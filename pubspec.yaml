@@ -1,0 +1,54 @@
+name: lexiflow
+description: AI-powered language learning flashcard app
+publish_to: 'none'
+version: 0.1.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  
+  # Database
+  drift: ^2.14.0
+  sqlite3_flutter_libs: ^0.5.0
+  path_provider: ^2.1.1
+  path: ^1.8.3
+  
+  # State Management
+  flutter_riverpod: ^2.4.9
+  
+  # UI Components
+  cupertino_icons: ^1.0.6
+  google_fonts: ^6.1.0
+  
+  # Image Handling
+  image_picker: ^1.0.5
+  
+  # HTTP & API (для будущих функций)
+  http: ^1.1.2
+  
+  # Local Storage
+  shared_preferences: ^2.2.2
+  
+  # Utils
+  uuid: ^4.2.2
+  intl: ^0.18.1
+  
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+  
+  # Code Generation
+  drift_dev: ^2.14.0
+  build_runner: ^2.4.7
+
+flutter:
+  uses-material-design: true
+  
+  # Assets (создадим позже когда понадобятся)
+  # assets:
+  #   - assets/images/
+  #   - assets/icons/
