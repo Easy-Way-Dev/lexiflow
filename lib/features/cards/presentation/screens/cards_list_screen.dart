@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lexiflow/core/database/app_database.dart';
 import 'package:lexiflow/features/decks/presentation/screens/add_card_screen.dart';
+import 'package:lexiflow/features/cards/presentation/screens/study_screen.dart';
 
 class CardsListScreen extends StatefulWidget {
   final AppDatabase db;
@@ -61,6 +62,29 @@ class _CardsListScreenState extends State<CardsListScreen> {
     if (result == true) {
       _loadCards();
     }
+  }
+
+  Future<void> _startStudy() async {
+    if (_cards.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Добавьте хотя бы одну карточку')),
+      );
+      return;
+    }
+
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => StudyScreen(
+          db: widget.db,
+          deckId: widget.deckId,
+          deckName: widget.deckName,
+        ),
+      ),
+    );
+
+    // Обновляем список после обучения
+    _loadCards();
   }
 
   Future<void> _deleteCard(CardData card) async {
@@ -129,7 +153,32 @@ class _CardsListScreenState extends State<CardsListScreen> {
           ? const Center(child: CircularProgressIndicator())
           : _cards.isEmpty
               ? _buildEmptyState()
-              : _buildCardsList(),
+              : Column(
+                  children: [
+                    // Кнопка "Начать обучение" вверху
+                    if (_cards.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: SizedBox(
+                          width: double.infinity,
+                          child: FilledButton.icon(
+                            onPressed: _startStudy,
+                            icon: const Icon(Icons.school),
+                            label: const Text('Начать обучение'),
+                            style: FilledButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              textStyle: const TextStyle(fontSize: 18),
+                            ),
+                          ),
+                        ),
+                      ),
+
+                    // Список карточек
+                    Expanded(
+                      child: _buildCardsList(),
+                    ),
+                  ],
+                ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _addCard,
         icon: const Icon(Icons.add),
