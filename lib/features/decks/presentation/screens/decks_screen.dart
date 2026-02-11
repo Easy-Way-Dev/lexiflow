@@ -43,17 +43,35 @@ class _DecksScreenState extends State<DecksScreen> {
     }
   }
 
+  // ============ СОЗДАНИЕ КОЛОДЫ ============
   Future<void> _createDeck() async {
-    final nameController = TextEditingController();
-    final descController = TextEditingController();
-    String sourceLang = 'en';
-    String targetLang = 'ru';
+    await _showDeckDialog(deckToEdit: null);
+  }
+
+  // ============ РЕДАКТИРОВАНИЕ КОЛОДЫ ============
+  Future<void> _editDeck(Deck deck) async {
+    await _showDeckDialog(deckToEdit: deck);
+  }
+
+  // ============ ДИАЛОГ СОЗДАНИЯ/РЕДАКТИРОВАНИЯ ============
+  Future<void> _showDeckDialog({Deck? deckToEdit}) async {
+    final bool isEditing = deckToEdit != null;
+
+    // Заполняем поля текущими данными если редактируем
+    final nameController = TextEditingController(
+      text: isEditing ? deckToEdit.name : '',
+    );
+    final descController = TextEditingController(
+      text: isEditing ? (deckToEdit.description ?? '') : '',
+    );
+    String sourceLang = isEditing ? deckToEdit.sourceLanguage : 'en';
+    String targetLang = isEditing ? deckToEdit.targetLanguage : 'ru';
 
     final result = await showDialog<bool>(
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
-          title: const Text('Создать колоду'),
+          title: Text(isEditing ? 'Редактировать колоду' : 'Создать колоду'),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -61,8 +79,9 @@ class _DecksScreenState extends State<DecksScreen> {
                 TextField(
                   controller: nameController,
                   decoration: const InputDecoration(
-                    labelText: 'Название',
+                    labelText: 'Название *',
                     hintText: 'Например: Английские слова',
+                    border: OutlineInputBorder(),
                   ),
                   autofocus: true,
                 ),
@@ -72,20 +91,23 @@ class _DecksScreenState extends State<DecksScreen> {
                   decoration: const InputDecoration(
                     labelText: 'Описание (необязательно)',
                     hintText: 'Для чего эта колода',
+                    border: OutlineInputBorder(),
                   ),
                   maxLines: 2,
                 ),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<String>(
                   value: sourceLang,
-                  decoration:
-                      const InputDecoration(labelText: 'Изучаемый язык'),
+                  decoration: const InputDecoration(
+                    labelText: 'Изучаемый язык',
+                    border: OutlineInputBorder(),
+                  ),
                   items: const [
-                    DropdownMenuItem(value: 'en', child: Text('English')),
-                    DropdownMenuItem(value: 'es', child: Text('Español')),
-                    DropdownMenuItem(value: 'fr', child: Text('Français')),
-                    DropdownMenuItem(value: 'de', child: Text('Deutsch')),
-                    DropdownMenuItem(value: 'it', child: Text('Italiano')),
+                    DropdownMenuItem(value: 'en', child: Text('🇬🇧 English')),
+                    DropdownMenuItem(value: 'es', child: Text('🇪🇸 Español')),
+                    DropdownMenuItem(value: 'fr', child: Text('🇫🇷 Français')),
+                    DropdownMenuItem(value: 'de', child: Text('🇩🇪 Deutsch')),
+                    DropdownMenuItem(value: 'it', child: Text('🇮🇹 Italiano')),
                   ],
                   onChanged: (value) {
                     if (value != null) {
@@ -96,11 +118,15 @@ class _DecksScreenState extends State<DecksScreen> {
                 const SizedBox(height: 16),
                 DropdownButtonFormField<String>(
                   value: targetLang,
-                  decoration: const InputDecoration(labelText: 'Родной язык'),
+                  decoration: const InputDecoration(
+                    labelText: 'Родной язык',
+                    border: OutlineInputBorder(),
+                  ),
                   items: const [
-                    DropdownMenuItem(value: 'ru', child: Text('Русский')),
-                    DropdownMenuItem(value: 'en', child: Text('English')),
-                    DropdownMenuItem(value: 'uk', child: Text('Українська')),
+                    DropdownMenuItem(value: 'ru', child: Text('🇷🇺 Русский')),
+                    DropdownMenuItem(value: 'en', child: Text('🇬🇧 English')),
+                    DropdownMenuItem(
+                        value: 'uk', child: Text('🇺🇦 Українська')),
                   ],
                   onChanged: (value) {
                     if (value != null) {
@@ -118,7 +144,7 @@ class _DecksScreenState extends State<DecksScreen> {
             ),
             FilledButton(
               onPressed: () => Navigator.pop(context, true),
-              child: const Text('Создать'),
+              child: Text(isEditing ? 'Сохранить' : 'Создать'),
             ),
           ],
         ),
@@ -127,37 +153,76 @@ class _DecksScreenState extends State<DecksScreen> {
 
     if (result == true && nameController.text.isNotEmpty) {
       try {
-        await widget.db.createDeck(
-          DecksCompanion(
-            name: drift.Value(nameController.text),
-            description: drift.Value(
-                descController.text.isEmpty ? null : descController.text),
-            sourceLanguage: drift.Value(sourceLang),
-            targetLanguage: drift.Value(targetLang),
-          ),
-        );
-        await _loadDecks();
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Колода создана!')),
+        if (isEditing) {
+          // ОБНОВЛЯЕМ существующую колоду
+          await widget.db.into(widget.db.decks).insertOnConflictUpdate(
+                DecksCompanion(
+                  id: drift.Value(deckToEdit.id),
+                  name: drift.Value(nameController.text.trim()),
+                  description: drift.Value(
+                    descController.text.trim().isEmpty
+                        ? null
+                        : descController.text.trim(),
+                  ),
+                  sourceLanguage: drift.Value(sourceLang),
+                  targetLanguage: drift.Value(targetLang),
+                  // Сохраняем статистику
+                  totalCards: drift.Value(deckToEdit.totalCards),
+                  masteredCards: drift.Value(deckToEdit.masteredCards),
+                  createdAt: drift.Value(deckToEdit.createdAt),
+                ),
+              );
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('✅ Колода обновлена!'),
+                backgroundColor: Colors.green,
+              ),
+            );
+          }
+        } else {
+          // СОЗДАЁМ новую колоду
+          await widget.db.createDeck(
+            DecksCompanion(
+              name: drift.Value(nameController.text.trim()),
+              description: drift.Value(
+                descController.text.trim().isEmpty
+                    ? null
+                    : descController.text.trim(),
+              ),
+              sourceLanguage: drift.Value(sourceLang),
+              targetLanguage: drift.Value(targetLang),
+            ),
           );
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('✅ Колода создана!'),
+                backgroundColor: Colors.green,
+              ),
+            );
+          }
         }
+        await _loadDecks();
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Ошибка создания: $e')),
+            SnackBar(content: Text('Ошибка: $e')),
           );
         }
       }
     }
   }
 
+  // ============ УДАЛЕНИЕ КОЛОДЫ ============
   Future<void> _deleteDeck(Deck deck) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Удалить колоду?'),
-        content: Text('Колода "${deck.name}" и все её карточки будут удалены.'),
+        content: Text(
+          'Колода "${deck.name}" и все её карточки будут удалены безвозвратно.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -165,9 +230,7 @@ class _DecksScreenState extends State<DecksScreen> {
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            style: FilledButton.styleFrom(
-              backgroundColor: Colors.red,
-            ),
+            style: FilledButton.styleFrom(backgroundColor: Colors.red),
             child: const Text('Удалить'),
           ),
         ],
@@ -197,7 +260,7 @@ class _DecksScreenState extends State<DecksScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Мои колоды'),
+        title: const Text('LexiFlow'),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -224,11 +287,7 @@ class _DecksScreenState extends State<DecksScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.folder_open,
-            size: 80,
-            color: Colors.grey[400],
-          ),
+          Icon(Icons.folder_open, size: 80, color: Colors.grey[400]),
           const SizedBox(height: 16),
           Text(
             'Нет колод',
@@ -243,6 +302,12 @@ class _DecksScreenState extends State<DecksScreen> {
                   color: Colors.grey[500],
                 ),
           ),
+          const SizedBox(height: 24),
+          FilledButton.icon(
+            onPressed: _createDeck,
+            icon: const Icon(Icons.add),
+            label: const Text('Создать колоду'),
+          ),
         ],
       ),
     );
@@ -252,7 +317,7 @@ class _DecksScreenState extends State<DecksScreen> {
     return RefreshIndicator(
       onRefresh: _loadDecks,
       child: ListView.builder(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
         itemCount: _decks.length,
         itemBuilder: (context, index) {
           final deck = _decks[index];
@@ -280,7 +345,7 @@ class _DecksScreenState extends State<DecksScreen> {
               ),
             ),
           );
-          _loadDecks(); // Обновляем статистику после возврата
+          _loadDecks();
         },
         borderRadius: BorderRadius.circular(12),
         child: Padding(
@@ -298,36 +363,52 @@ class _DecksScreenState extends State<DecksScreen> {
                           deck.name,
                           style: Theme.of(context).textTheme.titleLarge,
                         ),
-                        if (deck.description != null) ...[
+                        if (deck.description != null &&
+                            deck.description!.isNotEmpty) ...[
                           const SizedBox(height: 4),
                           Text(
                             deck.description!,
                             style: Theme.of(context)
                                 .textTheme
                                 .bodyMedium
-                                ?.copyWith(
-                                  color: Colors.grey[600],
-                                ),
+                                ?.copyWith(color: Colors.grey[600]),
                           ),
                         ],
                       ],
                     ),
                   ),
-                  PopupMenuButton(
+                  // Меню с редактированием и удалением
+                  PopupMenuButton<String>(
+                    icon: const Icon(Icons.more_vert),
                     itemBuilder: (context) => [
+                      const PopupMenuItem(
+                        value: 'edit',
+                        child: Row(
+                          children: [
+                            Icon(Icons.edit, color: Colors.blue),
+                            SizedBox(width: 8),
+                            Text('Редактировать'),
+                          ],
+                        ),
+                      ),
                       const PopupMenuItem(
                         value: 'delete',
                         child: Row(
                           children: [
                             Icon(Icons.delete, color: Colors.red),
                             SizedBox(width: 8),
-                            Text('Удалить'),
+                            Text(
+                              'Удалить',
+                              style: TextStyle(color: Colors.red),
+                            ),
                           ],
                         ),
                       ),
                     ],
                     onSelected: (value) {
-                      if (value == 'delete') {
+                      if (value == 'edit') {
+                        _editDeck(deck);
+                      } else if (value == 'delete') {
                         _deleteDeck(deck);
                       }
                     },
@@ -338,7 +419,10 @@ class _DecksScreenState extends State<DecksScreen> {
               Row(
                 children: [
                   _buildLanguageChip(deck.sourceLanguage),
-                  const Icon(Icons.arrow_forward, size: 16),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 4),
+                    child: Icon(Icons.arrow_forward, size: 16),
+                  ),
                   _buildLanguageChip(deck.targetLanguage),
                   const Spacer(),
                   Text(
@@ -359,7 +443,8 @@ class _DecksScreenState extends State<DecksScreen> {
                         style: Theme.of(context).textTheme.bodySmall,
                       ),
                       Text(
-                        '${(progress * 100).toStringAsFixed(0)}%',
+                        '${deck.masteredCards}/${deck.totalCards} '
+                        '(${(progress * 100).toStringAsFixed(0)}%)',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                               fontWeight: FontWeight.bold,
                             ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lexiflow/core/database/app_database.dart';
 import 'package:drift/drift.dart' as drift;
 import 'dart:math' as math;
+import 'dart:io';
 
 class StudyScreen extends StatefulWidget {
   final AppDatabase db;
@@ -50,11 +51,9 @@ class _StudyScreenState extends State<StudyScreen>
   Future<void> _loadCards() async {
     setState(() => _isLoading = true);
     try {
-      // Получаем карточки для повторения
       final cards = await widget.db.getCardsForReview(widget.deckId);
 
       if (cards.isEmpty) {
-        // Если нет карточек для повторения, берём все карточки
         final allCards = await widget.db.getCardsByDeckId(widget.deckId);
         setState(() {
           _cards = allCards;
@@ -94,15 +93,13 @@ class _StudyScreenState extends State<StudyScreen>
     final card = _cards[_currentIndex];
     final startTime = DateTime.now();
 
-    // Алгоритм SM-2 для расчёта следующего интервала
     final result = _calculateSM2(
       quality: quality,
       repetitions: card.repetitions,
-      easinessFactor: card.easinessFactor / 100, // хранится как int * 100
+      easinessFactor: card.easinessFactor / 100,
       interval: card.interval,
     );
 
-    // Создаём обновлённую карточку через Companion
     final updatedCard = CardsCompanion(
       id: drift.Value(card.id),
       deckId: drift.Value(card.deckId),
@@ -131,10 +128,8 @@ class _StudyScreenState extends State<StudyScreen>
     );
 
     try {
-      // Сохраняем через update с companion
       await widget.db.into(widget.db.cards).insertOnConflictUpdate(updatedCard);
 
-      // Добавляем запись в историю
       await widget.db.addReviewHistory(
         ReviewHistoryCompanion(
           cardId: drift.Value(card.id),
@@ -144,7 +139,6 @@ class _StudyScreenState extends State<StudyScreen>
         ),
       );
 
-      // Переходим к следующей карточке
       _nextCard();
     } catch (e) {
       if (mounted) {
@@ -155,29 +149,24 @@ class _StudyScreenState extends State<StudyScreen>
     }
   }
 
-  /// Алгоритм SM-2 (SuperMemo 2)
   SM2Result _calculateSM2({
-    required int quality, // 0-5
+    required int quality,
     required int repetitions,
     required double easinessFactor,
     required int interval,
   }) {
-    // Корректируем easiness factor
     double newEF =
         easinessFactor + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02));
 
-    // EF не может быть меньше 1.3
     if (newEF < 1.3) newEF = 1.3;
 
     int newRepetitions;
     int newInterval;
 
     if (quality < 3) {
-      // Если ответ неправильный - начинаем сначала
       newRepetitions = 0;
       newInterval = 0;
     } else {
-      // Правильный ответ
       newRepetitions = repetitions + 1;
 
       if (newRepetitions == 1) {
@@ -204,7 +193,6 @@ class _StudyScreenState extends State<StudyScreen>
       });
       _flipController.reset();
     } else {
-      // Закончили все карточки
       _showCompletionDialog();
     }
   }
@@ -238,8 +226,8 @@ class _StudyScreenState extends State<StudyScreen>
         actions: [
           TextButton(
             onPressed: () {
-              Navigator.pop(context); // Закрыть диалог
-              Navigator.pop(context); // Вернуться к списку карточек
+              Navigator.pop(context);
+              Navigator.pop(context);
             },
             child: const Text('Готово'),
           ),
@@ -297,11 +285,7 @@ class _StudyScreenState extends State<StudyScreen>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.check_circle_outline,
-            size: 80,
-            color: Colors.green[400],
-          ),
+          Icon(Icons.check_circle_outline, size: 80, color: Colors.green[400]),
           const SizedBox(height: 16),
           Text(
             'Нет карточек для изучения',
@@ -329,13 +313,11 @@ class _StudyScreenState extends State<StudyScreen>
 
     return Column(
       children: [
-        // Прогресс-бар
         LinearProgressIndicator(
           value: progress,
           backgroundColor: Colors.grey[200],
           minHeight: 4,
         ),
-
         Expanded(
           child: Center(
             child: Padding(
@@ -343,18 +325,10 @@ class _StudyScreenState extends State<StudyScreen>
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // Карточка с анимацией
-                  Expanded(
-                    child: _buildFlipCard(card),
-                  ),
-
+                  Expanded(child: _buildFlipCard(card)),
                   const SizedBox(height: 24),
-
-                  // Кнопки ответа (показываются только когда карточка перевёрнута)
                   if (_isFlipped) _buildAnswerButtons(),
-
                   if (!_isFlipped) ...[
-                    // Подсказка что нужно нажать на карточку
                     const SizedBox(height: 48),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -406,6 +380,9 @@ class _StudyScreenState extends State<StudyScreen>
 
   Widget _buildCardFace(CardData card, {required bool isFront}) {
     final text = isFront ? card.frontText : card.backText;
+    final imagePath = isFront ? card.frontImagePath : card.backImagePath;
+    final hasImage = imagePath != null && imagePath.isNotEmpty;
+
     final backgroundColor = isFront
         ? Theme.of(context).colorScheme.primaryContainer
         : Theme.of(context).colorScheme.secondaryContainer;
@@ -424,55 +401,83 @@ class _StudyScreenState extends State<StudyScreen>
           ),
         ],
       ),
-      child: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                text,
-                style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                      fontWeight: FontWeight.bold,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(32),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // ИЗОБРАЖЕНИЕ (если есть)
+                if (hasImage) ...[
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: Image.file(
+                      File(imagePath),
+                      height: 200,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          height: 200,
+                          color: Colors.grey[300],
+                          child: const Center(
+                            child: Icon(Icons.broken_image, size: 48),
+                          ),
+                        );
+                      },
                     ),
-                textAlign: TextAlign.center,
-              ),
+                  ),
+                  const SizedBox(height: 24),
+                ],
 
-              // Показываем дополнительную информацию на обратной стороне
-              if (!isFront &&
-                  card.pronunciation != null &&
-                  card.pronunciation!.isNotEmpty) ...[
-                const SizedBox(height: 16),
+                // ТЕКСТ
                 Text(
-                  card.pronunciation!,
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        color: Colors.blue,
-                        fontStyle: FontStyle.italic,
+                  text,
+                  style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                        fontWeight: FontWeight.bold,
                       ),
                   textAlign: TextAlign.center,
                 ),
-              ],
 
-              if (!isFront &&
-                  card.example != null &&
-                  card.example!.isNotEmpty) ...[
-                const SizedBox(height: 24),
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.5),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    card.example!,
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                // ПРОИЗНОШЕНИЕ (только на обратной стороне)
+                if (!isFront &&
+                    card.pronunciation != null &&
+                    card.pronunciation!.isNotEmpty) ...[
+                  const SizedBox(height: 16),
+                  Text(
+                    card.pronunciation!,
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          color: Colors.blue,
                           fontStyle: FontStyle.italic,
                         ),
                     textAlign: TextAlign.center,
                   ),
-                ),
+                ],
+
+                // ПРИМЕР (только на обратной стороне)
+                if (!isFront &&
+                    card.example != null &&
+                    card.example!.isNotEmpty) ...[
+                  const SizedBox(height: 24),
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.5),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      card.example!,
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                            fontStyle: FontStyle.italic,
+                          ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ],
               ],
-            ],
+            ),
           ),
         ),
       ),
@@ -532,7 +537,6 @@ class _StudyScreenState extends State<StudyScreen>
   }
 }
 
-/// Результат алгоритма SM-2
 class SM2Result {
   final double easinessFactor;
   final int repetitions;

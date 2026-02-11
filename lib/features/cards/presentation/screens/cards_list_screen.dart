@@ -58,7 +58,22 @@ class _CardsListScreenState extends State<CardsListScreen> {
         ),
       ),
     );
+    if (result == true) {
+      _loadCards();
+    }
+  }
 
+  Future<void> _editCard(CardData card) async {
+    final result = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AddCardScreen(
+          db: widget.db,
+          deckId: widget.deckId,
+          cardToEdit: card, // передаём карточку для редактирования
+        ),
+      ),
+    );
     if (result == true) {
       _loadCards();
     }
@@ -83,7 +98,6 @@ class _CardsListScreenState extends State<CardsListScreen> {
       ),
     );
 
-    // Обновляем список после обучения
     _loadCards();
   }
 
@@ -133,8 +147,9 @@ class _CardsListScreenState extends State<CardsListScreen> {
         title: Text(widget.deckName),
         actions: [
           IconButton(
-            icon:
-                Icon(_showBackSide ? Icons.flip_to_front : Icons.flip_to_back),
+            icon: Icon(
+              _showBackSide ? Icons.flip_to_front : Icons.flip_to_back,
+            ),
             onPressed: () {
               setState(() => _showBackSide = !_showBackSide);
             },
@@ -156,22 +171,23 @@ class _CardsListScreenState extends State<CardsListScreen> {
               : Column(
                   children: [
                     // Кнопка "Начать обучение" вверху
-                    if (_cards.isNotEmpty)
-                      Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: SizedBox(
-                          width: double.infinity,
-                          child: FilledButton.icon(
-                            onPressed: _startStudy,
-                            icon: const Icon(Icons.school),
-                            label: const Text('Начать обучение'),
-                            style: FilledButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                              textStyle: const TextStyle(fontSize: 18),
-                            ),
+                    Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: SizedBox(
+                        width: double.infinity,
+                        child: FilledButton.icon(
+                          onPressed: _startStudy,
+                          icon: const Icon(Icons.school),
+                          label: Text(
+                            'Начать обучение (${_cards.length} карточек)',
+                          ),
+                          style: FilledButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            textStyle: const TextStyle(fontSize: 18),
                           ),
                         ),
                       ),
+                    ),
 
                     // Список карточек
                     Expanded(
@@ -226,7 +242,7 @@ class _CardsListScreenState extends State<CardsListScreen> {
     return RefreshIndicator(
       onRefresh: _loadCards,
       child: ListView.builder(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
         itemCount: _cards.length,
         itemBuilder: (context, index) {
           final card = _cards[index];
@@ -238,6 +254,7 @@ class _CardsListScreenState extends State<CardsListScreen> {
 
   Widget _buildCardItem(CardData card) {
     final displayText = _showBackSide ? card.backText : card.frontText;
+    final secondaryText = _showBackSide ? card.frontText : card.backText;
     final hasExample = card.example != null && card.example!.isNotEmpty;
     final hasPronunciation =
         card.pronunciation != null && card.pronunciation!.isNotEmpty;
@@ -245,9 +262,7 @@ class _CardsListScreenState extends State<CardsListScreen> {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: InkWell(
-        onTap: () {
-          // TODO: Открыть детальный просмотр карточки
-        },
+        onTap: () => _editCard(card), // Тап по карточке = редактировать
         borderRadius: BorderRadius.circular(12),
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -257,18 +272,35 @@ class _CardsListScreenState extends State<CardsListScreen> {
               Row(
                 children: [
                   Expanded(
-                    child: Text(
-                      displayText,
-                      style: Theme.of(context).textTheme.titleLarge,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Основной текст (лицевая или обратная)
+                        Text(
+                          displayText,
+                          style: Theme.of(context).textTheme.titleLarge,
+                        ),
+                        const SizedBox(height: 4),
+                        // Второй текст (перевод)
+                        Text(
+                          secondaryText,
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodyMedium
+                              ?.copyWith(color: Colors.grey[600]),
+                        ),
+                      ],
                     ),
                   ),
-                  PopupMenuButton(
+                  // Меню действий
+                  PopupMenuButton<String>(
+                    icon: const Icon(Icons.more_vert),
                     itemBuilder: (context) => [
                       const PopupMenuItem(
                         value: 'edit',
                         child: Row(
                           children: [
-                            Icon(Icons.edit),
+                            Icon(Icons.edit, color: Colors.blue),
                             SizedBox(width: 8),
                             Text('Редактировать'),
                           ],
@@ -280,23 +312,28 @@ class _CardsListScreenState extends State<CardsListScreen> {
                           children: [
                             Icon(Icons.delete, color: Colors.red),
                             SizedBox(width: 8),
-                            Text('Удалить'),
+                            Text(
+                              'Удалить',
+                              style: TextStyle(color: Colors.red),
+                            ),
                           ],
                         ),
                       ),
                     ],
                     onSelected: (value) {
-                      if (value == 'delete') {
+                      if (value == 'edit') {
+                        _editCard(card);
+                      } else if (value == 'delete') {
                         _deleteCard(card);
-                      } else if (value == 'edit') {
-                        // TODO: Редактирование карточки
                       }
                     },
                   ),
                 ],
               ),
+
+              // Произношение
               if (hasPronunciation) ...[
-                const SizedBox(height: 4),
+                const SizedBox(height: 6),
                 Text(
                   card.pronunciation!,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -305,6 +342,8 @@ class _CardsListScreenState extends State<CardsListScreen> {
                       ),
                 ),
               ],
+
+              // Пример
               if (hasExample) ...[
                 const SizedBox(height: 8),
                 Container(
@@ -321,29 +360,49 @@ class _CardsListScreenState extends State<CardsListScreen> {
                   ),
                 ),
               ],
+
               const SizedBox(height: 12),
+
+              // Статистика внизу карточки
               Row(
                 children: [
+                  // Статус освоения
                   if (card.isMastered)
                     const Chip(
-                      label: Text('Освоено'),
+                      label: Text('🏆 Освоено'),
                       backgroundColor: Colors.green,
-                      labelStyle: TextStyle(color: Colors.white),
-                      padding: EdgeInsets.symmetric(horizontal: 8),
+                      labelStyle: TextStyle(color: Colors.white, fontSize: 12),
+                      padding: EdgeInsets.symmetric(horizontal: 4),
+                      visualDensity: VisualDensity.compact,
                     )
                   else
                     Chip(
-                      label: Text('Повторений: ${card.repetitions}'),
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      label: Text('🔁 Повторений: ${card.repetitions}'),
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      visualDensity: VisualDensity.compact,
                     ),
+
                   const SizedBox(width: 8),
+
+                  // Статистика ответов
                   if (card.correctCount > 0 || card.incorrectCount > 0)
                     Text(
-                      '✓${card.correctCount} ✗${card.incorrectCount}',
+                      '✓${card.correctCount}  ✗${card.incorrectCount}',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             color: Colors.grey[600],
                           ),
                     ),
+
+                  const Spacer(),
+
+                  // Подсказка что можно нажать
+                  Text(
+                    'Нажмите для редактирования',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Colors.grey[400],
+                          fontSize: 10,
+                        ),
+                  ),
                 ],
               ),
             ],
