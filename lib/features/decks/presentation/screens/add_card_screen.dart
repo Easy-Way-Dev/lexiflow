@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:lexiflow/core/database/app_database.dart';
 import 'package:lexiflow/core/utils/image_helper.dart';
+import 'package:lexiflow/core/utils/video_helper.dart';
 import 'package:lexiflow/shared/widgets/audio_recorder_widget.dart';
 import 'package:drift/drift.dart' as drift;
 
@@ -28,6 +29,8 @@ class _AddCardScreenState extends State<AddCardScreen> {
   final _pronunciationController = TextEditingController();
   final _exampleController = TextEditingController();
   final _notesController = TextEditingController();
+  final _frontVideoController = TextEditingController();
+  final _backVideoController = TextEditingController();
 
   String? _frontImagePath;
   String? _backImagePath;
@@ -48,6 +51,8 @@ class _AddCardScreenState extends State<AddCardScreen> {
       _pronunciationController.text = card.pronunciation ?? '';
       _exampleController.text = card.example ?? '';
       _notesController.text = card.notes ?? '';
+      _frontVideoController.text = card.frontVideoUrl ?? '';
+      _backVideoController.text = card.backVideoUrl ?? '';
       _frontImagePath = card.frontImagePath;
       _backImagePath = card.backImagePath;
       _frontAudioPath = card.frontAudioPath;
@@ -62,19 +67,21 @@ class _AddCardScreenState extends State<AddCardScreen> {
     _pronunciationController.dispose();
     _exampleController.dispose();
     _notesController.dispose();
+    _frontVideoController.dispose();
+    _backVideoController.dispose();
     super.dispose();
   }
 
   // ========== ИЗОБРАЖЕНИЯ ==========
 
   Future<void> _pickFrontImage() async {
-    final imagePath = await ImageHelper.pickAndSaveImage();
-    if (imagePath != null) setState(() => _frontImagePath = imagePath);
+    final path = await ImageHelper.pickAndSaveImage();
+    if (path != null) setState(() => _frontImagePath = path);
   }
 
   Future<void> _pickBackImage() async {
-    final imagePath = await ImageHelper.pickAndSaveImage();
-    if (imagePath != null) setState(() => _backImagePath = imagePath);
+    final path = await ImageHelper.pickAndSaveImage();
+    if (path != null) setState(() => _backImagePath = path);
   }
 
   Future<void> _removeFrontImage() async {
@@ -101,6 +108,13 @@ class _AddCardScreenState extends State<AddCardScreen> {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isLoading = true);
 
+    final frontVideo = _frontVideoController.text.trim().isEmpty
+        ? null
+        : _frontVideoController.text.trim();
+    final backVideo = _backVideoController.text.trim().isEmpty
+        ? null
+        : _backVideoController.text.trim();
+
     try {
       if (_isEditing) {
         final card = widget.cardToEdit!;
@@ -114,6 +128,8 @@ class _AddCardScreenState extends State<AddCardScreen> {
                 backImagePath: drift.Value(_backImagePath),
                 frontAudioPath: drift.Value(_frontAudioPath),
                 backAudioPath: drift.Value(_backAudioPath),
+                frontVideoUrl: drift.Value(frontVideo),
+                backVideoUrl: drift.Value(backVideo),
                 pronunciation: drift.Value(
                   _pronunciationController.text.trim().isEmpty
                       ? null
@@ -141,7 +157,6 @@ class _AddCardScreenState extends State<AddCardScreen> {
                 updatedAt: drift.Value(DateTime.now()),
               ),
             );
-
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -161,6 +176,8 @@ class _AddCardScreenState extends State<AddCardScreen> {
             backImagePath: drift.Value(_backImagePath),
             frontAudioPath: drift.Value(_frontAudioPath),
             backAudioPath: drift.Value(_backAudioPath),
+            frontVideoUrl: drift.Value(frontVideo),
+            backVideoUrl: drift.Value(backVideo),
             pronunciation: drift.Value(
               _pronunciationController.text.trim().isEmpty
                   ? null
@@ -178,7 +195,6 @@ class _AddCardScreenState extends State<AddCardScreen> {
             ),
           ),
         );
-
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -236,16 +252,12 @@ class _AddCardScreenState extends State<AddCardScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      children: [
-                        const Icon(Icons.text_fields, size: 20),
-                        const SizedBox(width: 8),
-                        Text(
-                          'Лицевая сторона',
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
-                      ],
-                    ),
+                    Row(children: [
+                      const Icon(Icons.text_fields, size: 20),
+                      const SizedBox(width: 8),
+                      Text('Лицевая сторона',
+                          style: Theme.of(context).textTheme.titleMedium),
+                    ]),
                     const SizedBox(height: 16),
                     TextFormField(
                       controller: _frontTextController,
@@ -254,12 +266,9 @@ class _AddCardScreenState extends State<AddCardScreen> {
                         hintText: 'Например: Hello',
                         border: OutlineInputBorder(),
                       ),
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return 'Введите текст';
-                        }
-                        return null;
-                      },
+                      validator: (v) => v == null || v.trim().isEmpty
+                          ? 'Введите текст'
+                          : null,
                       maxLines: 3,
                       minLines: 1,
                     ),
@@ -268,7 +277,7 @@ class _AddCardScreenState extends State<AddCardScreen> {
                       controller: _pronunciationController,
                       decoration: const InputDecoration(
                         labelText: 'Произношение (необязательно)',
-                        hintText: 'Например: həˈloʊ или [хэлоу]',
+                        hintText: 'Например: həˈloʊ',
                         border: OutlineInputBorder(),
                         prefixIcon: Icon(Icons.record_voice_over),
                       ),
@@ -281,13 +290,16 @@ class _AddCardScreenState extends State<AddCardScreen> {
                       onRemoveImage: _removeFrontImage,
                     ),
                     const SizedBox(height: 16),
-                    // АУДИО лицевая сторона
                     AudioRecorderWidget(
                       audioPath: _frontAudioPath,
                       label: 'Аудио произношение',
-                      onAudioChanged: (path) {
-                        setState(() => _frontAudioPath = path);
-                      },
+                      onAudioChanged: (p) =>
+                          setState(() => _frontAudioPath = p),
+                    ),
+                    const SizedBox(height: 16),
+                    _buildVideoSection(
+                      controller: _frontVideoController,
+                      label: 'Видео (YouTube или другой URL)',
                     ),
                   ],
                 ),
@@ -303,16 +315,12 @@ class _AddCardScreenState extends State<AddCardScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      children: [
-                        const Icon(Icons.translate, size: 20),
-                        const SizedBox(width: 8),
-                        Text(
-                          'Обратная сторона',
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
-                      ],
-                    ),
+                    Row(children: [
+                      const Icon(Icons.translate, size: 20),
+                      const SizedBox(width: 8),
+                      Text('Обратная сторона',
+                          style: Theme.of(context).textTheme.titleMedium),
+                    ]),
                     const SizedBox(height: 16),
                     TextFormField(
                       controller: _backTextController,
@@ -321,12 +329,9 @@ class _AddCardScreenState extends State<AddCardScreen> {
                         hintText: 'Например: Привет',
                         border: OutlineInputBorder(),
                       ),
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return 'Введите перевод';
-                        }
-                        return null;
-                      },
+                      validator: (v) => v == null || v.trim().isEmpty
+                          ? 'Введите перевод'
+                          : null,
                       maxLines: 3,
                       minLines: 1,
                     ),
@@ -338,13 +343,15 @@ class _AddCardScreenState extends State<AddCardScreen> {
                       onRemoveImage: _removeBackImage,
                     ),
                     const SizedBox(height: 16),
-                    // АУДИО обратная сторона
                     AudioRecorderWidget(
                       audioPath: _backAudioPath,
                       label: 'Аудио перевода',
-                      onAudioChanged: (path) {
-                        setState(() => _backAudioPath = path);
-                      },
+                      onAudioChanged: (p) => setState(() => _backAudioPath = p),
+                    ),
+                    const SizedBox(height: 16),
+                    _buildVideoSection(
+                      controller: _backVideoController,
+                      label: 'Видео (YouTube или другой URL)',
                     ),
                   ],
                 ),
@@ -360,16 +367,12 @@ class _AddCardScreenState extends State<AddCardScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      children: [
-                        const Icon(Icons.info_outline, size: 20),
-                        const SizedBox(width: 8),
-                        Text(
-                          'Дополнительно',
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
-                      ],
-                    ),
+                    Row(children: [
+                      const Icon(Icons.info_outline, size: 20),
+                      const SizedBox(width: 8),
+                      Text('Дополнительно',
+                          style: Theme.of(context).textTheme.titleMedium),
+                    ]),
                     const SizedBox(height: 16),
                     TextFormField(
                       controller: _exampleController,
@@ -399,7 +402,7 @@ class _AddCardScreenState extends State<AddCardScreen> {
               ),
             ),
 
-            // ========== ПРОГРЕСС (если редактируем) ==========
+            // ========== ПРОГРЕСС ==========
             if (_isEditing) ...[
               const SizedBox(height: 16),
               Card(
@@ -409,26 +412,22 @@ class _AddCardScreenState extends State<AddCardScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        children: [
-                          Icon(Icons.bar_chart,
-                              size: 20, color: Colors.green[700]),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Прогресс обучения',
+                      Row(children: [
+                        Icon(Icons.bar_chart,
+                            size: 20, color: Colors.green[700]),
+                        const SizedBox(width: 8),
+                        Text('Прогресс обучения',
                             style: Theme.of(context)
                                 .textTheme
                                 .titleSmall
-                                ?.copyWith(color: Colors.green[700]),
-                          ),
-                        ],
-                      ),
+                                ?.copyWith(color: Colors.green[700])),
+                      ]),
                       const SizedBox(height: 8),
                       Text(
                         '🔁 Повторений: ${widget.cardToEdit!.repetitions}\n'
                         '✓ Правильно: ${widget.cardToEdit!.correctCount}\n'
                         '✗ Неправильно: ${widget.cardToEdit!.incorrectCount}\n'
-                        '${widget.cardToEdit!.isMastered ? "🏆 Карточка освоена!" : "📚 В процессе изучения"}',
+                        '${widget.cardToEdit!.isMastered ? "🏆 Освоена!" : "📚 В процессе"}',
                         style:
                             TextStyle(fontSize: 14, color: Colors.green[700]),
                       ),
@@ -469,16 +468,14 @@ class _AddCardScreenState extends State<AddCardScreen> {
     required VoidCallback onRemoveImage,
   }) {
     final hasImage = imagePath != null && imagePath.isNotEmpty;
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          title,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w500,
-              ),
-        ),
+        Text(title,
+            style: Theme.of(context)
+                .textTheme
+                .bodyMedium
+                ?.copyWith(fontWeight: FontWeight.w500)),
         const SizedBox(height: 8),
         if (hasImage) ...[
           ClipRRect(
@@ -488,50 +485,173 @@ class _AddCardScreenState extends State<AddCardScreen> {
               height: 200,
               width: double.infinity,
               fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) {
-                return Container(
-                  height: 200,
-                  color: Colors.grey[200],
-                  child: const Center(
-                    child: Icon(Icons.broken_image, size: 48),
-                  ),
-                );
-              },
+              errorBuilder: (_, __, ___) => Container(
+                height: 200,
+                color: Colors.grey[200],
+                child: const Center(child: Icon(Icons.broken_image, size: 48)),
+              ),
             ),
           ),
           const SizedBox(height: 8),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: onPickImage,
-                  icon: const Icon(Icons.edit),
-                  label: const Text('Заменить'),
-                ),
+          Row(children: [
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: onPickImage,
+                icon: const Icon(Icons.edit),
+                label: const Text('Заменить'),
               ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: onRemoveImage,
-                  icon: const Icon(Icons.delete, color: Colors.red),
-                  label: const Text(
-                    'Удалить',
-                    style: TextStyle(color: Colors.red),
-                  ),
-                ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: onRemoveImage,
+                icon: const Icon(Icons.delete, color: Colors.red),
+                label:
+                    const Text('Удалить', style: TextStyle(color: Colors.red)),
               ),
-            ],
-          ),
-        ] else ...[
+            ),
+          ]),
+        ] else
           OutlinedButton.icon(
             onPressed: onPickImage,
             icon: const Icon(Icons.add_photo_alternate),
             label: const Text('Добавить изображение'),
             style: OutlinedButton.styleFrom(
-              minimumSize: const Size(double.infinity, 48),
+                minimumSize: const Size(double.infinity, 48)),
+          ),
+      ],
+    );
+  }
+
+  // ========== ВИДЖЕТ ВИДЕО ==========
+  Widget _buildVideoSection({
+    required TextEditingController controller,
+    required String label,
+  }) {
+    final url = controller.text.trim();
+    final hasUrl = url.isNotEmpty;
+    final isYouTube = hasUrl && VideoHelper.isYouTubeUrl(url);
+    final isYouGlish = hasUrl && VideoHelper.isYouGlishUrl(url);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Видео',
+          style: Theme.of(context)
+              .textTheme
+              .bodyMedium
+              ?.copyWith(fontWeight: FontWeight.w500),
+        ),
+        const SizedBox(height: 8),
+        TextFormField(
+          controller: controller,
+          decoration: InputDecoration(
+            labelText: label,
+            hintText: 'https://youtube.com/watch?v=...',
+            border: const OutlineInputBorder(),
+            prefixIcon: Icon(
+              isYouTube
+                  ? Icons.smart_display
+                  : isYouGlish
+                      ? Icons.record_voice_over
+                      : Icons.link,
+              color: isYouTube ? Colors.red : null,
+            ),
+            suffixIcon: hasUrl
+                ? IconButton(
+                    icon: const Icon(Icons.clear),
+                    onPressed: () {
+                      controller.clear();
+                      setState(() {});
+                    },
+                  )
+                : null,
+          ),
+          onChanged: (_) => setState(() {}),
+          validator: (v) {
+            if (v != null && v.trim().isNotEmpty) {
+              if (!VideoHelper.isValidVideoUrl(v.trim())) {
+                return 'Введите корректный URL (http:// или https://)';
+              }
+            }
+            return null;
+          },
+        ),
+        if (hasUrl) ...[
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: isYouTube ? Colors.red[50] : Colors.blue[50],
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                  color: isYouTube ? Colors.red[200]! : Colors.blue[200]!),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  isYouTube
+                      ? Icons.smart_display
+                      : isYouGlish
+                          ? Icons.record_voice_over
+                          : Icons.link,
+                  color: isYouTube ? Colors.red : Colors.blue,
+                  size: 20,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    isYouTube
+                        ? '▶ YouTube видео'
+                        : isYouGlish
+                            ? '🎤 YouGlish произношение'
+                            : '🔗 Видео по ссылке',
+                    style: TextStyle(
+                      color: isYouTube ? Colors.red[700] : Colors.blue[700],
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+                TextButton(
+                  onPressed: () => VideoHelper.openVideo(context, url),
+                  child: const Text('Открыть'),
+                ),
+              ],
             ),
           ),
         ],
+        // Подсказки для YouGlish
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 8,
+          children: [
+            ActionChip(
+              label: const Text('YouGlish EN'),
+              avatar: const Icon(Icons.mic, size: 16),
+              onPressed: () {
+                final word = _frontTextController.text.trim();
+                if (word.isNotEmpty) {
+                  controller.text =
+                      VideoHelper.buildYouGlishUrl(word, lang: 'english');
+                  setState(() {});
+                }
+              },
+            ),
+            ActionChip(
+              label: const Text('YouGlish RU'),
+              avatar: const Icon(Icons.mic, size: 16),
+              onPressed: () {
+                final word = _frontTextController.text.trim();
+                if (word.isNotEmpty) {
+                  controller.text =
+                      VideoHelper.buildYouGlishUrl(word, lang: 'russian');
+                  setState(() {});
+                }
+              },
+            ),
+          ],
+        ),
       ],
     );
   }

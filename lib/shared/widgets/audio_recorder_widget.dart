@@ -1,6 +1,10 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as p;
 import 'package:lexiflow/core/utils/audio_helper.dart';
 
 class AudioRecorderWidget extends StatefulWidget {
@@ -31,7 +35,6 @@ class _AudioRecorderWidgetState extends State<AudioRecorderWidget> {
   void initState() {
     super.initState();
     _currentAudioPath = widget.audioPath;
-
     _playerSubscription = AudioHelper.playerStateStream.listen((state) {
       if (mounted) {
         setState(() => _isPlaying = state == PlayerState.playing);
@@ -46,7 +49,8 @@ class _AudioRecorderWidgetState extends State<AudioRecorderWidget> {
     super.dispose();
   }
 
-  // Таймер записи
+  // ========== ТАЙМЕР ==========
+
   void _startTimer() {
     _recordingSeconds = 0;
     _recordingTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
@@ -65,9 +69,10 @@ class _AudioRecorderWidgetState extends State<AudioRecorderWidget> {
     return '${mins.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
   }
 
+  // ========== ЗАПИСЬ ==========
+
   Future<void> _toggleRecording() async {
     if (_isRecording) {
-      // Останавливаем запись
       _stopTimer();
       setState(() => _isRecording = false);
       final path = await AudioHelper.stopRecording();
@@ -82,19 +87,16 @@ class _AudioRecorderWidgetState extends State<AudioRecorderWidget> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: const Row(
-                children: [
-                  Icon(Icons.check_circle, color: Colors.white),
-                  SizedBox(width: 8),
-                  Text('✅ Аудио записано!'),
-                ],
-              ),
+              content: const Row(children: [
+                Icon(Icons.check_circle, color: Colors.white),
+                SizedBox(width: 8),
+                Text('✅ Аудио записано!'),
+              ]),
               backgroundColor: Colors.green,
               duration: const Duration(seconds: 2),
               behavior: SnackBarBehavior.floating,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
+                  borderRadius: BorderRadius.circular(10)),
             ),
           );
         }
@@ -109,7 +111,6 @@ class _AudioRecorderWidgetState extends State<AudioRecorderWidget> {
         }
       }
     } else {
-      // Начинаем запись
       final started = await AudioHelper.startRecording();
       if (started) {
         _startTimer();
@@ -126,6 +127,74 @@ class _AudioRecorderWidgetState extends State<AudioRecorderWidget> {
       }
     }
   }
+
+  // ========== ВЫБОР ФАЙЛА С КОМПЬЮТЕРА ==========
+
+  Future<void> _pickAudioFromFile() async {
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['mp3', 'wav', 'ogg', 'aac', 'm4a', 'wma', 'flac'],
+        dialogTitle: 'Выберите аудио файл',
+      );
+
+      if (result == null || result.files.isEmpty) return;
+
+      final pickedFile = result.files.first;
+      if (pickedFile.path == null) return;
+
+      // Копируем файл в папку приложения
+      final appDir = await getApplicationDocumentsDirectory();
+      final audioDir = Directory(p.join(appDir.path, 'audio'));
+      if (!await audioDir.exists()) {
+        await audioDir.create(recursive: true);
+      }
+
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final ext = p.extension(pickedFile.path!);
+      final destPath = p.join(audioDir.path, 'audio_$timestamp$ext');
+
+      await File(pickedFile.path!).copy(destPath);
+
+      // Удаляем старый файл если есть
+      if (_currentAudioPath != null) {
+        await AudioHelper.deleteAudio(_currentAudioPath);
+      }
+
+      setState(() => _currentAudioPath = destPath);
+      widget.onAudioChanged(destPath);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(children: [
+              const Icon(Icons.check_circle, color: Colors.white),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text('✅ Загружено: ${pickedFile.name}'),
+              ),
+            ]),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 2),
+            behavior: SnackBarBehavior.floating,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('❌ Ошибка загрузки: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  // ========== ВОСПРОИЗВЕДЕНИЕ / УДАЛЕНИЕ ==========
 
   Future<void> _playAudio() async {
     if (_currentAudioPath == null) return;
@@ -164,6 +233,8 @@ class _AudioRecorderWidgetState extends State<AudioRecorderWidget> {
     }
   }
 
+  // ========== UI ==========
+
   @override
   Widget build(BuildContext context) {
     final hasAudio = _currentAudioPath != null && _currentAudioPath!.isNotEmpty;
@@ -173,9 +244,10 @@ class _AudioRecorderWidgetState extends State<AudioRecorderWidget> {
       children: [
         Text(
           widget.label,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w500,
-              ),
+          style: Theme.of(context)
+              .textTheme
+              .bodyMedium
+              ?.copyWith(fontWeight: FontWeight.w500),
         ),
         const SizedBox(height: 8),
         if (_isRecording) ...[
@@ -191,36 +263,25 @@ class _AudioRecorderWidgetState extends State<AudioRecorderWidget> {
               children: [
                 Row(
                   children: [
-                    // Мигающая точка
                     const _PulsingDot(),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            'Идёт запись...',
-                            style: TextStyle(
-                              color: Colors.red[700],
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          Text(
-                            'Говорите в микрофон',
-                            style: TextStyle(
-                              color: Colors.red[400],
-                              fontSize: 12,
-                            ),
-                          ),
+                          Text('Идёт запись...',
+                              style: TextStyle(
+                                  color: Colors.red[700],
+                                  fontWeight: FontWeight.bold)),
+                          Text('Говорите в микрофон',
+                              style: TextStyle(
+                                  color: Colors.red[400], fontSize: 12)),
                         ],
                       ),
                     ),
-                    // Таймер
                     Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
+                          horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
                         color: Colors.red[100],
                         borderRadius: BorderRadius.circular(20),
@@ -238,10 +299,8 @@ class _AudioRecorderWidgetState extends State<AudioRecorderWidget> {
                   ],
                 ),
                 const SizedBox(height: 12),
-                // Индикатор уровня звука (анимированные полоски)
                 const _SoundWaveIndicator(),
                 const SizedBox(height: 12),
-                // Кнопка стоп
                 SizedBox(
                   width: double.infinity,
                   child: FilledButton.icon(
@@ -258,7 +317,7 @@ class _AudioRecorderWidgetState extends State<AudioRecorderWidget> {
             ),
           ),
         ] else if (hasAudio) ...[
-          // ===== АУДИО ЗАПИСАНО =====
+          // ===== АУДИО ЕСТЬ =====
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
@@ -275,11 +334,8 @@ class _AudioRecorderWidgetState extends State<AudioRecorderWidget> {
                     color: Colors.green[100],
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(
-                    Icons.audiotrack,
-                    color: Colors.green[700],
-                    size: 22,
-                  ),
+                  child: Icon(Icons.audiotrack,
+                      color: Colors.green[700], size: 22),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -287,25 +343,22 @@ class _AudioRecorderWidgetState extends State<AudioRecorderWidget> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Аудио записано ✅',
+                        'Аудио добавлено ✅',
                         style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          color: Colors.green[700],
-                        ),
+                            fontWeight: FontWeight.w600,
+                            color: Colors.green[700]),
                       ),
                       Text(
                         _isPlaying
                             ? '▶ Воспроизведение...'
-                            : 'Нажмите ▶ чтобы послушать',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.green[500],
-                        ),
+                            : p.basename(_currentAudioPath!),
+                        style:
+                            TextStyle(fontSize: 11, color: Colors.green[500]),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ],
                   ),
                 ),
-                // Кнопка воспроизведения
                 IconButton(
                   icon: Icon(
                     _isPlaying ? Icons.stop_circle : Icons.play_circle,
@@ -315,7 +368,6 @@ class _AudioRecorderWidgetState extends State<AudioRecorderWidget> {
                   onPressed: _playAudio,
                   tooltip: _isPlaying ? 'Стоп' : 'Слушать',
                 ),
-                // Кнопка удаления
                 IconButton(
                   icon: const Icon(Icons.delete_outline, color: Colors.red),
                   onPressed: _deleteAudio,
@@ -325,30 +377,64 @@ class _AudioRecorderWidgetState extends State<AudioRecorderWidget> {
             ),
           ),
           const SizedBox(height: 8),
-          // Кнопка перезаписи
-          OutlinedButton.icon(
-            onPressed: _toggleRecording,
-            icon: const Icon(Icons.mic, color: Colors.orange),
-            label: const Text(
-              'Записать заново',
-              style: TextStyle(color: Colors.orange),
-            ),
-            style: OutlinedButton.styleFrom(
-              side: const BorderSide(color: Colors.orange),
-              minimumSize: const Size(double.infinity, 44),
-            ),
+          // Кнопки перезаписи и замены файла
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: _toggleRecording,
+                  icon: const Icon(Icons.mic, size: 18),
+                  label: const Text('Записать заново'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.orange,
+                    side: const BorderSide(color: Colors.orange),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: _pickAudioFromFile,
+                  icon: const Icon(Icons.folder_open, size: 18),
+                  label: const Text('Выбрать файл'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.blue,
+                    side: const BorderSide(color: Colors.blue),
+                  ),
+                ),
+              ),
+            ],
           ),
         ] else ...[
-          // ===== НЕТ АУДИО =====
-          OutlinedButton.icon(
-            onPressed: _toggleRecording,
-            icon: const Icon(Icons.mic, color: Colors.red),
-            label: const Text('Записать произношение'),
-            style: OutlinedButton.styleFrom(
-              minimumSize: const Size(double.infinity, 48),
-              side: const BorderSide(color: Colors.red),
-              foregroundColor: Colors.red,
-            ),
+          // ===== НЕТ АУДИО - две кнопки =====
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: _toggleRecording,
+                  icon: const Icon(Icons.mic),
+                  label: const Text('Записать'),
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size(0, 48),
+                    side: const BorderSide(color: Colors.red),
+                    foregroundColor: Colors.red,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: _pickAudioFromFile,
+                  icon: const Icon(Icons.folder_open),
+                  label: const Text('С компьютера'),
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size(0, 48),
+                    side: const BorderSide(color: Colors.blue),
+                    foregroundColor: Colors.blue,
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ],
@@ -410,7 +496,7 @@ class _PulsingDotState extends State<_PulsingDot>
   }
 }
 
-// ===== АНИМИРОВАННЫЕ ВОЛНЫ ЗВУКА =====
+// ===== АНИМИРОВАННЫЕ ВОЛНЫ =====
 class _SoundWaveIndicator extends StatefulWidget {
   const _SoundWaveIndicator();
 
@@ -446,7 +532,6 @@ class _SoundWaveIndicatorState extends State<_SoundWaveIndicator>
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.end,
           children: List.generate(12, (index) {
-            // Каждая полоска имеет свою фазу
             final phase = (index / 12) * 2 * 3.14159;
             final value = (0.5 +
                         0.5 *
@@ -454,7 +539,6 @@ class _SoundWaveIndicatorState extends State<_SoundWaveIndicator>
                                 _controller.value * 2 * 3.14159 + phase)) *
                     0.8 +
                 0.2;
-
             return Container(
               width: 6,
               height: 4 + value * 28,
@@ -471,7 +555,6 @@ class _SoundWaveIndicatorState extends State<_SoundWaveIndicator>
   }
 
   double _sinApprox(double x) {
-    // Простая аппроксимация синуса
     x = x % (2 * 3.14159);
     if (x < 0) x += 2 * 3.14159;
     if (x < 3.14159) {

@@ -6,11 +6,6 @@ import 'package:path/path.dart' as p;
 
 part 'app_database.g.dart';
 
-// ============================================
-// ТАБЛИЦЫ (Tables)
-// ============================================
-
-/// Таблица колод карточек
 class Decks extends Table {
   IntColumn get id => integer().autoIncrement()();
   TextColumn get name => text().withLength(min: 1, max: 100)();
@@ -23,7 +18,6 @@ class Decks extends Table {
   DateTimeColumn get lastStudiedAt => dateTime().nullable()();
 }
 
-/// Таблица карточек
 @DataClassName('CardData')
 class Cards extends Table {
   IntColumn get id => integer().autoIncrement()();
@@ -37,15 +31,19 @@ class Cards extends Table {
   TextColumn get backImagePath => text().nullable()();
   TextColumn get frontAudioPath => text().nullable()();
   TextColumn get backAudioPath => text().nullable()();
+
+  // НОВОЕ: Видео URL
+  TextColumn get frontVideoUrl => text().nullable()();
+  TextColumn get backVideoUrl => text().nullable()();
+
   TextColumn get pronunciation => text().nullable()();
   TextColumn get example => text().nullable()();
   TextColumn get notes => text().nullable()();
 
-  // Прогресс обучения
-  IntColumn get easinessFactor =>
-      integer().withDefault(const Constant(250))(); // 2.5 * 100
+  // SM-2
+  IntColumn get easinessFactor => integer().withDefault(const Constant(250))();
   IntColumn get repetitions => integer().withDefault(const Constant(0))();
-  IntColumn get interval => integer().withDefault(const Constant(0))(); // дни
+  IntColumn get interval => integer().withDefault(const Constant(0))();
   DateTimeColumn get nextReviewDate => dateTime().nullable()();
   DateTimeColumn get lastReviewedAt => dateTime().nullable()();
 
@@ -59,17 +57,15 @@ class Cards extends Table {
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
 }
 
-/// История повторений карточек
 class ReviewHistory extends Table {
   IntColumn get id => integer().autoIncrement()();
   IntColumn get cardId =>
       integer().references(Cards, #id, onDelete: KeyAction.cascade)();
-  IntColumn get quality => integer()(); // 0-5 (SM-2 algorithm)
+  IntColumn get quality => integer()();
   IntColumn get timeSpentSeconds => integer()();
   DateTimeColumn get reviewedAt => dateTime().withDefault(currentDateAndTime)();
 }
 
-/// Настройки пользователя
 class Settings extends Table {
   IntColumn get id => integer().autoIncrement()();
   TextColumn get key => text().unique()();
@@ -77,50 +73,51 @@ class Settings extends Table {
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
 }
 
-// ============================================
-// DATABASE
-// ============================================
-
 @DriftDatabase(tables: [Decks, Cards, ReviewHistory, Settings])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 3;
+
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+        onCreate: (m) async {
+          await m.createAll();
+        },
+        onUpgrade: (m, from, to) async {
+          // v1 → v2: ничего не меняли в Cards
+          // v2 → v3: добавляем frontVideoUrl и backVideoUrl
+          if (from < 3) {
+            await m.addColumn(cards, cards.frontVideoUrl);
+            await m.addColumn(cards, cards.backVideoUrl);
+          }
+        },
+      );
 
   // ============================================
   // DECKS QUERIES
   // ============================================
 
-  /// Получить все колоды
   Future<List<Deck>> getAllDecks() => select(decks).get();
 
-  /// Получить колоду по ID
   Future<Deck?> getDeckById(int id) =>
       (select(decks)..where((tbl) => tbl.id.equals(id))).getSingleOrNull();
 
-  /// Создать новую колоду
   Future<int> createDeck(DecksCompanion deck) => into(decks).insert(deck);
 
-  /// Обновить колоду
   Future<bool> updateDeck(Deck deck) => update(decks).replace(deck);
 
-  /// Удалить колоду
   Future<int> deleteDeck(int id) =>
       (delete(decks)..where((tbl) => tbl.id.equals(id))).go();
 
-  /// Обновить статистику колоды
   Future<void> updateDeckStats(int deckId) async {
-    final cardsQuery = select(cards)..where((tbl) => tbl.deckId.equals(deckId));
-
-    final deckCards = await cardsQuery.get();
-    final totalCards = deckCards.length;
-    final masteredCards = deckCards.where((c) => c.isMastered).length;
-
+    final deckCards =
+        await (select(cards)..where((tbl) => tbl.deckId.equals(deckId))).get();
     await (update(decks)..where((tbl) => tbl.id.equals(deckId))).write(
       DecksCompanion(
-        totalCards: Value(totalCards),
-        masteredCards: Value(masteredCards),
+        totalCards: Value(deckCards.length),
+        masteredCards: Value(deckCards.where((c) => c.isMastered).length),
       ),
     );
   }
@@ -129,43 +126,32 @@ class AppDatabase extends _$AppDatabase {
   // CARDS QUERIES
   // ============================================
 
-  /// Получить все карточки колоды
   Future<List<CardData>> getCardsByDeckId(int deckId) =>
       (select(cards)..where((tbl) => tbl.deckId.equals(deckId))).get();
 
-  /// Получить карточку по ID
   Future<CardData?> getCardById(int id) =>
       (select(cards)..where((tbl) => tbl.id.equals(id))).getSingleOrNull();
 
-  /// Создать новую карточку
   Future<int> createCard(CardsCompanion card) async {
     final cardId = await into(cards).insert(card);
-    // Обновляем статистику колоды
-    if (card.deckId.present) {
-      await updateDeckStats(card.deckId.value);
-    }
+    if (card.deckId.present) await updateDeckStats(card.deckId.value);
     return cardId;
   }
 
-  /// Обновить карточку
   Future<bool> updateCard(CardData card) async {
     final result = await update(cards).replace(card);
     await updateDeckStats(card.deckId);
     return result;
   }
 
-  /// Удалить карточку
   Future<int> deleteCard(int id) async {
     final card = await getCardById(id);
     final result =
         await (delete(cards)..where((tbl) => tbl.id.equals(id))).go();
-    if (card != null) {
-      await updateDeckStats(card.deckId);
-    }
+    if (card != null) await updateDeckStats(card.deckId);
     return result;
   }
 
-  /// Получить карточки для повторения
   Future<List<CardData>> getCardsForReview(int deckId) {
     final now = DateTime.now();
     return (select(cards)
@@ -178,28 +164,24 @@ class AppDatabase extends _$AppDatabase {
         .get();
   }
 
-  /// Получить освоенные карточки
   Future<List<CardData>> getMasteredCards(int deckId) => (select(cards)
         ..where(
             (tbl) => tbl.deckId.equals(deckId) & tbl.isMastered.equals(true)))
       .get();
 
   // ============================================
-  // REVIEW HISTORY QUERIES
+  // REVIEW HISTORY
   // ============================================
 
-  /// Добавить запись о повторении
   Future<int> addReviewHistory(ReviewHistoryCompanion history) =>
       into(reviewHistory).insert(history);
 
-  /// Получить историю повторений карточки
   Future<List<ReviewHistoryData>> getCardReviewHistory(int cardId) =>
       (select(reviewHistory)
             ..where((tbl) => tbl.cardId.equals(cardId))
             ..orderBy([(tbl) => OrderingTerm.desc(tbl.reviewedAt)]))
           .get();
 
-  /// Получить статистику за период
   Future<List<ReviewHistoryData>> getReviewHistoryByDateRange(
     DateTime startDate,
     DateTime endDate,
@@ -212,14 +194,12 @@ class AppDatabase extends _$AppDatabase {
           .get();
 
   // ============================================
-  // SETTINGS QUERIES
+  // SETTINGS
   // ============================================
 
-  /// Получить настройку
   Future<Setting?> getSetting(String key) =>
       (select(settings)..where((tbl) => tbl.key.equals(key))).getSingleOrNull();
 
-  /// Сохранить настройку
   Future<void> setSetting(String key, String value) async {
     final existing = await getSetting(key);
     if (existing != null) {
@@ -231,22 +211,14 @@ class AppDatabase extends _$AppDatabase {
       );
     } else {
       await into(settings).insert(
-        SettingsCompanion(
-          key: Value(key),
-          value: Value(value),
-        ),
+        SettingsCompanion(key: Value(key), value: Value(value)),
       );
     }
   }
 
-  /// Удалить настройку
   Future<int> deleteSetting(String key) =>
       (delete(settings)..where((tbl) => tbl.key.equals(key))).go();
 }
-
-// ============================================
-// DATABASE CONNECTION
-// ============================================
 
 LazyDatabase _openConnection() {
   return LazyDatabase(() async {

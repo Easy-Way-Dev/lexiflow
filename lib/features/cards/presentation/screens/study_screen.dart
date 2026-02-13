@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:lexiflow/core/database/app_database.dart';
 import 'package:lexiflow/core/utils/audio_helper.dart';
+import 'package:lexiflow/core/utils/video_helper.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:drift/drift.dart' as drift;
 
@@ -91,7 +92,6 @@ class _StudyScreenState extends State<StudyScreen>
 
     final card = _cards[_currentIndex];
     final startTime = DateTime.now();
-
     if (quality >= 3) _correctAnswers++;
 
     final result = _calculateSM2(
@@ -110,6 +110,8 @@ class _StudyScreenState extends State<StudyScreen>
       backImagePath: drift.Value(card.backImagePath),
       frontAudioPath: drift.Value(card.frontAudioPath),
       backAudioPath: drift.Value(card.backAudioPath),
+      frontVideoUrl: drift.Value(card.frontVideoUrl),
+      backVideoUrl: drift.Value(card.backVideoUrl),
       pronunciation: drift.Value(card.pronunciation),
       example: drift.Value(card.example),
       notes: drift.Value(card.notes),
@@ -288,10 +290,8 @@ class _StudyScreenState extends State<StudyScreen>
         children: [
           Icon(Icons.check_circle_outline, size: 80, color: Colors.green[400]),
           const SizedBox(height: 16),
-          Text(
-            'Нет карточек для изучения',
-            style: Theme.of(context).textTheme.headlineSmall,
-          ),
+          Text('Нет карточек для изучения',
+              style: Theme.of(context).textTheme.headlineSmall),
           const SizedBox(height: 8),
           const Text(
             'Все карточки изучены!\nВозвращайтесь позже для повторения.',
@@ -383,8 +383,10 @@ class _StudyScreenState extends State<StudyScreen>
     final text = isFront ? card.frontText : card.backText;
     final imagePath = isFront ? card.frontImagePath : card.backImagePath;
     final audioPath = isFront ? card.frontAudioPath : card.backAudioPath;
+    final videoUrl = isFront ? card.frontVideoUrl : card.backVideoUrl;
     final hasImage = imagePath != null && imagePath.isNotEmpty;
     final hasAudio = audioPath != null && audioPath.isNotEmpty;
+    final hasVideo = videoUrl != null && videoUrl.isNotEmpty;
 
     final backgroundColor = isFront
         ? Theme.of(context).colorScheme.primaryContainer
@@ -421,15 +423,12 @@ class _StudyScreenState extends State<StudyScreen>
                       height: 180,
                       width: double.infinity,
                       fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Container(
-                          height: 180,
-                          color: Colors.grey[300],
-                          child: const Center(
-                            child: Icon(Icons.broken_image, size: 48),
-                          ),
-                        );
-                      },
+                      errorBuilder: (context, error, stackTrace) => Container(
+                        height: 180,
+                        color: Colors.grey[300],
+                        child: const Center(
+                            child: Icon(Icons.broken_image, size: 48)),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 20),
@@ -463,6 +462,12 @@ class _StudyScreenState extends State<StudyScreen>
                 if (hasAudio) ...[
                   const SizedBox(height: 16),
                   _AudioPlayButton(audioPath: audioPath),
+                ],
+
+                // ВИДЕО КНОПКА
+                if (hasVideo) ...[
+                  const SizedBox(height: 12),
+                  _VideoButton(videoUrl: videoUrl),
                 ],
 
                 // ПРИМЕР (только обратная)
@@ -500,29 +505,25 @@ class _StudyScreenState extends State<StudyScreen>
       alignment: WrapAlignment.center,
       children: [
         _buildAnswerButton(
-          label: 'Не помню',
-          icon: Icons.close,
-          color: Colors.red,
-          quality: 0,
-        ),
+            label: 'Не помню',
+            icon: Icons.close,
+            color: Colors.red,
+            quality: 0),
         _buildAnswerButton(
-          label: 'Сложно',
-          icon: Icons.sentiment_dissatisfied,
-          color: Colors.orange,
-          quality: 3,
-        ),
+            label: 'Сложно',
+            icon: Icons.sentiment_dissatisfied,
+            color: Colors.orange,
+            quality: 3),
         _buildAnswerButton(
-          label: 'Хорошо',
-          icon: Icons.sentiment_satisfied,
-          color: Colors.blue,
-          quality: 4,
-        ),
+            label: 'Хорошо',
+            icon: Icons.sentiment_satisfied,
+            color: Colors.blue,
+            quality: 4),
         _buildAnswerButton(
-          label: 'Легко',
-          icon: Icons.sentiment_very_satisfied,
-          color: Colors.green,
-          quality: 5,
-        ),
+            label: 'Легко',
+            icon: Icons.sentiment_very_satisfied,
+            color: Colors.green,
+            quality: 5),
       ],
     );
   }
@@ -578,14 +579,50 @@ class _AudioPlayButtonState extends State<_AudioPlayButton> {
           await AudioHelper.playAudio(widget.audioPath);
         }
       },
-      icon: Icon(
-        _isPlaying ? Icons.stop_circle : Icons.volume_up,
-        size: 22,
-      ),
+      icon: Icon(_isPlaying ? Icons.stop_circle : Icons.volume_up, size: 22),
       label: Text(_isPlaying ? 'Стоп' : 'Слушать'),
       style: OutlinedButton.styleFrom(
         foregroundColor: Colors.white,
         side: const BorderSide(color: Colors.white54),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      ),
+    );
+  }
+}
+
+// ========== КНОПКА ВИДЕО ==========
+class _VideoButton extends StatelessWidget {
+  final String videoUrl;
+  const _VideoButton({required this.videoUrl});
+
+  @override
+  Widget build(BuildContext context) {
+    final isYouTube = VideoHelper.isYouTubeUrl(videoUrl);
+    final isYouGlish = VideoHelper.isYouGlishUrl(videoUrl);
+
+    return OutlinedButton.icon(
+      onPressed: () => VideoHelper.openVideo(context, videoUrl),
+      icon: Icon(
+        isYouTube
+            ? Icons.smart_display
+            : isYouGlish
+                ? Icons.record_voice_over
+                : Icons.play_circle,
+        size: 22,
+        color: isYouTube ? Colors.red : Colors.white,
+      ),
+      label: Text(
+        isYouTube
+            ? 'YouTube'
+            : isYouGlish
+                ? 'YouGlish'
+                : 'Смотреть видео',
+      ),
+      style: OutlinedButton.styleFrom(
+        foregroundColor: Colors.white,
+        side: BorderSide(
+          color: isYouTube ? Colors.red : Colors.white54,
+        ),
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
       ),
     );

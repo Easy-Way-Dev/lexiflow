@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lexiflow/core/database/app_database.dart';
+import 'package:lexiflow/core/services/import_export_service.dart';
+import 'package:lexiflow/features/cards/presentation/screens/import_screen.dart';
 import 'package:drift/drift.dart' as drift;
 import 'package:lexiflow/features/cards/presentation/screens/cards_list_screen.dart';
 
@@ -57,7 +59,6 @@ class _DecksScreenState extends State<DecksScreen> {
   Future<void> _showDeckDialog({Deck? deckToEdit}) async {
     final bool isEditing = deckToEdit != null;
 
-    // Заполняем поля текущими данными если редактируем
     final nameController = TextEditingController(
       text: isEditing ? deckToEdit.name : '',
     );
@@ -154,7 +155,6 @@ class _DecksScreenState extends State<DecksScreen> {
     if (result == true && nameController.text.isNotEmpty) {
       try {
         if (isEditing) {
-          // ОБНОВЛЯЕМ существующую колоду
           await widget.db.into(widget.db.decks).insertOnConflictUpdate(
                 DecksCompanion(
                   id: drift.Value(deckToEdit.id),
@@ -166,7 +166,6 @@ class _DecksScreenState extends State<DecksScreen> {
                   ),
                   sourceLanguage: drift.Value(sourceLang),
                   targetLanguage: drift.Value(targetLang),
-                  // Сохраняем статистику
                   totalCards: drift.Value(deckToEdit.totalCards),
                   masteredCards: drift.Value(deckToEdit.masteredCards),
                   createdAt: drift.Value(deckToEdit.createdAt),
@@ -181,7 +180,6 @@ class _DecksScreenState extends State<DecksScreen> {
             );
           }
         } else {
-          // СОЗДАЁМ новую колоду
           await widget.db.createDeck(
             DecksCompanion(
               name: drift.Value(nameController.text.trim()),
@@ -256,12 +254,137 @@ class _DecksScreenState extends State<DecksScreen> {
     }
   }
 
+  // ============ ЭКСПОРТ КОЛОДЫ ============
+  Future<void> _exportDeck(Deck deck) async {
+    final format = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Выберите формат экспорта'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.table_chart, color: Colors.green),
+              title: const Text('CSV'),
+              subtitle: const Text('Для Excel, Google Sheets'),
+              onTap: () => Navigator.pop(context, 'csv'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.code, color: Colors.blue),
+              title: const Text('JSON'),
+              subtitle: const Text('Структурированный формат'),
+              onTap: () => Navigator.pop(context, 'json'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.inventory_2, color: Colors.purple),
+              title: const Text('LexiFlow'),
+              subtitle: const Text('С изображениями и аудио'),
+              onTap: () => Navigator.pop(context, 'lexiflow'),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (format == null) return;
+
+    try {
+      final service = ImportExportService(widget.db);
+      String filePath;
+
+      switch (format) {
+        case 'csv':
+          filePath = await service.exportToCSV(deck.id);
+          break;
+        case 'json':
+          filePath = await service.exportToJSON(deck.id);
+          break;
+        case 'lexiflow':
+          filePath = await service.exportToLexiflow(deck.id);
+          break;
+        default:
+          return;
+      }
+
+      if (mounted) {
+        final share = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('✅ Экспорт завершён'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Файл сохранён:'),
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[200],
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    filePath.split('/').last,
+                    style: const TextStyle(fontSize: 12),
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Закрыть'),
+              ),
+              FilledButton.icon(
+                onPressed: () => Navigator.pop(context, true),
+                icon: const Icon(Icons.share),
+                label: const Text('Поделиться'),
+              ),
+            ],
+          ),
+        );
+
+        if (share == true) {
+          await ImportExportService.shareFile(filePath);
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Ошибка экспорта: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  // ============ ИМПОРТ ============
+  Future<void> _import() async {
+    final result = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ImportScreen(db: widget.db),
+      ),
+    );
+
+    if (result == true) {
+      await _loadDecks();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('LexiFlow'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.file_download),
+            onPressed: _import,
+            tooltip: 'Импорт',
+          ),
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: _loadDecks,
@@ -297,16 +420,28 @@ class _DecksScreenState extends State<DecksScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Создайте первую колоду для изучения слов',
+            'Создайте новую или импортируйте готовую',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: Colors.grey[500],
                 ),
           ),
           const SizedBox(height: 24),
-          FilledButton.icon(
-            onPressed: _createDeck,
-            icon: const Icon(Icons.add),
-            label: const Text('Создать колоду'),
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            alignment: WrapAlignment.center,
+            children: [
+              FilledButton.icon(
+                onPressed: _createDeck,
+                icon: const Icon(Icons.add),
+                label: const Text('Создать колоду'),
+              ),
+              OutlinedButton.icon(
+                onPressed: _import,
+                icon: const Icon(Icons.file_download),
+                label: const Text('Импортировать'),
+              ),
+            ],
           ),
         ],
       ),
@@ -377,10 +512,19 @@ class _DecksScreenState extends State<DecksScreen> {
                       ],
                     ),
                   ),
-                  // Меню с редактированием и удалением
                   PopupMenuButton<String>(
                     icon: const Icon(Icons.more_vert),
                     itemBuilder: (context) => [
+                      const PopupMenuItem(
+                        value: 'export',
+                        child: Row(
+                          children: [
+                            Icon(Icons.file_upload, color: Colors.green),
+                            SizedBox(width: 8),
+                            Text('Экспортировать'),
+                          ],
+                        ),
+                      ),
                       const PopupMenuItem(
                         value: 'edit',
                         child: Row(
@@ -406,7 +550,9 @@ class _DecksScreenState extends State<DecksScreen> {
                       ),
                     ],
                     onSelected: (value) {
-                      if (value == 'edit') {
+                      if (value == 'export') {
+                        _exportDeck(deck);
+                      } else if (value == 'edit') {
                         _editDeck(deck);
                       } else if (value == 'delete') {
                         _deleteDeck(deck);

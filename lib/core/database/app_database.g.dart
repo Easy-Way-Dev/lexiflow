@@ -547,6 +547,18 @@ class $CardsTable extends Cards with TableInfo<$CardsTable, CardData> {
   late final GeneratedColumn<String> backAudioPath = GeneratedColumn<String>(
       'back_audio_path', aliasedName, true,
       type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _frontVideoUrlMeta =
+      const VerificationMeta('frontVideoUrl');
+  @override
+  late final GeneratedColumn<String> frontVideoUrl = GeneratedColumn<String>(
+      'front_video_url', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _backVideoUrlMeta =
+      const VerificationMeta('backVideoUrl');
+  @override
+  late final GeneratedColumn<String> backVideoUrl = GeneratedColumn<String>(
+      'back_video_url', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
   static const VerificationMeta _pronunciationMeta =
       const VerificationMeta('pronunciation');
   @override
@@ -652,6 +664,8 @@ class $CardsTable extends Cards with TableInfo<$CardsTable, CardData> {
         backImagePath,
         frontAudioPath,
         backAudioPath,
+        frontVideoUrl,
+        backVideoUrl,
         pronunciation,
         example,
         notes,
@@ -720,6 +734,18 @@ class $CardsTable extends Cards with TableInfo<$CardsTable, CardData> {
           _backAudioPathMeta,
           backAudioPath.isAcceptableOrUnknown(
               data['back_audio_path']!, _backAudioPathMeta));
+    }
+    if (data.containsKey('front_video_url')) {
+      context.handle(
+          _frontVideoUrlMeta,
+          frontVideoUrl.isAcceptableOrUnknown(
+              data['front_video_url']!, _frontVideoUrlMeta));
+    }
+    if (data.containsKey('back_video_url')) {
+      context.handle(
+          _backVideoUrlMeta,
+          backVideoUrl.isAcceptableOrUnknown(
+              data['back_video_url']!, _backVideoUrlMeta));
     }
     if (data.containsKey('pronunciation')) {
       context.handle(
@@ -814,6 +840,10 @@ class $CardsTable extends Cards with TableInfo<$CardsTable, CardData> {
           DriftSqlType.string, data['${effectivePrefix}front_audio_path']),
       backAudioPath: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}back_audio_path']),
+      frontVideoUrl: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}front_video_url']),
+      backVideoUrl: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}back_video_url']),
       pronunciation: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}pronunciation']),
       example: attachedDatabase.typeMapping
@@ -858,6 +888,8 @@ class CardData extends DataClass implements Insertable<CardData> {
   final String? backImagePath;
   final String? frontAudioPath;
   final String? backAudioPath;
+  final String? frontVideoUrl;
+  final String? backVideoUrl;
   final String? pronunciation;
   final String? example;
   final String? notes;
@@ -880,6 +912,8 @@ class CardData extends DataClass implements Insertable<CardData> {
       this.backImagePath,
       this.frontAudioPath,
       this.backAudioPath,
+      this.frontVideoUrl,
+      this.backVideoUrl,
       this.pronunciation,
       this.example,
       this.notes,
@@ -911,6 +945,12 @@ class CardData extends DataClass implements Insertable<CardData> {
     }
     if (!nullToAbsent || backAudioPath != null) {
       map['back_audio_path'] = Variable<String>(backAudioPath);
+    }
+    if (!nullToAbsent || frontVideoUrl != null) {
+      map['front_video_url'] = Variable<String>(frontVideoUrl);
+    }
+    if (!nullToAbsent || backVideoUrl != null) {
+      map['back_video_url'] = Variable<String>(backVideoUrl);
     }
     if (!nullToAbsent || pronunciation != null) {
       map['pronunciation'] = Variable<String>(pronunciation);
@@ -956,6 +996,12 @@ class CardData extends DataClass implements Insertable<CardData> {
       backAudioPath: backAudioPath == null && nullToAbsent
           ? const Value.absent()
           : Value(backAudioPath),
+      frontVideoUrl: frontVideoUrl == null && nullToAbsent
+          ? const Value.absent()
+          : Value(frontVideoUrl),
+      backVideoUrl: backVideoUrl == null && nullToAbsent
+          ? const Value.absent()
+          : Value(backVideoUrl),
       pronunciation: pronunciation == null && nullToAbsent
           ? const Value.absent()
           : Value(pronunciation),
@@ -993,6 +1039,8 @@ class CardData extends DataClass implements Insertable<CardData> {
       backImagePath: serializer.fromJson<String?>(json['backImagePath']),
       frontAudioPath: serializer.fromJson<String?>(json['frontAudioPath']),
       backAudioPath: serializer.fromJson<String?>(json['backAudioPath']),
+      frontVideoUrl: serializer.fromJson<String?>(json['frontVideoUrl']),
+      backVideoUrl: serializer.fromJson<String?>(json['backVideoUrl']),
       pronunciation: serializer.fromJson<String?>(json['pronunciation']),
       example: serializer.fromJson<String?>(json['example']),
       notes: serializer.fromJson<String?>(json['notes']),
@@ -1020,6 +1068,8 @@ class CardData extends DataClass implements Insertable<CardData> {
       'backImagePath': serializer.toJson<String?>(backImagePath),
       'frontAudioPath': serializer.toJson<String?>(frontAudioPath),
       'backAudioPath': serializer.toJson<String?>(backAudioPath),
+      'frontVideoUrl': serializer.toJson<String?>(frontVideoUrl),
+      'backVideoUrl': serializer.toJson<String?>(backVideoUrl),
       'pronunciation': serializer.toJson<String?>(pronunciation),
       'example': serializer.toJson<String?>(example),
       'notes': serializer.toJson<String?>(notes),
@@ -1045,6 +1095,8 @@ class CardData extends DataClass implements Insertable<CardData> {
           Value<String?> backImagePath = const Value.absent(),
           Value<String?> frontAudioPath = const Value.absent(),
           Value<String?> backAudioPath = const Value.absent(),
+          Value<String?> frontVideoUrl = const Value.absent(),
+          Value<String?> backVideoUrl = const Value.absent(),
           Value<String?> pronunciation = const Value.absent(),
           Value<String?> example = const Value.absent(),
           Value<String?> notes = const Value.absent(),
@@ -1071,6 +1123,10 @@ class CardData extends DataClass implements Insertable<CardData> {
             frontAudioPath.present ? frontAudioPath.value : this.frontAudioPath,
         backAudioPath:
             backAudioPath.present ? backAudioPath.value : this.backAudioPath,
+        frontVideoUrl:
+            frontVideoUrl.present ? frontVideoUrl.value : this.frontVideoUrl,
+        backVideoUrl:
+            backVideoUrl.present ? backVideoUrl.value : this.backVideoUrl,
         pronunciation:
             pronunciation.present ? pronunciation.value : this.pronunciation,
         example: example.present ? example.value : this.example,
@@ -1106,6 +1162,12 @@ class CardData extends DataClass implements Insertable<CardData> {
       backAudioPath: data.backAudioPath.present
           ? data.backAudioPath.value
           : this.backAudioPath,
+      frontVideoUrl: data.frontVideoUrl.present
+          ? data.frontVideoUrl.value
+          : this.frontVideoUrl,
+      backVideoUrl: data.backVideoUrl.present
+          ? data.backVideoUrl.value
+          : this.backVideoUrl,
       pronunciation: data.pronunciation.present
           ? data.pronunciation.value
           : this.pronunciation,
@@ -1147,6 +1209,8 @@ class CardData extends DataClass implements Insertable<CardData> {
           ..write('backImagePath: $backImagePath, ')
           ..write('frontAudioPath: $frontAudioPath, ')
           ..write('backAudioPath: $backAudioPath, ')
+          ..write('frontVideoUrl: $frontVideoUrl, ')
+          ..write('backVideoUrl: $backVideoUrl, ')
           ..write('pronunciation: $pronunciation, ')
           ..write('example: $example, ')
           ..write('notes: $notes, ')
@@ -1174,6 +1238,8 @@ class CardData extends DataClass implements Insertable<CardData> {
         backImagePath,
         frontAudioPath,
         backAudioPath,
+        frontVideoUrl,
+        backVideoUrl,
         pronunciation,
         example,
         notes,
@@ -1200,6 +1266,8 @@ class CardData extends DataClass implements Insertable<CardData> {
           other.backImagePath == this.backImagePath &&
           other.frontAudioPath == this.frontAudioPath &&
           other.backAudioPath == this.backAudioPath &&
+          other.frontVideoUrl == this.frontVideoUrl &&
+          other.backVideoUrl == this.backVideoUrl &&
           other.pronunciation == this.pronunciation &&
           other.example == this.example &&
           other.notes == this.notes &&
@@ -1224,6 +1292,8 @@ class CardsCompanion extends UpdateCompanion<CardData> {
   final Value<String?> backImagePath;
   final Value<String?> frontAudioPath;
   final Value<String?> backAudioPath;
+  final Value<String?> frontVideoUrl;
+  final Value<String?> backVideoUrl;
   final Value<String?> pronunciation;
   final Value<String?> example;
   final Value<String?> notes;
@@ -1246,6 +1316,8 @@ class CardsCompanion extends UpdateCompanion<CardData> {
     this.backImagePath = const Value.absent(),
     this.frontAudioPath = const Value.absent(),
     this.backAudioPath = const Value.absent(),
+    this.frontVideoUrl = const Value.absent(),
+    this.backVideoUrl = const Value.absent(),
     this.pronunciation = const Value.absent(),
     this.example = const Value.absent(),
     this.notes = const Value.absent(),
@@ -1269,6 +1341,8 @@ class CardsCompanion extends UpdateCompanion<CardData> {
     this.backImagePath = const Value.absent(),
     this.frontAudioPath = const Value.absent(),
     this.backAudioPath = const Value.absent(),
+    this.frontVideoUrl = const Value.absent(),
+    this.backVideoUrl = const Value.absent(),
     this.pronunciation = const Value.absent(),
     this.example = const Value.absent(),
     this.notes = const Value.absent(),
@@ -1294,6 +1368,8 @@ class CardsCompanion extends UpdateCompanion<CardData> {
     Expression<String>? backImagePath,
     Expression<String>? frontAudioPath,
     Expression<String>? backAudioPath,
+    Expression<String>? frontVideoUrl,
+    Expression<String>? backVideoUrl,
     Expression<String>? pronunciation,
     Expression<String>? example,
     Expression<String>? notes,
@@ -1317,6 +1393,8 @@ class CardsCompanion extends UpdateCompanion<CardData> {
       if (backImagePath != null) 'back_image_path': backImagePath,
       if (frontAudioPath != null) 'front_audio_path': frontAudioPath,
       if (backAudioPath != null) 'back_audio_path': backAudioPath,
+      if (frontVideoUrl != null) 'front_video_url': frontVideoUrl,
+      if (backVideoUrl != null) 'back_video_url': backVideoUrl,
       if (pronunciation != null) 'pronunciation': pronunciation,
       if (example != null) 'example': example,
       if (notes != null) 'notes': notes,
@@ -1342,6 +1420,8 @@ class CardsCompanion extends UpdateCompanion<CardData> {
       Value<String?>? backImagePath,
       Value<String?>? frontAudioPath,
       Value<String?>? backAudioPath,
+      Value<String?>? frontVideoUrl,
+      Value<String?>? backVideoUrl,
       Value<String?>? pronunciation,
       Value<String?>? example,
       Value<String?>? notes,
@@ -1364,6 +1444,8 @@ class CardsCompanion extends UpdateCompanion<CardData> {
       backImagePath: backImagePath ?? this.backImagePath,
       frontAudioPath: frontAudioPath ?? this.frontAudioPath,
       backAudioPath: backAudioPath ?? this.backAudioPath,
+      frontVideoUrl: frontVideoUrl ?? this.frontVideoUrl,
+      backVideoUrl: backVideoUrl ?? this.backVideoUrl,
       pronunciation: pronunciation ?? this.pronunciation,
       example: example ?? this.example,
       notes: notes ?? this.notes,
@@ -1406,6 +1488,12 @@ class CardsCompanion extends UpdateCompanion<CardData> {
     }
     if (backAudioPath.present) {
       map['back_audio_path'] = Variable<String>(backAudioPath.value);
+    }
+    if (frontVideoUrl.present) {
+      map['front_video_url'] = Variable<String>(frontVideoUrl.value);
+    }
+    if (backVideoUrl.present) {
+      map['back_video_url'] = Variable<String>(backVideoUrl.value);
     }
     if (pronunciation.present) {
       map['pronunciation'] = Variable<String>(pronunciation.value);
@@ -1460,6 +1548,8 @@ class CardsCompanion extends UpdateCompanion<CardData> {
           ..write('backImagePath: $backImagePath, ')
           ..write('frontAudioPath: $frontAudioPath, ')
           ..write('backAudioPath: $backAudioPath, ')
+          ..write('frontVideoUrl: $frontVideoUrl, ')
+          ..write('backVideoUrl: $backVideoUrl, ')
           ..write('pronunciation: $pronunciation, ')
           ..write('example: $example, ')
           ..write('notes: $notes, ')
@@ -2393,6 +2483,8 @@ typedef $$CardsTableCreateCompanionBuilder = CardsCompanion Function({
   Value<String?> backImagePath,
   Value<String?> frontAudioPath,
   Value<String?> backAudioPath,
+  Value<String?> frontVideoUrl,
+  Value<String?> backVideoUrl,
   Value<String?> pronunciation,
   Value<String?> example,
   Value<String?> notes,
@@ -2416,6 +2508,8 @@ typedef $$CardsTableUpdateCompanionBuilder = CardsCompanion Function({
   Value<String?> backImagePath,
   Value<String?> frontAudioPath,
   Value<String?> backAudioPath,
+  Value<String?> frontVideoUrl,
+  Value<String?> backVideoUrl,
   Value<String?> pronunciation,
   Value<String?> example,
   Value<String?> notes,
@@ -2495,6 +2589,12 @@ class $$CardsTableFilterComposer extends Composer<_$AppDatabase, $CardsTable> {
 
   ColumnFilters<String> get backAudioPath => $composableBuilder(
       column: $table.backAudioPath, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get frontVideoUrl => $composableBuilder(
+      column: $table.frontVideoUrl, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get backVideoUrl => $composableBuilder(
+      column: $table.backVideoUrl, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get pronunciation => $composableBuilder(
       column: $table.pronunciation, builder: (column) => ColumnFilters(column));
@@ -2615,6 +2715,14 @@ class $$CardsTableOrderingComposer
       column: $table.backAudioPath,
       builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<String> get frontVideoUrl => $composableBuilder(
+      column: $table.frontVideoUrl,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get backVideoUrl => $composableBuilder(
+      column: $table.backVideoUrl,
+      builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<String> get pronunciation => $composableBuilder(
       column: $table.pronunciation,
       builder: (column) => ColumnOrderings(column));
@@ -2710,6 +2818,12 @@ class $$CardsTableAnnotationComposer
 
   GeneratedColumn<String> get backAudioPath => $composableBuilder(
       column: $table.backAudioPath, builder: (column) => column);
+
+  GeneratedColumn<String> get frontVideoUrl => $composableBuilder(
+      column: $table.frontVideoUrl, builder: (column) => column);
+
+  GeneratedColumn<String> get backVideoUrl => $composableBuilder(
+      column: $table.backVideoUrl, builder: (column) => column);
 
   GeneratedColumn<String> get pronunciation => $composableBuilder(
       column: $table.pronunciation, builder: (column) => column);
@@ -2823,6 +2937,8 @@ class $$CardsTableTableManager extends RootTableManager<
             Value<String?> backImagePath = const Value.absent(),
             Value<String?> frontAudioPath = const Value.absent(),
             Value<String?> backAudioPath = const Value.absent(),
+            Value<String?> frontVideoUrl = const Value.absent(),
+            Value<String?> backVideoUrl = const Value.absent(),
             Value<String?> pronunciation = const Value.absent(),
             Value<String?> example = const Value.absent(),
             Value<String?> notes = const Value.absent(),
@@ -2846,6 +2962,8 @@ class $$CardsTableTableManager extends RootTableManager<
             backImagePath: backImagePath,
             frontAudioPath: frontAudioPath,
             backAudioPath: backAudioPath,
+            frontVideoUrl: frontVideoUrl,
+            backVideoUrl: backVideoUrl,
             pronunciation: pronunciation,
             example: example,
             notes: notes,
@@ -2869,6 +2987,8 @@ class $$CardsTableTableManager extends RootTableManager<
             Value<String?> backImagePath = const Value.absent(),
             Value<String?> frontAudioPath = const Value.absent(),
             Value<String?> backAudioPath = const Value.absent(),
+            Value<String?> frontVideoUrl = const Value.absent(),
+            Value<String?> backVideoUrl = const Value.absent(),
             Value<String?> pronunciation = const Value.absent(),
             Value<String?> example = const Value.absent(),
             Value<String?> notes = const Value.absent(),
@@ -2892,6 +3012,8 @@ class $$CardsTableTableManager extends RootTableManager<
             backImagePath: backImagePath,
             frontAudioPath: frontAudioPath,
             backAudioPath: backAudioPath,
+            frontVideoUrl: frontVideoUrl,
+            backVideoUrl: backVideoUrl,
             pronunciation: pronunciation,
             example: example,
             notes: notes,

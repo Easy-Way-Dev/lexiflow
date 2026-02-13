@@ -1,0 +1,153 @@
+{
+  "deck": {
+    "name": "Английские слова - Базовый уровень",
+    "description": "20 самых важных фраз для начинающих",
+    "source_language": "en",
+    "target_language": "ru",
+    "exported_at": "2026-02-11T20:00:00Z",
+    "app": "LexiFlow",
+    "version": "1.0"
+  },
+  "cards": [
+    {
+      "front_text": "Hello",
+      "back_text": "Привет",
+      "pronunciation": "хэлоу",
+      "example": "Hello, how are you?",
+      "notes": "Приветствие"
+    },
+    {
+      "front_text": "Goodbye",
+      "back_text": "До свидания",
+      "pronunciation": "гудбай",
+      "example": "Goodbye, see you later!",
+      "notes": "Прощание"
+    },
+    {
+      "front_text": "Thank you",
+      "back_text": "Спасибо",
+      "pronunciation": "сэнк ю",
+      "example": "Thank you very much!",
+      "notes": "Благодарность"
+    },
+    {
+      "front_text": "Please",
+      "back_text": "Пожалуйста",
+      "pronunciation": "плиз",
+      "example": "Please help me.",
+      "notes": "Вежливая просьба"
+    },
+    {
+      "front_text": "Sorry",
+      "back_text": "Извините",
+      "pronunciation": "сори",
+      "example": "I'm sorry for being late.",
+      "notes": "Извинение"
+    },
+    {
+      "front_text": "Yes",
+      "back_text": "Да",
+      "pronunciation": "йес",
+      "example": "Yes, I agree.",
+      "notes": "Согласие"
+    },
+    {
+      "front_text": "No",
+      "back_text": "Нет",
+      "pronunciation": "ноу",
+      "example": "No, thank you.",
+      "notes": "Отказ"
+    },
+    {
+      "front_text": "Good morning",
+      "back_text": "Доброе утро",
+      "pronunciation": "гуд морнинг",
+      "example": "Good morning, everyone!",
+      "notes": "Утреннее приветствие"
+    },
+    {
+      "front_text": "Good night",
+      "back_text": "Спокойной ночи",
+      "pronunciation": "гуд найт",
+      "example": "Good night, sleep well.",
+      "notes": "Пожелание на ночь"
+    },
+    {
+      "front_text": "How are you",
+      "back_text": "Как дела",
+      "pronunciation": "хау ар ю",
+      "example": "How are you today?",
+      "notes": "Вопрос о самочувствии"
+    },
+    {
+      "front_text": "I'm fine",
+      "back_text": "У меня всё хорошо",
+      "pronunciation": "айм файн",
+      "example": "I'm fine, thank you.",
+      "notes": "Ответ на вопрос"
+    },
+    {
+      "front_text": "What's your name",
+      "back_text": "Как тебя зовут",
+      "pronunciation": "вотс ёр нейм",
+      "example": "What's your name?",
+      "notes": "Знакомство"
+    },
+    {
+      "front_text": "My name is",
+      "back_text": "Меня зовут",
+      "pronunciation": "май нейм из",
+      "example": "My name is John.",
+      "notes": "Представление"
+    },
+    {
+      "front_text": "Nice to meet you",
+      "back_text": "Приятно познакомиться",
+      "pronunciation": "найс ту мит ю",
+      "example": "Nice to meet you!",
+      "notes": "При знакомстве"
+    },
+    {
+      "front_text": "Where are you from",
+      "back_text": "Откуда ты",
+      "pronunciation": "вэр ар ю фром",
+      "example": "Where are you from?",
+      "notes": "Вопрос о происхождении"
+    },
+    {
+      "front_text": "I don't understand",
+      "back_text": "Я не понимаю",
+      "pronunciation": "ай донт андерстэнд",
+      "example": "I don't understand this.",
+      "notes": "Непонимание"
+    },
+    {
+      "front_text": "Can you help me",
+      "back_text": "Можешь мне помочь",
+      "pronunciation": "кэн ю хелп ми",
+      "example": "Can you help me, please?",
+      "notes": "Просьба о помощи"
+    },
+    {
+      "front_text": "How much",
+      "back_text": "Сколько стоит",
+      "pronunciation": "хау мач",
+      "example": "How much does it cost?",
+      "notes": "Вопрос о цене"
+    },
+    {
+      "front_text": "Excuse me",
+      "back_text": "Простите",
+      "pronunciation": "экскьюз ми",
+      "example": "Excuse me, where is the station?",
+      "notes": "Обращение к незнакомцу"
+    },
+    {
+      "front_text": "See you",
+      "back_text": "Увидимся",
+      "pronunciation": "си ю",
+      "example": "See you tomorrow!",
+      "notes": "Прощание неформальное"
+    }
+  ]
+}
