@@ -1,8 +1,10 @@
+import 'dart:io';
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:lexiflow/core/database/app_database.dart';
+import 'package:lexiflow/core/utils/audio_helper.dart';
+import 'package:audioplayers/audioplayers.dart';
 import 'package:drift/drift.dart' as drift;
-import 'dart:math' as math;
-import 'dart:io';
 
 class StudyScreen extends StatefulWidget {
   final AppDatabase db;
@@ -26,6 +28,7 @@ class _StudyScreenState extends State<StudyScreen>
   int _currentIndex = 0;
   bool _isFlipped = false;
   bool _isLoading = true;
+  int _correctAnswers = 0;
 
   late AnimationController _flipController;
   late Animation<double> _flipAnimation;
@@ -42,7 +45,6 @@ class _StudyScreenState extends State<StudyScreen>
       duration: const Duration(milliseconds: 600),
       vsync: this,
     );
-
     _flipAnimation = Tween<double>(begin: 0, end: 1).animate(
       CurvedAnimation(parent: _flipController, curve: Curves.easeInOut),
     );
@@ -52,7 +54,6 @@ class _StudyScreenState extends State<StudyScreen>
     setState(() => _isLoading = true);
     try {
       final cards = await widget.db.getCardsForReview(widget.deckId);
-
       if (cards.isEmpty) {
         final allCards = await widget.db.getCardsByDeckId(widget.deckId);
         setState(() {
@@ -77,9 +78,7 @@ class _StudyScreenState extends State<StudyScreen>
 
   void _flipCard() {
     if (_flipController.isAnimating) return;
-
     setState(() => _isFlipped = !_isFlipped);
-
     if (_isFlipped) {
       _flipController.forward();
     } else {
@@ -92,6 +91,8 @@ class _StudyScreenState extends State<StudyScreen>
 
     final card = _cards[_currentIndex];
     final startTime = DateTime.now();
+
+    if (quality >= 3) _correctAnswers++;
 
     final result = _calculateSM2(
       quality: quality,
@@ -129,7 +130,6 @@ class _StudyScreenState extends State<StudyScreen>
 
     try {
       await widget.db.into(widget.db.cards).insertOnConflictUpdate(updatedCard);
-
       await widget.db.addReviewHistory(
         ReviewHistoryCompanion(
           cardId: drift.Value(card.id),
@@ -138,7 +138,6 @@ class _StudyScreenState extends State<StudyScreen>
               drift.Value(DateTime.now().difference(startTime).inSeconds),
         ),
       );
-
       _nextCard();
     } catch (e) {
       if (mounted) {
@@ -157,7 +156,6 @@ class _StudyScreenState extends State<StudyScreen>
   }) {
     double newEF =
         easinessFactor + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02));
-
     if (newEF < 1.3) newEF = 1.3;
 
     int newRepetitions;
@@ -168,7 +166,6 @@ class _StudyScreenState extends State<StudyScreen>
       newInterval = 0;
     } else {
       newRepetitions = repetitions + 1;
-
       if (newRepetitions == 1) {
         newInterval = 1;
       } else if (newRepetitions == 2) {
@@ -186,6 +183,7 @@ class _StudyScreenState extends State<StudyScreen>
   }
 
   void _nextCard() {
+    AudioHelper.stopAudio();
     if (_currentIndex < _cards.length - 1) {
       setState(() {
         _currentIndex++;
@@ -213,14 +211,15 @@ class _StudyScreenState extends State<StudyScreen>
           mainAxisSize: MainAxisSize.min,
           children: [
             const Text(
-              'Вы завершили изучение всех карточек в этой колоде!',
+              'Вы завершили изучение всех карточек!',
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 16),
             Text(
-              'Изучено карточек: ${_cards.length}',
+              'Изучено: ${_cards.length} карточек',
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
+            Text('Правильно: $_correctAnswers'),
           ],
         ),
         actions: [
@@ -237,6 +236,7 @@ class _StudyScreenState extends State<StudyScreen>
               setState(() {
                 _currentIndex = 0;
                 _isFlipped = false;
+                _correctAnswers = 0;
               });
               _flipController.reset();
               _loadCards();
@@ -250,6 +250,7 @@ class _StudyScreenState extends State<StudyScreen>
 
   @override
   void dispose() {
+    AudioHelper.stopAudio();
     _flipController.dispose();
     super.dispose();
   }
@@ -381,7 +382,9 @@ class _StudyScreenState extends State<StudyScreen>
   Widget _buildCardFace(CardData card, {required bool isFront}) {
     final text = isFront ? card.frontText : card.backText;
     final imagePath = isFront ? card.frontImagePath : card.backImagePath;
+    final audioPath = isFront ? card.frontAudioPath : card.backAudioPath;
     final hasImage = imagePath != null && imagePath.isNotEmpty;
+    final hasAudio = audioPath != null && audioPath.isNotEmpty;
 
     final backgroundColor = isFront
         ? Theme.of(context).colorScheme.primaryContainer
@@ -395,7 +398,7 @@ class _StudyScreenState extends State<StudyScreen>
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -409,18 +412,18 @@ class _StudyScreenState extends State<StudyScreen>
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // ИЗОБРАЖЕНИЕ (если есть)
+                // ИЗОБРАЖЕНИЕ
                 if (hasImage) ...[
                   ClipRRect(
                     borderRadius: BorderRadius.circular(16),
                     child: Image.file(
                       File(imagePath),
-                      height: 200,
+                      height: 180,
                       width: double.infinity,
                       fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) {
                         return Container(
-                          height: 200,
+                          height: 180,
                           color: Colors.grey[300],
                           child: const Center(
                             child: Icon(Icons.broken_image, size: 48),
@@ -429,7 +432,7 @@ class _StudyScreenState extends State<StudyScreen>
                       },
                     ),
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 20),
                 ],
 
                 // ТЕКСТ
@@ -441,11 +444,11 @@ class _StudyScreenState extends State<StudyScreen>
                   textAlign: TextAlign.center,
                 ),
 
-                // ПРОИЗНОШЕНИЕ (только на обратной стороне)
+                // ПРОИЗНОШЕНИЕ (только обратная)
                 if (!isFront &&
                     card.pronunciation != null &&
                     card.pronunciation!.isNotEmpty) ...[
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 12),
                   Text(
                     card.pronunciation!,
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
@@ -456,15 +459,21 @@ class _StudyScreenState extends State<StudyScreen>
                   ),
                 ],
 
-                // ПРИМЕР (только на обратной стороне)
+                // АУДИО КНОПКА
+                if (hasAudio) ...[
+                  const SizedBox(height: 16),
+                  _AudioPlayButton(audioPath: audioPath),
+                ],
+
+                // ПРИМЕР (только обратная)
                 if (!isFront &&
                     card.example != null &&
                     card.example!.isNotEmpty) ...[
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 20),
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.5),
+                      color: Colors.white.withValues(alpha: 0.5),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
@@ -537,6 +546,53 @@ class _StudyScreenState extends State<StudyScreen>
   }
 }
 
+// ========== КНОПКА АУДИО ==========
+class _AudioPlayButton extends StatefulWidget {
+  final String audioPath;
+  const _AudioPlayButton({required this.audioPath});
+
+  @override
+  State<_AudioPlayButton> createState() => _AudioPlayButtonState();
+}
+
+class _AudioPlayButtonState extends State<_AudioPlayButton> {
+  bool _isPlaying = false;
+
+  @override
+  void initState() {
+    super.initState();
+    AudioHelper.playerStateStream.listen((state) {
+      if (mounted) {
+        setState(() => _isPlaying = state == PlayerState.playing);
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return OutlinedButton.icon(
+      onPressed: () async {
+        if (_isPlaying) {
+          await AudioHelper.stopAudio();
+        } else {
+          await AudioHelper.playAudio(widget.audioPath);
+        }
+      },
+      icon: Icon(
+        _isPlaying ? Icons.stop_circle : Icons.volume_up,
+        size: 22,
+      ),
+      label: Text(_isPlaying ? 'Стоп' : 'Слушать'),
+      style: OutlinedButton.styleFrom(
+        foregroundColor: Colors.white,
+        side: const BorderSide(color: Colors.white54),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      ),
+    );
+  }
+}
+
+// ========== SM2 ==========
 class SM2Result {
   final double easinessFactor;
   final int repetitions;

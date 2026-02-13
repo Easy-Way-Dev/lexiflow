@@ -1,8 +1,9 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:lexiflow/core/database/app_database.dart';
-import 'package:drift/drift.dart' as drift;
 import 'package:lexiflow/core/utils/image_helper.dart';
-import 'dart:io';
+import 'package:lexiflow/shared/widgets/audio_recorder_widget.dart';
+import 'package:drift/drift.dart' as drift;
 
 class AddCardScreen extends StatefulWidget {
   final AppDatabase db;
@@ -28,9 +29,10 @@ class _AddCardScreenState extends State<AddCardScreen> {
   final _exampleController = TextEditingController();
   final _notesController = TextEditingController();
 
-  // Пути к изображениям
   String? _frontImagePath;
   String? _backImagePath;
+  String? _frontAudioPath;
+  String? _backAudioPath;
 
   bool _isLoading = false;
 
@@ -48,6 +50,8 @@ class _AddCardScreenState extends State<AddCardScreen> {
       _notesController.text = card.notes ?? '';
       _frontImagePath = card.frontImagePath;
       _backImagePath = card.backImagePath;
+      _frontAudioPath = card.frontAudioPath;
+      _backAudioPath = card.backAudioPath;
     }
   }
 
@@ -61,25 +65,20 @@ class _AddCardScreenState extends State<AddCardScreen> {
     super.dispose();
   }
 
-  // ========== ВЫБОР ИЗОБРАЖЕНИЙ ==========
+  // ========== ИЗОБРАЖЕНИЯ ==========
 
   Future<void> _pickFrontImage() async {
     final imagePath = await ImageHelper.pickAndSaveImage();
-    if (imagePath != null) {
-      setState(() => _frontImagePath = imagePath);
-    }
+    if (imagePath != null) setState(() => _frontImagePath = imagePath);
   }
 
   Future<void> _pickBackImage() async {
     final imagePath = await ImageHelper.pickAndSaveImage();
-    if (imagePath != null) {
-      setState(() => _backImagePath = imagePath);
-    }
+    if (imagePath != null) setState(() => _backImagePath = imagePath);
   }
 
   Future<void> _removeFrontImage() async {
     if (_frontImagePath != null) {
-      // Если это новое изображение (не из существующей карточки) - удаляем файл
       if (!_isEditing || _frontImagePath != widget.cardToEdit!.frontImagePath) {
         await ImageHelper.deleteImage(_frontImagePath);
       }
@@ -100,7 +99,6 @@ class _AddCardScreenState extends State<AddCardScreen> {
 
   Future<void> _saveCard() async {
     if (!_formKey.currentState!.validate()) return;
-
     setState(() => _isLoading = true);
 
     try {
@@ -114,6 +112,8 @@ class _AddCardScreenState extends State<AddCardScreen> {
                 backText: drift.Value(_backTextController.text.trim()),
                 frontImagePath: drift.Value(_frontImagePath),
                 backImagePath: drift.Value(_backImagePath),
+                frontAudioPath: drift.Value(_frontAudioPath),
+                backAudioPath: drift.Value(_backAudioPath),
                 pronunciation: drift.Value(
                   _pronunciationController.text.trim().isEmpty
                       ? null
@@ -159,6 +159,8 @@ class _AddCardScreenState extends State<AddCardScreen> {
             backText: drift.Value(_backTextController.text.trim()),
             frontImagePath: drift.Value(_frontImagePath),
             backImagePath: drift.Value(_backImagePath),
+            frontAudioPath: drift.Value(_frontAudioPath),
+            backAudioPath: drift.Value(_backAudioPath),
             pronunciation: drift.Value(
               _pronunciationController.text.trim().isEmpty
                   ? null
@@ -272,12 +274,20 @@ class _AddCardScreenState extends State<AddCardScreen> {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    // Изображение лицевой стороны
                     _buildImageSection(
                       title: 'Изображение',
                       imagePath: _frontImagePath,
                       onPickImage: _pickFrontImage,
                       onRemoveImage: _removeFrontImage,
+                    ),
+                    const SizedBox(height: 16),
+                    // АУДИО лицевая сторона
+                    AudioRecorderWidget(
+                      audioPath: _frontAudioPath,
+                      label: 'Аудио произношение',
+                      onAudioChanged: (path) {
+                        setState(() => _frontAudioPath = path);
+                      },
                     ),
                   ],
                 ),
@@ -321,12 +331,20 @@ class _AddCardScreenState extends State<AddCardScreen> {
                       minLines: 1,
                     ),
                     const SizedBox(height: 16),
-                    // Изображение обратной стороны
                     _buildImageSection(
                       title: 'Изображение',
                       imagePath: _backImagePath,
                       onPickImage: _pickBackImage,
                       onRemoveImage: _removeBackImage,
+                    ),
+                    const SizedBox(height: 16),
+                    // АУДИО обратная сторона
+                    AudioRecorderWidget(
+                      audioPath: _backAudioPath,
+                      label: 'Аудио перевода',
+                      onAudioChanged: (path) {
+                        setState(() => _backAudioPath = path);
+                      },
                     ),
                   ],
                 ),
@@ -411,10 +429,8 @@ class _AddCardScreenState extends State<AddCardScreen> {
                         '✓ Правильно: ${widget.cardToEdit!.correctCount}\n'
                         '✗ Неправильно: ${widget.cardToEdit!.incorrectCount}\n'
                         '${widget.cardToEdit!.isMastered ? "🏆 Карточка освоена!" : "📚 В процессе изучения"}',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.green[700],
-                        ),
+                        style:
+                            TextStyle(fontSize: 14, color: Colors.green[700]),
                       ),
                       const SizedBox(height: 8),
                       Text(
@@ -445,7 +461,7 @@ class _AddCardScreenState extends State<AddCardScreen> {
     );
   }
 
-  // ========== ВИДЖЕТ ДЛЯ ИЗОБРАЖЕНИЯ ==========
+  // ========== ВИДЖЕТ ИЗОБРАЖЕНИЯ ==========
   Widget _buildImageSection({
     required String title,
     required String? imagePath,
@@ -465,7 +481,6 @@ class _AddCardScreenState extends State<AddCardScreen> {
         ),
         const SizedBox(height: 8),
         if (hasImage) ...[
-          // Показываем изображение
           ClipRRect(
             borderRadius: BorderRadius.circular(8),
             child: Image.file(
@@ -508,7 +523,6 @@ class _AddCardScreenState extends State<AddCardScreen> {
             ],
           ),
         ] else ...[
-          // Кнопка добавить изображение
           OutlinedButton.icon(
             onPressed: onPickImage,
             icon: const Icon(Icons.add_photo_alternate),

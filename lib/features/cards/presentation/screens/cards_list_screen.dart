@@ -1,5 +1,7 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:lexiflow/core/database/app_database.dart';
+import 'package:lexiflow/core/services/image_service.dart';
 import 'package:lexiflow/features/decks/presentation/screens/add_card_screen.dart';
 import 'package:lexiflow/features/cards/presentation/screens/study_screen.dart';
 
@@ -58,6 +60,7 @@ class _CardsListScreenState extends State<CardsListScreen> {
         ),
       ),
     );
+
     if (result == true) {
       _loadCards();
     }
@@ -70,10 +73,11 @@ class _CardsListScreenState extends State<CardsListScreen> {
         builder: (context) => AddCardScreen(
           db: widget.db,
           deckId: widget.deckId,
-          cardToEdit: card, // передаём карточку для редактирования
+          cardToEdit: card,
         ),
       ),
     );
+
     if (result == true) {
       _loadCards();
     }
@@ -123,8 +127,14 @@ class _CardsListScreenState extends State<CardsListScreen> {
 
     if (confirmed == true) {
       try {
+        // Удаляем изображения
+        await ImageService.deleteImage(card.frontImagePath);
+        await ImageService.deleteImage(card.backImagePath);
+
+        // Удаляем карточку
         await widget.db.deleteCard(card.id);
         _loadCards();
+
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Карточка удалена')),
@@ -147,9 +157,8 @@ class _CardsListScreenState extends State<CardsListScreen> {
         title: Text(widget.deckName),
         actions: [
           IconButton(
-            icon: Icon(
-              _showBackSide ? Icons.flip_to_front : Icons.flip_to_back,
-            ),
+            icon:
+                Icon(_showBackSide ? Icons.flip_to_front : Icons.flip_to_back),
             onPressed: () {
               setState(() => _showBackSide = !_showBackSide);
             },
@@ -170,26 +179,22 @@ class _CardsListScreenState extends State<CardsListScreen> {
               ? _buildEmptyState()
               : Column(
                   children: [
-                    // Кнопка "Начать обучение" вверху
-                    Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: SizedBox(
-                        width: double.infinity,
-                        child: FilledButton.icon(
-                          onPressed: _startStudy,
-                          icon: const Icon(Icons.school),
-                          label: Text(
-                            'Начать обучение (${_cards.length} карточек)',
-                          ),
-                          style: FilledButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            textStyle: const TextStyle(fontSize: 18),
+                    if (_cards.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: SizedBox(
+                          width: double.infinity,
+                          child: FilledButton.icon(
+                            onPressed: _startStudy,
+                            icon: const Icon(Icons.school),
+                            label: const Text('Начать обучение'),
+                            style: FilledButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              textStyle: const TextStyle(fontSize: 18),
+                            ),
                           ),
                         ),
                       ),
-                    ),
-
-                    // Список карточек
                     Expanded(
                       child: _buildCardsList(),
                     ),
@@ -242,7 +247,7 @@ class _CardsListScreenState extends State<CardsListScreen> {
     return RefreshIndicator(
       onRefresh: _loadCards,
       child: ListView.builder(
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
+        padding: const EdgeInsets.all(16),
         itemCount: _cards.length,
         itemBuilder: (context, index) {
           final card = _cards[index];
@@ -254,159 +259,138 @@ class _CardsListScreenState extends State<CardsListScreen> {
 
   Widget _buildCardItem(CardData card) {
     final displayText = _showBackSide ? card.backText : card.frontText;
-    final secondaryText = _showBackSide ? card.frontText : card.backText;
+    final displayImagePath =
+        _showBackSide ? card.backImagePath : card.frontImagePath;
     final hasExample = card.example != null && card.example!.isNotEmpty;
     final hasPronunciation =
         card.pronunciation != null && card.pronunciation!.isNotEmpty;
+    final hasImage = displayImagePath != null && displayImagePath.isNotEmpty;
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
+      clipBehavior: Clip.antiAlias,
       child: InkWell(
-        onTap: () => _editCard(card), // Тап по карточке = редактировать
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
+        onTap: () => _editCard(card),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Изображение (если есть)
+            if (hasImage)
+              Image.file(
+                File(displayImagePath),
+                width: double.infinity,
+                height: 200,
+                fit: BoxFit.cover,
+              ),
+
+            // Текстовая информация
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Основной текст (лицевая или обратная)
-                        Text(
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
                           displayText,
                           style: Theme.of(context).textTheme.titleLarge,
                         ),
-                        const SizedBox(height: 4),
-                        // Второй текст (перевод)
-                        Text(
-                          secondaryText,
-                          style: Theme.of(context)
-                              .textTheme
-                              .bodyMedium
-                              ?.copyWith(color: Colors.grey[600]),
-                        ),
-                      ],
-                    ),
-                  ),
-                  // Меню действий
-                  PopupMenuButton<String>(
-                    icon: const Icon(Icons.more_vert),
-                    itemBuilder: (context) => [
-                      const PopupMenuItem(
-                        value: 'edit',
-                        child: Row(
-                          children: [
-                            Icon(Icons.edit, color: Colors.blue),
-                            SizedBox(width: 8),
-                            Text('Редактировать'),
-                          ],
-                        ),
                       ),
-                      const PopupMenuItem(
-                        value: 'delete',
-                        child: Row(
-                          children: [
-                            Icon(Icons.delete, color: Colors.red),
-                            SizedBox(width: 8),
-                            Text(
-                              'Удалить',
-                              style: TextStyle(color: Colors.red),
+                      PopupMenuButton(
+                        itemBuilder: (context) => [
+                          const PopupMenuItem(
+                            value: 'edit',
+                            child: Row(
+                              children: [
+                                Icon(Icons.edit),
+                                SizedBox(width: 8),
+                                Text('Редактировать'),
+                              ],
                             ),
-                          ],
-                        ),
+                          ),
+                          const PopupMenuItem(
+                            value: 'delete',
+                            child: Row(
+                              children: [
+                                Icon(Icons.delete, color: Colors.red),
+                                SizedBox(width: 8),
+                                Text('Удалить'),
+                              ],
+                            ),
+                          ),
+                        ],
+                        onSelected: (value) {
+                          if (value == 'delete') {
+                            _deleteCard(card);
+                          } else if (value == 'edit') {
+                            _editCard(card);
+                          }
+                        },
                       ),
                     ],
-                    onSelected: (value) {
-                      if (value == 'edit') {
-                        _editCard(card);
-                      } else if (value == 'delete') {
-                        _deleteCard(card);
-                      }
-                    },
                   ),
-                ],
-              ),
-
-              // Произношение
-              if (hasPronunciation) ...[
-                const SizedBox(height: 6),
-                Text(
-                  card.pronunciation!,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Colors.blue,
-                        fontStyle: FontStyle.italic,
-                      ),
-                ),
-              ],
-
-              // Пример
-              if (hasExample) ...[
-                const SizedBox(height: 8),
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[100],
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    card.example!,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          fontStyle: FontStyle.italic,
-                        ),
-                  ),
-                ),
-              ],
-
-              const SizedBox(height: 12),
-
-              // Статистика внизу карточки
-              Row(
-                children: [
-                  // Статус освоения
-                  if (card.isMastered)
-                    const Chip(
-                      label: Text('🏆 Освоено'),
-                      backgroundColor: Colors.green,
-                      labelStyle: TextStyle(color: Colors.white, fontSize: 12),
-                      padding: EdgeInsets.symmetric(horizontal: 4),
-                      visualDensity: VisualDensity.compact,
-                    )
-                  else
-                    Chip(
-                      label: Text('🔁 Повторений: ${card.repetitions}'),
-                      padding: const EdgeInsets.symmetric(horizontal: 4),
-                      visualDensity: VisualDensity.compact,
-                    ),
-
-                  const SizedBox(width: 8),
-
-                  // Статистика ответов
-                  if (card.correctCount > 0 || card.incorrectCount > 0)
+                  if (hasPronunciation) ...[
+                    const SizedBox(height: 4),
                     Text(
-                      '✓${card.correctCount}  ✗${card.incorrectCount}',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Colors.grey[600],
+                      card.pronunciation!,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: Colors.blue,
+                            fontStyle: FontStyle.italic,
                           ),
                     ),
-
-                  const Spacer(),
-
-                  // Подсказка что можно нажать
-                  Text(
-                    'Нажмите для редактирования',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Colors.grey[400],
-                          fontSize: 10,
+                  ],
+                  if (hasExample) ...[
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[100],
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        card.example!,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              fontStyle: FontStyle.italic,
+                            ),
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      if (card.isMastered)
+                        const Chip(
+                          label: Text('Освоено'),
+                          backgroundColor: Colors.green,
+                          labelStyle: TextStyle(color: Colors.white),
+                          padding: EdgeInsets.symmetric(horizontal: 8),
+                        )
+                      else
+                        Chip(
+                          label: Text('Повторений: ${card.repetitions}'),
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
                         ),
+                      const SizedBox(width: 8),
+                      if (card.correctCount > 0 || card.incorrectCount > 0)
+                        Text(
+                          '✓${card.correctCount} ✗${card.incorrectCount}',
+                          style:
+                              Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: Colors.grey[600],
+                                  ),
+                        ),
+                      const Spacer(),
+                      // Иконки наличия медиа
+                      if (card.frontImagePath != null ||
+                          card.backImagePath != null)
+                        Icon(Icons.image, size: 16, color: Colors.grey[600]),
+                    ],
                   ),
                 ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

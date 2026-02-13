@@ -26,7 +26,11 @@ dependencies:
   # Image Handling
   image_picker: ^1.0.5
   
-  # HTTP & API (для будущих функций)
+  # Audio
+  audioplayers: ^6.0.0
+  record: ^4.4.4
+  
+  # HTTP & API
   http: ^1.1.2
   
   # Local Storage
@@ -35,20 +39,13 @@ dependencies:
   # Utils
   uuid: ^4.2.2
   intl: ^0.18.1
-  
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^3.0.0
-  
-  # Code Generation
   drift_dev: ^2.14.0
   build_runner: ^2.4.7
 
 flutter:
   uses-material-design: true
-  
-  # Assets (создадим позже когда понадобятся)
-  # assets:
-  #   - assets/images/
-  #   - assets/icons/
