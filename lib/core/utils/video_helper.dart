@@ -14,7 +14,12 @@ class VideoHelper {
   static bool isYouGlishUrl(String url) => url.contains('youglish.com');
 
   static bool isLocalFile(String url) =>
-      url.startsWith('/') || url.contains(':\\') || url.contains(':/');
+      !url.startsWith('http://') &&
+      !url.startsWith('https://') &&
+      (url.startsWith('/') ||
+          url.contains(':\\') ||
+          url.contains(':/') ||
+          url.startsWith(r'\'));
 
   static String? extractYouTubeId(String url) {
     final regExp = RegExp(
@@ -61,7 +66,6 @@ class VideoHelper {
       final pickedFile = result.files.first;
       if (pickedFile.path == null) return null;
 
-      // Копируем в папку приложения
       final appDir = await getApplicationDocumentsDirectory();
       final videoDir = Directory(p.join(appDir.path, 'videos'));
       if (!await videoDir.exists()) {
@@ -84,22 +88,46 @@ class VideoHelper {
 
   static Future<void> openVideo(BuildContext context, String url) async {
     try {
-      // Локальный файл — открываем через url_launcher
-      final uri = isLocalFile(url) ? Uri.file(url) : Uri.parse(url);
+      bool opened = false;
 
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-      } else {
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('❌ Не удалось открыть видео'),
-              backgroundColor: Colors.red,
-            ),
+      if (Platform.isWindows) {
+        // На Windows используем cmd /c start
+        if (isLocalFile(url)) {
+          // Локальный файл — открываем через проводник/плеер
+          final result = await Process.run(
+            'cmd',
+            ['/c', 'start', '', url],
+            runInShell: true,
           );
+          opened = result.exitCode == 0;
+        } else {
+          // Веб URL — открываем в браузере через start
+          final result = await Process.run(
+            'cmd',
+            ['/c', 'start', '', url],
+            runInShell: true,
+          );
+          opened = result.exitCode == 0;
+        }
+      } else {
+        // Android / iOS / macOS — используем url_launcher
+        final uri = isLocalFile(url) ? Uri.file(url) : Uri.parse(url);
+        if (await canLaunchUrl(uri)) {
+          await launchUrl(uri, mode: LaunchMode.externalApplication);
+          opened = true;
         }
       }
+
+      if (!opened && context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('❌ Не удалось открыть видео'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     } catch (e) {
+      debugPrint('Error opening video: $e');
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

@@ -102,6 +102,34 @@ class _AddCardScreenState extends State<AddCardScreen> {
     }
   }
 
+  // ========== ВИДЕО С КОМПЬЮТЕРА ==========
+
+  Future<void> _pickVideoFromFile(TextEditingController controller) async {
+    final path = await VideoHelper.pickVideoFromFile();
+    if (path != null) {
+      controller.text = path;
+      setState(() {});
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(children: [
+              const Icon(Icons.check_circle, color: Colors.white),
+              const SizedBox(width: 8),
+              Expanded(
+                  child: Text(
+                      '✅ Видео: ${path.split(r'\').last.split('/').last}')),
+            ]),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 2),
+            behavior: SnackBarBehavior.floating,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+        );
+      }
+    }
+  }
+
   // ========== СОХРАНЕНИЕ ==========
 
   Future<void> _saveCard() async {
@@ -215,6 +243,8 @@ class _AddCardScreenState extends State<AddCardScreen> {
     }
   }
 
+  // ========== BUILD ==========
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -293,13 +323,13 @@ class _AddCardScreenState extends State<AddCardScreen> {
                     AudioRecorderWidget(
                       audioPath: _frontAudioPath,
                       label: 'Аудио произношение',
-                      onAudioChanged: (p) =>
-                          setState(() => _frontAudioPath = p),
+                      onAudioChanged: (path) =>
+                          setState(() => _frontAudioPath = path),
                     ),
                     const SizedBox(height: 16),
                     _buildVideoSection(
                       controller: _frontVideoController,
-                      label: 'Видео (YouTube или другой URL)',
+                      wordController: _frontTextController,
                     ),
                   ],
                 ),
@@ -346,12 +376,13 @@ class _AddCardScreenState extends State<AddCardScreen> {
                     AudioRecorderWidget(
                       audioPath: _backAudioPath,
                       label: 'Аудио перевода',
-                      onAudioChanged: (p) => setState(() => _backAudioPath = p),
+                      onAudioChanged: (path) =>
+                          setState(() => _backAudioPath = path),
                     ),
                     const SizedBox(height: 16),
                     _buildVideoSection(
                       controller: _backVideoController,
-                      label: 'Видео (YouTube или другой URL)',
+                      wordController: _frontTextController,
                     ),
                   ],
                 ),
@@ -461,6 +492,7 @@ class _AddCardScreenState extends State<AddCardScreen> {
   }
 
   // ========== ВИДЖЕТ ИЗОБРАЖЕНИЯ ==========
+
   Widget _buildImageSection({
     required String title,
     required String? imagePath,
@@ -524,113 +556,189 @@ class _AddCardScreenState extends State<AddCardScreen> {
   }
 
   // ========== ВИДЖЕТ ВИДЕО ==========
+
   Widget _buildVideoSection({
     required TextEditingController controller,
-    required String label,
+    required TextEditingController wordController,
   }) {
     final url = controller.text.trim();
     final hasUrl = url.isNotEmpty;
     final isYouTube = hasUrl && VideoHelper.isYouTubeUrl(url);
     final isYouGlish = hasUrl && VideoHelper.isYouGlishUrl(url);
+    final isLocal = hasUrl && VideoHelper.isLocalFile(url);
+
+    // Имя файла для локального видео
+    final localFileName = isLocal ? url.split(r'\').last.split('/').last : '';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Видео',
-          style: Theme.of(context)
-              .textTheme
-              .bodyMedium
-              ?.copyWith(fontWeight: FontWeight.w500),
-        ),
+        Text('Видео',
+            style: Theme.of(context)
+                .textTheme
+                .bodyMedium
+                ?.copyWith(fontWeight: FontWeight.w500)),
         const SizedBox(height: 8),
-        TextFormField(
-          controller: controller,
-          decoration: InputDecoration(
-            labelText: label,
-            hintText: 'https://youtube.com/watch?v=...',
-            border: const OutlineInputBorder(),
-            prefixIcon: Icon(
-              isYouTube
-                  ? Icons.smart_display
-                  : isYouGlish
-                      ? Icons.record_voice_over
-                      : Icons.link,
-              color: isYouTube ? Colors.red : null,
-            ),
-            suffixIcon: hasUrl
-                ? IconButton(
-                    icon: const Icon(Icons.clear),
-                    onPressed: () {
-                      controller.clear();
-                      setState(() {});
-                    },
-                  )
-                : null,
-          ),
-          onChanged: (_) => setState(() {}),
-          validator: (v) {
-            if (v != null && v.trim().isNotEmpty) {
-              if (!VideoHelper.isValidVideoUrl(v.trim())) {
-                return 'Введите корректный URL (http:// или https://)';
-              }
-            }
-            return null;
-          },
-        ),
-        if (hasUrl) ...[
-          const SizedBox(height: 8),
+
+        // Если есть локальный файл — показываем плашку
+        if (isLocal) ...[
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: isYouTube ? Colors.red[50] : Colors.blue[50],
+              color: Colors.purple[50],
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(
-                  color: isYouTube ? Colors.red[200]! : Colors.blue[200]!),
+              border: Border.all(color: Colors.purple[200]!),
             ),
             child: Row(
               children: [
-                Icon(
-                  isYouTube
-                      ? Icons.smart_display
-                      : isYouGlish
-                          ? Icons.record_voice_over
-                          : Icons.link,
-                  color: isYouTube ? Colors.red : Colors.blue,
-                  size: 20,
-                ),
-                const SizedBox(width: 8),
+                Icon(Icons.video_file, color: Colors.purple[700], size: 28),
+                const SizedBox(width: 12),
                 Expanded(
-                  child: Text(
-                    isYouTube
-                        ? '▶ YouTube видео'
-                        : isYouGlish
-                            ? '🎤 YouGlish произношение'
-                            : '🔗 Видео по ссылке',
-                    style: TextStyle(
-                      color: isYouTube ? Colors.red[700] : Colors.blue[700],
-                      fontWeight: FontWeight.w500,
-                    ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Локальное видео 📁',
+                          style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              color: Colors.purple[700])),
+                      Text(localFileName,
+                          style: TextStyle(
+                              fontSize: 11, color: Colors.purple[400]),
+                          overflow: TextOverflow.ellipsis),
+                    ],
                   ),
                 ),
-                TextButton(
+                IconButton(
+                  icon: Icon(Icons.play_circle,
+                      color: Colors.purple[700], size: 30),
                   onPressed: () => VideoHelper.openVideo(context, url),
-                  child: const Text('Открыть'),
+                  tooltip: 'Открыть',
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close, color: Colors.red),
+                  onPressed: () {
+                    controller.clear();
+                    setState(() {});
+                  },
+                  tooltip: 'Удалить',
                 ),
               ],
             ),
           ),
+          const SizedBox(height: 8),
+          // Кнопка заменить файл
+          OutlinedButton.icon(
+            onPressed: () => _pickVideoFromFile(controller),
+            icon: const Icon(Icons.folder_open, size: 18),
+            label: const Text('Выбрать другой файл'),
+            style: OutlinedButton.styleFrom(
+              minimumSize: const Size(double.infinity, 44),
+              foregroundColor: Colors.purple,
+              side: const BorderSide(color: Colors.purple),
+            ),
+          ),
+        ] else ...[
+          // Поле для URL
+          TextFormField(
+            controller: controller,
+            decoration: InputDecoration(
+              labelText: 'YouTube, YouGlish или другой URL',
+              hintText: 'https://youtube.com/watch?v=...',
+              border: const OutlineInputBorder(),
+              prefixIcon: Icon(
+                isYouTube
+                    ? Icons.smart_display
+                    : isYouGlish
+                        ? Icons.record_voice_over
+                        : Icons.link,
+                color: isYouTube ? Colors.red : null,
+              ),
+              suffixIcon: hasUrl
+                  ? IconButton(
+                      icon: const Icon(Icons.clear),
+                      onPressed: () {
+                        controller.clear();
+                        setState(() {});
+                      },
+                    )
+                  : null,
+            ),
+            onChanged: (_) => setState(() {}),
+            validator: (v) {
+              if (v != null && v.trim().isNotEmpty) {
+                if (!VideoHelper.isValidVideoUrl(v.trim())) {
+                  return 'Введите корректный URL';
+                }
+              }
+              return null;
+            },
+          ),
+
+          // Плашка с превью URL
+          if (hasUrl) ...[
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: isYouTube ? Colors.red[50] : Colors.blue[50],
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                    color: isYouTube ? Colors.red[200]! : Colors.blue[200]!),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    isYouTube
+                        ? Icons.smart_display
+                        : isYouGlish
+                            ? Icons.record_voice_over
+                            : Icons.link,
+                    color: isYouTube ? Colors.red : Colors.blue,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      isYouTube
+                          ? '▶ YouTube видео'
+                          : isYouGlish
+                              ? '🎤 YouGlish произношение'
+                              : '🔗 Видео по ссылке',
+                      style: TextStyle(
+                        color: isYouTube ? Colors.red[700] : Colors.blue[700],
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () => VideoHelper.openVideo(context, url),
+                    child: const Text('Открыть'),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ],
-        // Подсказки для YouGlish
+
         const SizedBox(height: 8),
+
+        // Кнопки быстрых действий
         Wrap(
           spacing: 8,
+          runSpacing: 8,
           children: [
+            // Выбрать файл с компьютера
+            ActionChip(
+              label: const Text('📁 С компьютера'),
+              avatar: const Icon(Icons.video_file, size: 16),
+              onPressed: () => _pickVideoFromFile(controller),
+            ),
+            // YouGlish EN
             ActionChip(
               label: const Text('YouGlish EN'),
               avatar: const Icon(Icons.mic, size: 16),
               onPressed: () {
-                final word = _frontTextController.text.trim();
+                final word = wordController.text.trim();
                 if (word.isNotEmpty) {
                   controller.text =
                       VideoHelper.buildYouGlishUrl(word, lang: 'english');
@@ -638,11 +746,12 @@ class _AddCardScreenState extends State<AddCardScreen> {
                 }
               },
             ),
+            // YouGlish RU
             ActionChip(
               label: const Text('YouGlish RU'),
               avatar: const Icon(Icons.mic, size: 16),
               onPressed: () {
-                final word = _frontTextController.text.trim();
+                final word = wordController.text.trim();
                 if (word.isNotEmpty) {
                   controller.text =
                       VideoHelper.buildYouGlishUrl(word, lang: 'russian');

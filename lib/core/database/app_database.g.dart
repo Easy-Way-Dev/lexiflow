@@ -2133,6 +2133,932 @@ class SettingsCompanion extends UpdateCompanion<Setting> {
   }
 }
 
+class $DailyStatsTable extends DailyStats
+    with TableInfo<$DailyStatsTable, DailyStatsData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $DailyStatsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+      'id', aliasedName, false,
+      hasAutoIncrement: true,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+  static const VerificationMeta _dateMeta = const VerificationMeta('date');
+  @override
+  late final GeneratedColumn<DateTime> date = GeneratedColumn<DateTime>(
+      'date', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  static const VerificationMeta _cardsStudiedMeta =
+      const VerificationMeta('cardsStudied');
+  @override
+  late final GeneratedColumn<int> cardsStudied = GeneratedColumn<int>(
+      'cards_studied', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _correctAnswersMeta =
+      const VerificationMeta('correctAnswers');
+  @override
+  late final GeneratedColumn<int> correctAnswers = GeneratedColumn<int>(
+      'correct_answers', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _incorrectAnswersMeta =
+      const VerificationMeta('incorrectAnswers');
+  @override
+  late final GeneratedColumn<int> incorrectAnswers = GeneratedColumn<int>(
+      'incorrect_answers', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _timeSpentMinutesMeta =
+      const VerificationMeta('timeSpentMinutes');
+  @override
+  late final GeneratedColumn<int> timeSpentMinutes = GeneratedColumn<int>(
+      'time_spent_minutes', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _sessionsCountMeta =
+      const VerificationMeta('sessionsCount');
+  @override
+  late final GeneratedColumn<int> sessionsCount = GeneratedColumn<int>(
+      'sessions_count', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  @override
+  List<GeneratedColumn> get $columns => [
+        id,
+        date,
+        cardsStudied,
+        correctAnswers,
+        incorrectAnswers,
+        timeSpentMinutes,
+        sessionsCount
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'daily_stats';
+  @override
+  VerificationContext validateIntegrity(Insertable<DailyStatsData> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('date')) {
+      context.handle(
+          _dateMeta, date.isAcceptableOrUnknown(data['date']!, _dateMeta));
+    } else if (isInserting) {
+      context.missing(_dateMeta);
+    }
+    if (data.containsKey('cards_studied')) {
+      context.handle(
+          _cardsStudiedMeta,
+          cardsStudied.isAcceptableOrUnknown(
+              data['cards_studied']!, _cardsStudiedMeta));
+    }
+    if (data.containsKey('correct_answers')) {
+      context.handle(
+          _correctAnswersMeta,
+          correctAnswers.isAcceptableOrUnknown(
+              data['correct_answers']!, _correctAnswersMeta));
+    }
+    if (data.containsKey('incorrect_answers')) {
+      context.handle(
+          _incorrectAnswersMeta,
+          incorrectAnswers.isAcceptableOrUnknown(
+              data['incorrect_answers']!, _incorrectAnswersMeta));
+    }
+    if (data.containsKey('time_spent_minutes')) {
+      context.handle(
+          _timeSpentMinutesMeta,
+          timeSpentMinutes.isAcceptableOrUnknown(
+              data['time_spent_minutes']!, _timeSpentMinutesMeta));
+    }
+    if (data.containsKey('sessions_count')) {
+      context.handle(
+          _sessionsCountMeta,
+          sessionsCount.isAcceptableOrUnknown(
+              data['sessions_count']!, _sessionsCountMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  DailyStatsData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return DailyStatsData(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      date: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}date'])!,
+      cardsStudied: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}cards_studied'])!,
+      correctAnswers: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}correct_answers'])!,
+      incorrectAnswers: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}incorrect_answers'])!,
+      timeSpentMinutes: attachedDatabase.typeMapping.read(
+          DriftSqlType.int, data['${effectivePrefix}time_spent_minutes'])!,
+      sessionsCount: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}sessions_count'])!,
+    );
+  }
+
+  @override
+  $DailyStatsTable createAlias(String alias) {
+    return $DailyStatsTable(attachedDatabase, alias);
+  }
+}
+
+class DailyStatsData extends DataClass implements Insertable<DailyStatsData> {
+  final int id;
+  final DateTime date;
+  final int cardsStudied;
+  final int correctAnswers;
+  final int incorrectAnswers;
+  final int timeSpentMinutes;
+  final int sessionsCount;
+  const DailyStatsData(
+      {required this.id,
+      required this.date,
+      required this.cardsStudied,
+      required this.correctAnswers,
+      required this.incorrectAnswers,
+      required this.timeSpentMinutes,
+      required this.sessionsCount});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['date'] = Variable<DateTime>(date);
+    map['cards_studied'] = Variable<int>(cardsStudied);
+    map['correct_answers'] = Variable<int>(correctAnswers);
+    map['incorrect_answers'] = Variable<int>(incorrectAnswers);
+    map['time_spent_minutes'] = Variable<int>(timeSpentMinutes);
+    map['sessions_count'] = Variable<int>(sessionsCount);
+    return map;
+  }
+
+  DailyStatsCompanion toCompanion(bool nullToAbsent) {
+    return DailyStatsCompanion(
+      id: Value(id),
+      date: Value(date),
+      cardsStudied: Value(cardsStudied),
+      correctAnswers: Value(correctAnswers),
+      incorrectAnswers: Value(incorrectAnswers),
+      timeSpentMinutes: Value(timeSpentMinutes),
+      sessionsCount: Value(sessionsCount),
+    );
+  }
+
+  factory DailyStatsData.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return DailyStatsData(
+      id: serializer.fromJson<int>(json['id']),
+      date: serializer.fromJson<DateTime>(json['date']),
+      cardsStudied: serializer.fromJson<int>(json['cardsStudied']),
+      correctAnswers: serializer.fromJson<int>(json['correctAnswers']),
+      incorrectAnswers: serializer.fromJson<int>(json['incorrectAnswers']),
+      timeSpentMinutes: serializer.fromJson<int>(json['timeSpentMinutes']),
+      sessionsCount: serializer.fromJson<int>(json['sessionsCount']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'date': serializer.toJson<DateTime>(date),
+      'cardsStudied': serializer.toJson<int>(cardsStudied),
+      'correctAnswers': serializer.toJson<int>(correctAnswers),
+      'incorrectAnswers': serializer.toJson<int>(incorrectAnswers),
+      'timeSpentMinutes': serializer.toJson<int>(timeSpentMinutes),
+      'sessionsCount': serializer.toJson<int>(sessionsCount),
+    };
+  }
+
+  DailyStatsData copyWith(
+          {int? id,
+          DateTime? date,
+          int? cardsStudied,
+          int? correctAnswers,
+          int? incorrectAnswers,
+          int? timeSpentMinutes,
+          int? sessionsCount}) =>
+      DailyStatsData(
+        id: id ?? this.id,
+        date: date ?? this.date,
+        cardsStudied: cardsStudied ?? this.cardsStudied,
+        correctAnswers: correctAnswers ?? this.correctAnswers,
+        incorrectAnswers: incorrectAnswers ?? this.incorrectAnswers,
+        timeSpentMinutes: timeSpentMinutes ?? this.timeSpentMinutes,
+        sessionsCount: sessionsCount ?? this.sessionsCount,
+      );
+  DailyStatsData copyWithCompanion(DailyStatsCompanion data) {
+    return DailyStatsData(
+      id: data.id.present ? data.id.value : this.id,
+      date: data.date.present ? data.date.value : this.date,
+      cardsStudied: data.cardsStudied.present
+          ? data.cardsStudied.value
+          : this.cardsStudied,
+      correctAnswers: data.correctAnswers.present
+          ? data.correctAnswers.value
+          : this.correctAnswers,
+      incorrectAnswers: data.incorrectAnswers.present
+          ? data.incorrectAnswers.value
+          : this.incorrectAnswers,
+      timeSpentMinutes: data.timeSpentMinutes.present
+          ? data.timeSpentMinutes.value
+          : this.timeSpentMinutes,
+      sessionsCount: data.sessionsCount.present
+          ? data.sessionsCount.value
+          : this.sessionsCount,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DailyStatsData(')
+          ..write('id: $id, ')
+          ..write('date: $date, ')
+          ..write('cardsStudied: $cardsStudied, ')
+          ..write('correctAnswers: $correctAnswers, ')
+          ..write('incorrectAnswers: $incorrectAnswers, ')
+          ..write('timeSpentMinutes: $timeSpentMinutes, ')
+          ..write('sessionsCount: $sessionsCount')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, date, cardsStudied, correctAnswers,
+      incorrectAnswers, timeSpentMinutes, sessionsCount);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is DailyStatsData &&
+          other.id == this.id &&
+          other.date == this.date &&
+          other.cardsStudied == this.cardsStudied &&
+          other.correctAnswers == this.correctAnswers &&
+          other.incorrectAnswers == this.incorrectAnswers &&
+          other.timeSpentMinutes == this.timeSpentMinutes &&
+          other.sessionsCount == this.sessionsCount);
+}
+
+class DailyStatsCompanion extends UpdateCompanion<DailyStatsData> {
+  final Value<int> id;
+  final Value<DateTime> date;
+  final Value<int> cardsStudied;
+  final Value<int> correctAnswers;
+  final Value<int> incorrectAnswers;
+  final Value<int> timeSpentMinutes;
+  final Value<int> sessionsCount;
+  const DailyStatsCompanion({
+    this.id = const Value.absent(),
+    this.date = const Value.absent(),
+    this.cardsStudied = const Value.absent(),
+    this.correctAnswers = const Value.absent(),
+    this.incorrectAnswers = const Value.absent(),
+    this.timeSpentMinutes = const Value.absent(),
+    this.sessionsCount = const Value.absent(),
+  });
+  DailyStatsCompanion.insert({
+    this.id = const Value.absent(),
+    required DateTime date,
+    this.cardsStudied = const Value.absent(),
+    this.correctAnswers = const Value.absent(),
+    this.incorrectAnswers = const Value.absent(),
+    this.timeSpentMinutes = const Value.absent(),
+    this.sessionsCount = const Value.absent(),
+  }) : date = Value(date);
+  static Insertable<DailyStatsData> custom({
+    Expression<int>? id,
+    Expression<DateTime>? date,
+    Expression<int>? cardsStudied,
+    Expression<int>? correctAnswers,
+    Expression<int>? incorrectAnswers,
+    Expression<int>? timeSpentMinutes,
+    Expression<int>? sessionsCount,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (date != null) 'date': date,
+      if (cardsStudied != null) 'cards_studied': cardsStudied,
+      if (correctAnswers != null) 'correct_answers': correctAnswers,
+      if (incorrectAnswers != null) 'incorrect_answers': incorrectAnswers,
+      if (timeSpentMinutes != null) 'time_spent_minutes': timeSpentMinutes,
+      if (sessionsCount != null) 'sessions_count': sessionsCount,
+    });
+  }
+
+  DailyStatsCompanion copyWith(
+      {Value<int>? id,
+      Value<DateTime>? date,
+      Value<int>? cardsStudied,
+      Value<int>? correctAnswers,
+      Value<int>? incorrectAnswers,
+      Value<int>? timeSpentMinutes,
+      Value<int>? sessionsCount}) {
+    return DailyStatsCompanion(
+      id: id ?? this.id,
+      date: date ?? this.date,
+      cardsStudied: cardsStudied ?? this.cardsStudied,
+      correctAnswers: correctAnswers ?? this.correctAnswers,
+      incorrectAnswers: incorrectAnswers ?? this.incorrectAnswers,
+      timeSpentMinutes: timeSpentMinutes ?? this.timeSpentMinutes,
+      sessionsCount: sessionsCount ?? this.sessionsCount,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (date.present) {
+      map['date'] = Variable<DateTime>(date.value);
+    }
+    if (cardsStudied.present) {
+      map['cards_studied'] = Variable<int>(cardsStudied.value);
+    }
+    if (correctAnswers.present) {
+      map['correct_answers'] = Variable<int>(correctAnswers.value);
+    }
+    if (incorrectAnswers.present) {
+      map['incorrect_answers'] = Variable<int>(incorrectAnswers.value);
+    }
+    if (timeSpentMinutes.present) {
+      map['time_spent_minutes'] = Variable<int>(timeSpentMinutes.value);
+    }
+    if (sessionsCount.present) {
+      map['sessions_count'] = Variable<int>(sessionsCount.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DailyStatsCompanion(')
+          ..write('id: $id, ')
+          ..write('date: $date, ')
+          ..write('cardsStudied: $cardsStudied, ')
+          ..write('correctAnswers: $correctAnswers, ')
+          ..write('incorrectAnswers: $incorrectAnswers, ')
+          ..write('timeSpentMinutes: $timeSpentMinutes, ')
+          ..write('sessionsCount: $sessionsCount')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $UserProgressTable extends UserProgress
+    with TableInfo<$UserProgressTable, UserProgressData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $UserProgressTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+      'id', aliasedName, false,
+      hasAutoIncrement: true,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+  static const VerificationMeta _totalPointsMeta =
+      const VerificationMeta('totalPoints');
+  @override
+  late final GeneratedColumn<int> totalPoints = GeneratedColumn<int>(
+      'total_points', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _currentLevelMeta =
+      const VerificationMeta('currentLevel');
+  @override
+  late final GeneratedColumn<int> currentLevel = GeneratedColumn<int>(
+      'current_level', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(1));
+  static const VerificationMeta _currentStreakMeta =
+      const VerificationMeta('currentStreak');
+  @override
+  late final GeneratedColumn<int> currentStreak = GeneratedColumn<int>(
+      'current_streak', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _longestStreakMeta =
+      const VerificationMeta('longestStreak');
+  @override
+  late final GeneratedColumn<int> longestStreak = GeneratedColumn<int>(
+      'longest_streak', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _totalCardsStudiedMeta =
+      const VerificationMeta('totalCardsStudied');
+  @override
+  late final GeneratedColumn<int> totalCardsStudied = GeneratedColumn<int>(
+      'total_cards_studied', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _totalCorrectMeta =
+      const VerificationMeta('totalCorrect');
+  @override
+  late final GeneratedColumn<int> totalCorrect = GeneratedColumn<int>(
+      'total_correct', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _totalSessionsMeta =
+      const VerificationMeta('totalSessions');
+  @override
+  late final GeneratedColumn<int> totalSessions = GeneratedColumn<int>(
+      'total_sessions', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _lastStudyDateMeta =
+      const VerificationMeta('lastStudyDate');
+  @override
+  late final GeneratedColumn<DateTime> lastStudyDate =
+      GeneratedColumn<DateTime>('last_study_date', aliasedName, true,
+          type: DriftSqlType.dateTime, requiredDuringInsert: false);
+  static const VerificationMeta _updatedAtMeta =
+      const VerificationMeta('updatedAt');
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+      'updated_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  @override
+  List<GeneratedColumn> get $columns => [
+        id,
+        totalPoints,
+        currentLevel,
+        currentStreak,
+        longestStreak,
+        totalCardsStudied,
+        totalCorrect,
+        totalSessions,
+        lastStudyDate,
+        updatedAt
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'user_progress';
+  @override
+  VerificationContext validateIntegrity(Insertable<UserProgressData> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('total_points')) {
+      context.handle(
+          _totalPointsMeta,
+          totalPoints.isAcceptableOrUnknown(
+              data['total_points']!, _totalPointsMeta));
+    }
+    if (data.containsKey('current_level')) {
+      context.handle(
+          _currentLevelMeta,
+          currentLevel.isAcceptableOrUnknown(
+              data['current_level']!, _currentLevelMeta));
+    }
+    if (data.containsKey('current_streak')) {
+      context.handle(
+          _currentStreakMeta,
+          currentStreak.isAcceptableOrUnknown(
+              data['current_streak']!, _currentStreakMeta));
+    }
+    if (data.containsKey('longest_streak')) {
+      context.handle(
+          _longestStreakMeta,
+          longestStreak.isAcceptableOrUnknown(
+              data['longest_streak']!, _longestStreakMeta));
+    }
+    if (data.containsKey('total_cards_studied')) {
+      context.handle(
+          _totalCardsStudiedMeta,
+          totalCardsStudied.isAcceptableOrUnknown(
+              data['total_cards_studied']!, _totalCardsStudiedMeta));
+    }
+    if (data.containsKey('total_correct')) {
+      context.handle(
+          _totalCorrectMeta,
+          totalCorrect.isAcceptableOrUnknown(
+              data['total_correct']!, _totalCorrectMeta));
+    }
+    if (data.containsKey('total_sessions')) {
+      context.handle(
+          _totalSessionsMeta,
+          totalSessions.isAcceptableOrUnknown(
+              data['total_sessions']!, _totalSessionsMeta));
+    }
+    if (data.containsKey('last_study_date')) {
+      context.handle(
+          _lastStudyDateMeta,
+          lastStudyDate.isAcceptableOrUnknown(
+              data['last_study_date']!, _lastStudyDateMeta));
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(_updatedAtMeta,
+          updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  UserProgressData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return UserProgressData(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      totalPoints: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}total_points'])!,
+      currentLevel: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}current_level'])!,
+      currentStreak: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}current_streak'])!,
+      longestStreak: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}longest_streak'])!,
+      totalCardsStudied: attachedDatabase.typeMapping.read(
+          DriftSqlType.int, data['${effectivePrefix}total_cards_studied'])!,
+      totalCorrect: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}total_correct'])!,
+      totalSessions: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}total_sessions'])!,
+      lastStudyDate: attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime, data['${effectivePrefix}last_study_date']),
+      updatedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}updated_at'])!,
+    );
+  }
+
+  @override
+  $UserProgressTable createAlias(String alias) {
+    return $UserProgressTable(attachedDatabase, alias);
+  }
+}
+
+class UserProgressData extends DataClass
+    implements Insertable<UserProgressData> {
+  final int id;
+  final int totalPoints;
+  final int currentLevel;
+  final int currentStreak;
+  final int longestStreak;
+  final int totalCardsStudied;
+  final int totalCorrect;
+  final int totalSessions;
+  final DateTime? lastStudyDate;
+  final DateTime updatedAt;
+  const UserProgressData(
+      {required this.id,
+      required this.totalPoints,
+      required this.currentLevel,
+      required this.currentStreak,
+      required this.longestStreak,
+      required this.totalCardsStudied,
+      required this.totalCorrect,
+      required this.totalSessions,
+      this.lastStudyDate,
+      required this.updatedAt});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['total_points'] = Variable<int>(totalPoints);
+    map['current_level'] = Variable<int>(currentLevel);
+    map['current_streak'] = Variable<int>(currentStreak);
+    map['longest_streak'] = Variable<int>(longestStreak);
+    map['total_cards_studied'] = Variable<int>(totalCardsStudied);
+    map['total_correct'] = Variable<int>(totalCorrect);
+    map['total_sessions'] = Variable<int>(totalSessions);
+    if (!nullToAbsent || lastStudyDate != null) {
+      map['last_study_date'] = Variable<DateTime>(lastStudyDate);
+    }
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    return map;
+  }
+
+  UserProgressCompanion toCompanion(bool nullToAbsent) {
+    return UserProgressCompanion(
+      id: Value(id),
+      totalPoints: Value(totalPoints),
+      currentLevel: Value(currentLevel),
+      currentStreak: Value(currentStreak),
+      longestStreak: Value(longestStreak),
+      totalCardsStudied: Value(totalCardsStudied),
+      totalCorrect: Value(totalCorrect),
+      totalSessions: Value(totalSessions),
+      lastStudyDate: lastStudyDate == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastStudyDate),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory UserProgressData.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return UserProgressData(
+      id: serializer.fromJson<int>(json['id']),
+      totalPoints: serializer.fromJson<int>(json['totalPoints']),
+      currentLevel: serializer.fromJson<int>(json['currentLevel']),
+      currentStreak: serializer.fromJson<int>(json['currentStreak']),
+      longestStreak: serializer.fromJson<int>(json['longestStreak']),
+      totalCardsStudied: serializer.fromJson<int>(json['totalCardsStudied']),
+      totalCorrect: serializer.fromJson<int>(json['totalCorrect']),
+      totalSessions: serializer.fromJson<int>(json['totalSessions']),
+      lastStudyDate: serializer.fromJson<DateTime?>(json['lastStudyDate']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'totalPoints': serializer.toJson<int>(totalPoints),
+      'currentLevel': serializer.toJson<int>(currentLevel),
+      'currentStreak': serializer.toJson<int>(currentStreak),
+      'longestStreak': serializer.toJson<int>(longestStreak),
+      'totalCardsStudied': serializer.toJson<int>(totalCardsStudied),
+      'totalCorrect': serializer.toJson<int>(totalCorrect),
+      'totalSessions': serializer.toJson<int>(totalSessions),
+      'lastStudyDate': serializer.toJson<DateTime?>(lastStudyDate),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  UserProgressData copyWith(
+          {int? id,
+          int? totalPoints,
+          int? currentLevel,
+          int? currentStreak,
+          int? longestStreak,
+          int? totalCardsStudied,
+          int? totalCorrect,
+          int? totalSessions,
+          Value<DateTime?> lastStudyDate = const Value.absent(),
+          DateTime? updatedAt}) =>
+      UserProgressData(
+        id: id ?? this.id,
+        totalPoints: totalPoints ?? this.totalPoints,
+        currentLevel: currentLevel ?? this.currentLevel,
+        currentStreak: currentStreak ?? this.currentStreak,
+        longestStreak: longestStreak ?? this.longestStreak,
+        totalCardsStudied: totalCardsStudied ?? this.totalCardsStudied,
+        totalCorrect: totalCorrect ?? this.totalCorrect,
+        totalSessions: totalSessions ?? this.totalSessions,
+        lastStudyDate:
+            lastStudyDate.present ? lastStudyDate.value : this.lastStudyDate,
+        updatedAt: updatedAt ?? this.updatedAt,
+      );
+  UserProgressData copyWithCompanion(UserProgressCompanion data) {
+    return UserProgressData(
+      id: data.id.present ? data.id.value : this.id,
+      totalPoints:
+          data.totalPoints.present ? data.totalPoints.value : this.totalPoints,
+      currentLevel: data.currentLevel.present
+          ? data.currentLevel.value
+          : this.currentLevel,
+      currentStreak: data.currentStreak.present
+          ? data.currentStreak.value
+          : this.currentStreak,
+      longestStreak: data.longestStreak.present
+          ? data.longestStreak.value
+          : this.longestStreak,
+      totalCardsStudied: data.totalCardsStudied.present
+          ? data.totalCardsStudied.value
+          : this.totalCardsStudied,
+      totalCorrect: data.totalCorrect.present
+          ? data.totalCorrect.value
+          : this.totalCorrect,
+      totalSessions: data.totalSessions.present
+          ? data.totalSessions.value
+          : this.totalSessions,
+      lastStudyDate: data.lastStudyDate.present
+          ? data.lastStudyDate.value
+          : this.lastStudyDate,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('UserProgressData(')
+          ..write('id: $id, ')
+          ..write('totalPoints: $totalPoints, ')
+          ..write('currentLevel: $currentLevel, ')
+          ..write('currentStreak: $currentStreak, ')
+          ..write('longestStreak: $longestStreak, ')
+          ..write('totalCardsStudied: $totalCardsStudied, ')
+          ..write('totalCorrect: $totalCorrect, ')
+          ..write('totalSessions: $totalSessions, ')
+          ..write('lastStudyDate: $lastStudyDate, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+      id,
+      totalPoints,
+      currentLevel,
+      currentStreak,
+      longestStreak,
+      totalCardsStudied,
+      totalCorrect,
+      totalSessions,
+      lastStudyDate,
+      updatedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is UserProgressData &&
+          other.id == this.id &&
+          other.totalPoints == this.totalPoints &&
+          other.currentLevel == this.currentLevel &&
+          other.currentStreak == this.currentStreak &&
+          other.longestStreak == this.longestStreak &&
+          other.totalCardsStudied == this.totalCardsStudied &&
+          other.totalCorrect == this.totalCorrect &&
+          other.totalSessions == this.totalSessions &&
+          other.lastStudyDate == this.lastStudyDate &&
+          other.updatedAt == this.updatedAt);
+}
+
+class UserProgressCompanion extends UpdateCompanion<UserProgressData> {
+  final Value<int> id;
+  final Value<int> totalPoints;
+  final Value<int> currentLevel;
+  final Value<int> currentStreak;
+  final Value<int> longestStreak;
+  final Value<int> totalCardsStudied;
+  final Value<int> totalCorrect;
+  final Value<int> totalSessions;
+  final Value<DateTime?> lastStudyDate;
+  final Value<DateTime> updatedAt;
+  const UserProgressCompanion({
+    this.id = const Value.absent(),
+    this.totalPoints = const Value.absent(),
+    this.currentLevel = const Value.absent(),
+    this.currentStreak = const Value.absent(),
+    this.longestStreak = const Value.absent(),
+    this.totalCardsStudied = const Value.absent(),
+    this.totalCorrect = const Value.absent(),
+    this.totalSessions = const Value.absent(),
+    this.lastStudyDate = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+  });
+  UserProgressCompanion.insert({
+    this.id = const Value.absent(),
+    this.totalPoints = const Value.absent(),
+    this.currentLevel = const Value.absent(),
+    this.currentStreak = const Value.absent(),
+    this.longestStreak = const Value.absent(),
+    this.totalCardsStudied = const Value.absent(),
+    this.totalCorrect = const Value.absent(),
+    this.totalSessions = const Value.absent(),
+    this.lastStudyDate = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+  });
+  static Insertable<UserProgressData> custom({
+    Expression<int>? id,
+    Expression<int>? totalPoints,
+    Expression<int>? currentLevel,
+    Expression<int>? currentStreak,
+    Expression<int>? longestStreak,
+    Expression<int>? totalCardsStudied,
+    Expression<int>? totalCorrect,
+    Expression<int>? totalSessions,
+    Expression<DateTime>? lastStudyDate,
+    Expression<DateTime>? updatedAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (totalPoints != null) 'total_points': totalPoints,
+      if (currentLevel != null) 'current_level': currentLevel,
+      if (currentStreak != null) 'current_streak': currentStreak,
+      if (longestStreak != null) 'longest_streak': longestStreak,
+      if (totalCardsStudied != null) 'total_cards_studied': totalCardsStudied,
+      if (totalCorrect != null) 'total_correct': totalCorrect,
+      if (totalSessions != null) 'total_sessions': totalSessions,
+      if (lastStudyDate != null) 'last_study_date': lastStudyDate,
+      if (updatedAt != null) 'updated_at': updatedAt,
+    });
+  }
+
+  UserProgressCompanion copyWith(
+      {Value<int>? id,
+      Value<int>? totalPoints,
+      Value<int>? currentLevel,
+      Value<int>? currentStreak,
+      Value<int>? longestStreak,
+      Value<int>? totalCardsStudied,
+      Value<int>? totalCorrect,
+      Value<int>? totalSessions,
+      Value<DateTime?>? lastStudyDate,
+      Value<DateTime>? updatedAt}) {
+    return UserProgressCompanion(
+      id: id ?? this.id,
+      totalPoints: totalPoints ?? this.totalPoints,
+      currentLevel: currentLevel ?? this.currentLevel,
+      currentStreak: currentStreak ?? this.currentStreak,
+      longestStreak: longestStreak ?? this.longestStreak,
+      totalCardsStudied: totalCardsStudied ?? this.totalCardsStudied,
+      totalCorrect: totalCorrect ?? this.totalCorrect,
+      totalSessions: totalSessions ?? this.totalSessions,
+      lastStudyDate: lastStudyDate ?? this.lastStudyDate,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (totalPoints.present) {
+      map['total_points'] = Variable<int>(totalPoints.value);
+    }
+    if (currentLevel.present) {
+      map['current_level'] = Variable<int>(currentLevel.value);
+    }
+    if (currentStreak.present) {
+      map['current_streak'] = Variable<int>(currentStreak.value);
+    }
+    if (longestStreak.present) {
+      map['longest_streak'] = Variable<int>(longestStreak.value);
+    }
+    if (totalCardsStudied.present) {
+      map['total_cards_studied'] = Variable<int>(totalCardsStudied.value);
+    }
+    if (totalCorrect.present) {
+      map['total_correct'] = Variable<int>(totalCorrect.value);
+    }
+    if (totalSessions.present) {
+      map['total_sessions'] = Variable<int>(totalSessions.value);
+    }
+    if (lastStudyDate.present) {
+      map['last_study_date'] = Variable<DateTime>(lastStudyDate.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('UserProgressCompanion(')
+          ..write('id: $id, ')
+          ..write('totalPoints: $totalPoints, ')
+          ..write('currentLevel: $currentLevel, ')
+          ..write('currentStreak: $currentStreak, ')
+          ..write('longestStreak: $longestStreak, ')
+          ..write('totalCardsStudied: $totalCardsStudied, ')
+          ..write('totalCorrect: $totalCorrect, ')
+          ..write('totalSessions: $totalSessions, ')
+          ..write('lastStudyDate: $lastStudyDate, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -2140,12 +3066,14 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $CardsTable cards = $CardsTable(this);
   late final $ReviewHistoryTable reviewHistory = $ReviewHistoryTable(this);
   late final $SettingsTable settings = $SettingsTable(this);
+  late final $DailyStatsTable dailyStats = $DailyStatsTable(this);
+  late final $UserProgressTable userProgress = $UserProgressTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
   @override
   List<DatabaseSchemaEntity> get allSchemaEntities =>
-      [decks, cards, reviewHistory, settings];
+      [decks, cards, reviewHistory, settings, dailyStats, userProgress];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules(
         [
@@ -3512,6 +4440,459 @@ typedef $$SettingsTableProcessedTableManager = ProcessedTableManager<
     (Setting, BaseReferences<_$AppDatabase, $SettingsTable, Setting>),
     Setting,
     PrefetchHooks Function()>;
+typedef $$DailyStatsTableCreateCompanionBuilder = DailyStatsCompanion Function({
+  Value<int> id,
+  required DateTime date,
+  Value<int> cardsStudied,
+  Value<int> correctAnswers,
+  Value<int> incorrectAnswers,
+  Value<int> timeSpentMinutes,
+  Value<int> sessionsCount,
+});
+typedef $$DailyStatsTableUpdateCompanionBuilder = DailyStatsCompanion Function({
+  Value<int> id,
+  Value<DateTime> date,
+  Value<int> cardsStudied,
+  Value<int> correctAnswers,
+  Value<int> incorrectAnswers,
+  Value<int> timeSpentMinutes,
+  Value<int> sessionsCount,
+});
+
+class $$DailyStatsTableFilterComposer
+    extends Composer<_$AppDatabase, $DailyStatsTable> {
+  $$DailyStatsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get date => $composableBuilder(
+      column: $table.date, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get cardsStudied => $composableBuilder(
+      column: $table.cardsStudied, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get correctAnswers => $composableBuilder(
+      column: $table.correctAnswers,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get incorrectAnswers => $composableBuilder(
+      column: $table.incorrectAnswers,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get timeSpentMinutes => $composableBuilder(
+      column: $table.timeSpentMinutes,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get sessionsCount => $composableBuilder(
+      column: $table.sessionsCount, builder: (column) => ColumnFilters(column));
+}
+
+class $$DailyStatsTableOrderingComposer
+    extends Composer<_$AppDatabase, $DailyStatsTable> {
+  $$DailyStatsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get date => $composableBuilder(
+      column: $table.date, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get cardsStudied => $composableBuilder(
+      column: $table.cardsStudied,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get correctAnswers => $composableBuilder(
+      column: $table.correctAnswers,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get incorrectAnswers => $composableBuilder(
+      column: $table.incorrectAnswers,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get timeSpentMinutes => $composableBuilder(
+      column: $table.timeSpentMinutes,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get sessionsCount => $composableBuilder(
+      column: $table.sessionsCount,
+      builder: (column) => ColumnOrderings(column));
+}
+
+class $$DailyStatsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $DailyStatsTable> {
+  $$DailyStatsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get date =>
+      $composableBuilder(column: $table.date, builder: (column) => column);
+
+  GeneratedColumn<int> get cardsStudied => $composableBuilder(
+      column: $table.cardsStudied, builder: (column) => column);
+
+  GeneratedColumn<int> get correctAnswers => $composableBuilder(
+      column: $table.correctAnswers, builder: (column) => column);
+
+  GeneratedColumn<int> get incorrectAnswers => $composableBuilder(
+      column: $table.incorrectAnswers, builder: (column) => column);
+
+  GeneratedColumn<int> get timeSpentMinutes => $composableBuilder(
+      column: $table.timeSpentMinutes, builder: (column) => column);
+
+  GeneratedColumn<int> get sessionsCount => $composableBuilder(
+      column: $table.sessionsCount, builder: (column) => column);
+}
+
+class $$DailyStatsTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $DailyStatsTable,
+    DailyStatsData,
+    $$DailyStatsTableFilterComposer,
+    $$DailyStatsTableOrderingComposer,
+    $$DailyStatsTableAnnotationComposer,
+    $$DailyStatsTableCreateCompanionBuilder,
+    $$DailyStatsTableUpdateCompanionBuilder,
+    (
+      DailyStatsData,
+      BaseReferences<_$AppDatabase, $DailyStatsTable, DailyStatsData>
+    ),
+    DailyStatsData,
+    PrefetchHooks Function()> {
+  $$DailyStatsTableTableManager(_$AppDatabase db, $DailyStatsTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$DailyStatsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$DailyStatsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$DailyStatsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            Value<DateTime> date = const Value.absent(),
+            Value<int> cardsStudied = const Value.absent(),
+            Value<int> correctAnswers = const Value.absent(),
+            Value<int> incorrectAnswers = const Value.absent(),
+            Value<int> timeSpentMinutes = const Value.absent(),
+            Value<int> sessionsCount = const Value.absent(),
+          }) =>
+              DailyStatsCompanion(
+            id: id,
+            date: date,
+            cardsStudied: cardsStudied,
+            correctAnswers: correctAnswers,
+            incorrectAnswers: incorrectAnswers,
+            timeSpentMinutes: timeSpentMinutes,
+            sessionsCount: sessionsCount,
+          ),
+          createCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            required DateTime date,
+            Value<int> cardsStudied = const Value.absent(),
+            Value<int> correctAnswers = const Value.absent(),
+            Value<int> incorrectAnswers = const Value.absent(),
+            Value<int> timeSpentMinutes = const Value.absent(),
+            Value<int> sessionsCount = const Value.absent(),
+          }) =>
+              DailyStatsCompanion.insert(
+            id: id,
+            date: date,
+            cardsStudied: cardsStudied,
+            correctAnswers: correctAnswers,
+            incorrectAnswers: incorrectAnswers,
+            timeSpentMinutes: timeSpentMinutes,
+            sessionsCount: sessionsCount,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$DailyStatsTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $DailyStatsTable,
+    DailyStatsData,
+    $$DailyStatsTableFilterComposer,
+    $$DailyStatsTableOrderingComposer,
+    $$DailyStatsTableAnnotationComposer,
+    $$DailyStatsTableCreateCompanionBuilder,
+    $$DailyStatsTableUpdateCompanionBuilder,
+    (
+      DailyStatsData,
+      BaseReferences<_$AppDatabase, $DailyStatsTable, DailyStatsData>
+    ),
+    DailyStatsData,
+    PrefetchHooks Function()>;
+typedef $$UserProgressTableCreateCompanionBuilder = UserProgressCompanion
+    Function({
+  Value<int> id,
+  Value<int> totalPoints,
+  Value<int> currentLevel,
+  Value<int> currentStreak,
+  Value<int> longestStreak,
+  Value<int> totalCardsStudied,
+  Value<int> totalCorrect,
+  Value<int> totalSessions,
+  Value<DateTime?> lastStudyDate,
+  Value<DateTime> updatedAt,
+});
+typedef $$UserProgressTableUpdateCompanionBuilder = UserProgressCompanion
+    Function({
+  Value<int> id,
+  Value<int> totalPoints,
+  Value<int> currentLevel,
+  Value<int> currentStreak,
+  Value<int> longestStreak,
+  Value<int> totalCardsStudied,
+  Value<int> totalCorrect,
+  Value<int> totalSessions,
+  Value<DateTime?> lastStudyDate,
+  Value<DateTime> updatedAt,
+});
+
+class $$UserProgressTableFilterComposer
+    extends Composer<_$AppDatabase, $UserProgressTable> {
+  $$UserProgressTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get totalPoints => $composableBuilder(
+      column: $table.totalPoints, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get currentLevel => $composableBuilder(
+      column: $table.currentLevel, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get currentStreak => $composableBuilder(
+      column: $table.currentStreak, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get longestStreak => $composableBuilder(
+      column: $table.longestStreak, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get totalCardsStudied => $composableBuilder(
+      column: $table.totalCardsStudied,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get totalCorrect => $composableBuilder(
+      column: $table.totalCorrect, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get totalSessions => $composableBuilder(
+      column: $table.totalSessions, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get lastStudyDate => $composableBuilder(
+      column: $table.lastStudyDate, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnFilters(column));
+}
+
+class $$UserProgressTableOrderingComposer
+    extends Composer<_$AppDatabase, $UserProgressTable> {
+  $$UserProgressTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get totalPoints => $composableBuilder(
+      column: $table.totalPoints, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get currentLevel => $composableBuilder(
+      column: $table.currentLevel,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get currentStreak => $composableBuilder(
+      column: $table.currentStreak,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get longestStreak => $composableBuilder(
+      column: $table.longestStreak,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get totalCardsStudied => $composableBuilder(
+      column: $table.totalCardsStudied,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get totalCorrect => $composableBuilder(
+      column: $table.totalCorrect,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get totalSessions => $composableBuilder(
+      column: $table.totalSessions,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get lastStudyDate => $composableBuilder(
+      column: $table.lastStudyDate,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
+}
+
+class $$UserProgressTableAnnotationComposer
+    extends Composer<_$AppDatabase, $UserProgressTable> {
+  $$UserProgressTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get totalPoints => $composableBuilder(
+      column: $table.totalPoints, builder: (column) => column);
+
+  GeneratedColumn<int> get currentLevel => $composableBuilder(
+      column: $table.currentLevel, builder: (column) => column);
+
+  GeneratedColumn<int> get currentStreak => $composableBuilder(
+      column: $table.currentStreak, builder: (column) => column);
+
+  GeneratedColumn<int> get longestStreak => $composableBuilder(
+      column: $table.longestStreak, builder: (column) => column);
+
+  GeneratedColumn<int> get totalCardsStudied => $composableBuilder(
+      column: $table.totalCardsStudied, builder: (column) => column);
+
+  GeneratedColumn<int> get totalCorrect => $composableBuilder(
+      column: $table.totalCorrect, builder: (column) => column);
+
+  GeneratedColumn<int> get totalSessions => $composableBuilder(
+      column: $table.totalSessions, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get lastStudyDate => $composableBuilder(
+      column: $table.lastStudyDate, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+}
+
+class $$UserProgressTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $UserProgressTable,
+    UserProgressData,
+    $$UserProgressTableFilterComposer,
+    $$UserProgressTableOrderingComposer,
+    $$UserProgressTableAnnotationComposer,
+    $$UserProgressTableCreateCompanionBuilder,
+    $$UserProgressTableUpdateCompanionBuilder,
+    (
+      UserProgressData,
+      BaseReferences<_$AppDatabase, $UserProgressTable, UserProgressData>
+    ),
+    UserProgressData,
+    PrefetchHooks Function()> {
+  $$UserProgressTableTableManager(_$AppDatabase db, $UserProgressTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$UserProgressTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$UserProgressTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$UserProgressTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            Value<int> totalPoints = const Value.absent(),
+            Value<int> currentLevel = const Value.absent(),
+            Value<int> currentStreak = const Value.absent(),
+            Value<int> longestStreak = const Value.absent(),
+            Value<int> totalCardsStudied = const Value.absent(),
+            Value<int> totalCorrect = const Value.absent(),
+            Value<int> totalSessions = const Value.absent(),
+            Value<DateTime?> lastStudyDate = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+          }) =>
+              UserProgressCompanion(
+            id: id,
+            totalPoints: totalPoints,
+            currentLevel: currentLevel,
+            currentStreak: currentStreak,
+            longestStreak: longestStreak,
+            totalCardsStudied: totalCardsStudied,
+            totalCorrect: totalCorrect,
+            totalSessions: totalSessions,
+            lastStudyDate: lastStudyDate,
+            updatedAt: updatedAt,
+          ),
+          createCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            Value<int> totalPoints = const Value.absent(),
+            Value<int> currentLevel = const Value.absent(),
+            Value<int> currentStreak = const Value.absent(),
+            Value<int> longestStreak = const Value.absent(),
+            Value<int> totalCardsStudied = const Value.absent(),
+            Value<int> totalCorrect = const Value.absent(),
+            Value<int> totalSessions = const Value.absent(),
+            Value<DateTime?> lastStudyDate = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+          }) =>
+              UserProgressCompanion.insert(
+            id: id,
+            totalPoints: totalPoints,
+            currentLevel: currentLevel,
+            currentStreak: currentStreak,
+            longestStreak: longestStreak,
+            totalCardsStudied: totalCardsStudied,
+            totalCorrect: totalCorrect,
+            totalSessions: totalSessions,
+            lastStudyDate: lastStudyDate,
+            updatedAt: updatedAt,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$UserProgressTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $UserProgressTable,
+    UserProgressData,
+    $$UserProgressTableFilterComposer,
+    $$UserProgressTableOrderingComposer,
+    $$UserProgressTableAnnotationComposer,
+    $$UserProgressTableCreateCompanionBuilder,
+    $$UserProgressTableUpdateCompanionBuilder,
+    (
+      UserProgressData,
+      BaseReferences<_$AppDatabase, $UserProgressTable, UserProgressData>
+    ),
+    UserProgressData,
+    PrefetchHooks Function()>;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -3524,4 +4905,8 @@ class $AppDatabaseManager {
       $$ReviewHistoryTableTableManager(_db, _db.reviewHistory);
   $$SettingsTableTableManager get settings =>
       $$SettingsTableTableManager(_db, _db.settings);
+  $$DailyStatsTableTableManager get dailyStats =>
+      $$DailyStatsTableTableManager(_db, _db.dailyStats);
+  $$UserProgressTableTableManager get userProgress =>
+      $$UserProgressTableTableManager(_db, _db.userProgress);
 }
