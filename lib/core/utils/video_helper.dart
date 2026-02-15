@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
-import 'package:url_launcher/url_launcher.dart';
+import 'package:url_launcher/url_launcher.dart'
+    as launcher; // Добавлен префикс для избежания конфликтов
 
 class VideoHelper {
   // ========== ОПРЕДЕЛЕНИЕ ТИПА ==========
@@ -84,7 +85,30 @@ class VideoHelper {
     }
   }
 
-  // ========== ОТКРЫТИЕ ВИДЕО ==========
+  // ========== ОТКРЫТИЕ ВИДЕО И URL ==========
+
+  /// Проверить можно ли открыть URL
+  static Future<bool> canLaunchUrl(String url) async {
+    try {
+      final uri = Uri.parse(url);
+      return await launcher.canLaunchUrl(uri);
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /// Открыть URL в браузере
+  static Future<void> launchUrlInBrowser(String url) async {
+    try {
+      final uri = Uri.parse(url);
+      await launcher.launchUrl(
+        uri,
+        mode: launcher.LaunchMode.externalApplication,
+      );
+    } catch (e) {
+      debugPrint('Ошибка открытия URL: $e');
+    }
+  }
 
   static Future<void> openVideo(BuildContext context, String url) async {
     try {
@@ -93,7 +117,6 @@ class VideoHelper {
       if (Platform.isWindows) {
         // На Windows используем cmd /c start
         if (isLocalFile(url)) {
-          // Локальный файл — открываем через проводник/плеер
           final result = await Process.run(
             'cmd',
             ['/c', 'start', '', url],
@@ -101,7 +124,6 @@ class VideoHelper {
           );
           opened = result.exitCode == 0;
         } else {
-          // Веб URL — открываем в браузере через start
           final result = await Process.run(
             'cmd',
             ['/c', 'start', '', url],
@@ -112,8 +134,9 @@ class VideoHelper {
       } else {
         // Android / iOS / macOS — используем url_launcher
         final uri = isLocalFile(url) ? Uri.file(url) : Uri.parse(url);
-        if (await canLaunchUrl(uri)) {
-          await launchUrl(uri, mode: LaunchMode.externalApplication);
+        if (await launcher.canLaunchUrl(uri)) {
+          await launcher.launchUrl(uri,
+              mode: launcher.LaunchMode.externalApplication);
           opened = true;
         }
       }

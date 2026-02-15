@@ -37,7 +37,7 @@ class $DecksTable extends Decks with TableInfo<$DecksTable, Deck> {
   late final GeneratedColumn<String> sourceLanguage = GeneratedColumn<String>(
       'source_language', aliasedName, false,
       additionalChecks:
-          GeneratedColumn.checkTextLength(minTextLength: 2, maxTextLength: 5),
+          GeneratedColumn.checkTextLength(minTextLength: 2, maxTextLength: 10),
       type: DriftSqlType.string,
       requiredDuringInsert: true);
   static const VerificationMeta _targetLanguageMeta =
@@ -46,7 +46,7 @@ class $DecksTable extends Decks with TableInfo<$DecksTable, Deck> {
   late final GeneratedColumn<String> targetLanguage = GeneratedColumn<String>(
       'target_language', aliasedName, false,
       additionalChecks:
-          GeneratedColumn.checkTextLength(minTextLength: 2, maxTextLength: 5),
+          GeneratedColumn.checkTextLength(minTextLength: 2, maxTextLength: 10),
       type: DriftSqlType.string,
       requiredDuringInsert: true);
   static const VerificationMeta _totalCardsMeta =
@@ -565,6 +565,12 @@ class $CardsTable extends Cards with TableInfo<$CardsTable, CardData> {
   late final GeneratedColumn<String> pronunciation = GeneratedColumn<String>(
       'pronunciation', aliasedName, true,
       type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _transcriptionMeta =
+      const VerificationMeta('transcription');
+  @override
+  late final GeneratedColumn<String> transcription = GeneratedColumn<String>(
+      'transcription', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
   static const VerificationMeta _exampleMeta =
       const VerificationMeta('example');
   @override
@@ -667,6 +673,7 @@ class $CardsTable extends Cards with TableInfo<$CardsTable, CardData> {
         frontVideoUrl,
         backVideoUrl,
         pronunciation,
+        transcription,
         example,
         notes,
         easinessFactor,
@@ -752,6 +759,12 @@ class $CardsTable extends Cards with TableInfo<$CardsTable, CardData> {
           _pronunciationMeta,
           pronunciation.isAcceptableOrUnknown(
               data['pronunciation']!, _pronunciationMeta));
+    }
+    if (data.containsKey('transcription')) {
+      context.handle(
+          _transcriptionMeta,
+          transcription.isAcceptableOrUnknown(
+              data['transcription']!, _transcriptionMeta));
     }
     if (data.containsKey('example')) {
       context.handle(_exampleMeta,
@@ -846,6 +859,8 @@ class $CardsTable extends Cards with TableInfo<$CardsTable, CardData> {
           .read(DriftSqlType.string, data['${effectivePrefix}back_video_url']),
       pronunciation: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}pronunciation']),
+      transcription: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}transcription']),
       example: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}example']),
       notes: attachedDatabase.typeMapping
@@ -891,6 +906,7 @@ class CardData extends DataClass implements Insertable<CardData> {
   final String? frontVideoUrl;
   final String? backVideoUrl;
   final String? pronunciation;
+  final String? transcription;
   final String? example;
   final String? notes;
   final int easinessFactor;
@@ -915,6 +931,7 @@ class CardData extends DataClass implements Insertable<CardData> {
       this.frontVideoUrl,
       this.backVideoUrl,
       this.pronunciation,
+      this.transcription,
       this.example,
       this.notes,
       required this.easinessFactor,
@@ -954,6 +971,9 @@ class CardData extends DataClass implements Insertable<CardData> {
     }
     if (!nullToAbsent || pronunciation != null) {
       map['pronunciation'] = Variable<String>(pronunciation);
+    }
+    if (!nullToAbsent || transcription != null) {
+      map['transcription'] = Variable<String>(transcription);
     }
     if (!nullToAbsent || example != null) {
       map['example'] = Variable<String>(example);
@@ -1005,6 +1025,9 @@ class CardData extends DataClass implements Insertable<CardData> {
       pronunciation: pronunciation == null && nullToAbsent
           ? const Value.absent()
           : Value(pronunciation),
+      transcription: transcription == null && nullToAbsent
+          ? const Value.absent()
+          : Value(transcription),
       example: example == null && nullToAbsent
           ? const Value.absent()
           : Value(example),
@@ -1042,6 +1065,7 @@ class CardData extends DataClass implements Insertable<CardData> {
       frontVideoUrl: serializer.fromJson<String?>(json['frontVideoUrl']),
       backVideoUrl: serializer.fromJson<String?>(json['backVideoUrl']),
       pronunciation: serializer.fromJson<String?>(json['pronunciation']),
+      transcription: serializer.fromJson<String?>(json['transcription']),
       example: serializer.fromJson<String?>(json['example']),
       notes: serializer.fromJson<String?>(json['notes']),
       easinessFactor: serializer.fromJson<int>(json['easinessFactor']),
@@ -1071,6 +1095,7 @@ class CardData extends DataClass implements Insertable<CardData> {
       'frontVideoUrl': serializer.toJson<String?>(frontVideoUrl),
       'backVideoUrl': serializer.toJson<String?>(backVideoUrl),
       'pronunciation': serializer.toJson<String?>(pronunciation),
+      'transcription': serializer.toJson<String?>(transcription),
       'example': serializer.toJson<String?>(example),
       'notes': serializer.toJson<String?>(notes),
       'easinessFactor': serializer.toJson<int>(easinessFactor),
@@ -1098,6 +1123,7 @@ class CardData extends DataClass implements Insertable<CardData> {
           Value<String?> frontVideoUrl = const Value.absent(),
           Value<String?> backVideoUrl = const Value.absent(),
           Value<String?> pronunciation = const Value.absent(),
+          Value<String?> transcription = const Value.absent(),
           Value<String?> example = const Value.absent(),
           Value<String?> notes = const Value.absent(),
           int? easinessFactor,
@@ -1129,6 +1155,8 @@ class CardData extends DataClass implements Insertable<CardData> {
             backVideoUrl.present ? backVideoUrl.value : this.backVideoUrl,
         pronunciation:
             pronunciation.present ? pronunciation.value : this.pronunciation,
+        transcription:
+            transcription.present ? transcription.value : this.transcription,
         example: example.present ? example.value : this.example,
         notes: notes.present ? notes.value : this.notes,
         easinessFactor: easinessFactor ?? this.easinessFactor,
@@ -1171,6 +1199,9 @@ class CardData extends DataClass implements Insertable<CardData> {
       pronunciation: data.pronunciation.present
           ? data.pronunciation.value
           : this.pronunciation,
+      transcription: data.transcription.present
+          ? data.transcription.value
+          : this.transcription,
       example: data.example.present ? data.example.value : this.example,
       notes: data.notes.present ? data.notes.value : this.notes,
       easinessFactor: data.easinessFactor.present
@@ -1212,6 +1243,7 @@ class CardData extends DataClass implements Insertable<CardData> {
           ..write('frontVideoUrl: $frontVideoUrl, ')
           ..write('backVideoUrl: $backVideoUrl, ')
           ..write('pronunciation: $pronunciation, ')
+          ..write('transcription: $transcription, ')
           ..write('example: $example, ')
           ..write('notes: $notes, ')
           ..write('easinessFactor: $easinessFactor, ')
@@ -1241,6 +1273,7 @@ class CardData extends DataClass implements Insertable<CardData> {
         frontVideoUrl,
         backVideoUrl,
         pronunciation,
+        transcription,
         example,
         notes,
         easinessFactor,
@@ -1269,6 +1302,7 @@ class CardData extends DataClass implements Insertable<CardData> {
           other.frontVideoUrl == this.frontVideoUrl &&
           other.backVideoUrl == this.backVideoUrl &&
           other.pronunciation == this.pronunciation &&
+          other.transcription == this.transcription &&
           other.example == this.example &&
           other.notes == this.notes &&
           other.easinessFactor == this.easinessFactor &&
@@ -1295,6 +1329,7 @@ class CardsCompanion extends UpdateCompanion<CardData> {
   final Value<String?> frontVideoUrl;
   final Value<String?> backVideoUrl;
   final Value<String?> pronunciation;
+  final Value<String?> transcription;
   final Value<String?> example;
   final Value<String?> notes;
   final Value<int> easinessFactor;
@@ -1319,6 +1354,7 @@ class CardsCompanion extends UpdateCompanion<CardData> {
     this.frontVideoUrl = const Value.absent(),
     this.backVideoUrl = const Value.absent(),
     this.pronunciation = const Value.absent(),
+    this.transcription = const Value.absent(),
     this.example = const Value.absent(),
     this.notes = const Value.absent(),
     this.easinessFactor = const Value.absent(),
@@ -1344,6 +1380,7 @@ class CardsCompanion extends UpdateCompanion<CardData> {
     this.frontVideoUrl = const Value.absent(),
     this.backVideoUrl = const Value.absent(),
     this.pronunciation = const Value.absent(),
+    this.transcription = const Value.absent(),
     this.example = const Value.absent(),
     this.notes = const Value.absent(),
     this.easinessFactor = const Value.absent(),
@@ -1371,6 +1408,7 @@ class CardsCompanion extends UpdateCompanion<CardData> {
     Expression<String>? frontVideoUrl,
     Expression<String>? backVideoUrl,
     Expression<String>? pronunciation,
+    Expression<String>? transcription,
     Expression<String>? example,
     Expression<String>? notes,
     Expression<int>? easinessFactor,
@@ -1396,6 +1434,7 @@ class CardsCompanion extends UpdateCompanion<CardData> {
       if (frontVideoUrl != null) 'front_video_url': frontVideoUrl,
       if (backVideoUrl != null) 'back_video_url': backVideoUrl,
       if (pronunciation != null) 'pronunciation': pronunciation,
+      if (transcription != null) 'transcription': transcription,
       if (example != null) 'example': example,
       if (notes != null) 'notes': notes,
       if (easinessFactor != null) 'easiness_factor': easinessFactor,
@@ -1423,6 +1462,7 @@ class CardsCompanion extends UpdateCompanion<CardData> {
       Value<String?>? frontVideoUrl,
       Value<String?>? backVideoUrl,
       Value<String?>? pronunciation,
+      Value<String?>? transcription,
       Value<String?>? example,
       Value<String?>? notes,
       Value<int>? easinessFactor,
@@ -1447,6 +1487,7 @@ class CardsCompanion extends UpdateCompanion<CardData> {
       frontVideoUrl: frontVideoUrl ?? this.frontVideoUrl,
       backVideoUrl: backVideoUrl ?? this.backVideoUrl,
       pronunciation: pronunciation ?? this.pronunciation,
+      transcription: transcription ?? this.transcription,
       example: example ?? this.example,
       notes: notes ?? this.notes,
       easinessFactor: easinessFactor ?? this.easinessFactor,
@@ -1497,6 +1538,9 @@ class CardsCompanion extends UpdateCompanion<CardData> {
     }
     if (pronunciation.present) {
       map['pronunciation'] = Variable<String>(pronunciation.value);
+    }
+    if (transcription.present) {
+      map['transcription'] = Variable<String>(transcription.value);
     }
     if (example.present) {
       map['example'] = Variable<String>(example.value);
@@ -1551,6 +1595,7 @@ class CardsCompanion extends UpdateCompanion<CardData> {
           ..write('frontVideoUrl: $frontVideoUrl, ')
           ..write('backVideoUrl: $backVideoUrl, ')
           ..write('pronunciation: $pronunciation, ')
+          ..write('transcription: $transcription, ')
           ..write('example: $example, ')
           ..write('notes: $notes, ')
           ..write('easinessFactor: $easinessFactor, ')
@@ -2528,537 +2573,6 @@ class DailyStatsCompanion extends UpdateCompanion<DailyStatsData> {
   }
 }
 
-class $UserProgressTable extends UserProgress
-    with TableInfo<$UserProgressTable, UserProgressData> {
-  @override
-  final GeneratedDatabase attachedDatabase;
-  final String? _alias;
-  $UserProgressTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _idMeta = const VerificationMeta('id');
-  @override
-  late final GeneratedColumn<int> id = GeneratedColumn<int>(
-      'id', aliasedName, false,
-      hasAutoIncrement: true,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultConstraints:
-          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
-  static const VerificationMeta _totalPointsMeta =
-      const VerificationMeta('totalPoints');
-  @override
-  late final GeneratedColumn<int> totalPoints = GeneratedColumn<int>(
-      'total_points', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultValue: const Constant(0));
-  static const VerificationMeta _currentLevelMeta =
-      const VerificationMeta('currentLevel');
-  @override
-  late final GeneratedColumn<int> currentLevel = GeneratedColumn<int>(
-      'current_level', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultValue: const Constant(1));
-  static const VerificationMeta _currentStreakMeta =
-      const VerificationMeta('currentStreak');
-  @override
-  late final GeneratedColumn<int> currentStreak = GeneratedColumn<int>(
-      'current_streak', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultValue: const Constant(0));
-  static const VerificationMeta _longestStreakMeta =
-      const VerificationMeta('longestStreak');
-  @override
-  late final GeneratedColumn<int> longestStreak = GeneratedColumn<int>(
-      'longest_streak', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultValue: const Constant(0));
-  static const VerificationMeta _totalCardsStudiedMeta =
-      const VerificationMeta('totalCardsStudied');
-  @override
-  late final GeneratedColumn<int> totalCardsStudied = GeneratedColumn<int>(
-      'total_cards_studied', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultValue: const Constant(0));
-  static const VerificationMeta _totalCorrectMeta =
-      const VerificationMeta('totalCorrect');
-  @override
-  late final GeneratedColumn<int> totalCorrect = GeneratedColumn<int>(
-      'total_correct', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultValue: const Constant(0));
-  static const VerificationMeta _totalSessionsMeta =
-      const VerificationMeta('totalSessions');
-  @override
-  late final GeneratedColumn<int> totalSessions = GeneratedColumn<int>(
-      'total_sessions', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultValue: const Constant(0));
-  static const VerificationMeta _lastStudyDateMeta =
-      const VerificationMeta('lastStudyDate');
-  @override
-  late final GeneratedColumn<DateTime> lastStudyDate =
-      GeneratedColumn<DateTime>('last_study_date', aliasedName, true,
-          type: DriftSqlType.dateTime, requiredDuringInsert: false);
-  static const VerificationMeta _updatedAtMeta =
-      const VerificationMeta('updatedAt');
-  @override
-  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
-      'updated_at', aliasedName, false,
-      type: DriftSqlType.dateTime,
-      requiredDuringInsert: false,
-      defaultValue: currentDateAndTime);
-  @override
-  List<GeneratedColumn> get $columns => [
-        id,
-        totalPoints,
-        currentLevel,
-        currentStreak,
-        longestStreak,
-        totalCardsStudied,
-        totalCorrect,
-        totalSessions,
-        lastStudyDate,
-        updatedAt
-      ];
-  @override
-  String get aliasedName => _alias ?? actualTableName;
-  @override
-  String get actualTableName => $name;
-  static const String $name = 'user_progress';
-  @override
-  VerificationContext validateIntegrity(Insertable<UserProgressData> instance,
-      {bool isInserting = false}) {
-    final context = VerificationContext();
-    final data = instance.toColumns(true);
-    if (data.containsKey('id')) {
-      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
-    }
-    if (data.containsKey('total_points')) {
-      context.handle(
-          _totalPointsMeta,
-          totalPoints.isAcceptableOrUnknown(
-              data['total_points']!, _totalPointsMeta));
-    }
-    if (data.containsKey('current_level')) {
-      context.handle(
-          _currentLevelMeta,
-          currentLevel.isAcceptableOrUnknown(
-              data['current_level']!, _currentLevelMeta));
-    }
-    if (data.containsKey('current_streak')) {
-      context.handle(
-          _currentStreakMeta,
-          currentStreak.isAcceptableOrUnknown(
-              data['current_streak']!, _currentStreakMeta));
-    }
-    if (data.containsKey('longest_streak')) {
-      context.handle(
-          _longestStreakMeta,
-          longestStreak.isAcceptableOrUnknown(
-              data['longest_streak']!, _longestStreakMeta));
-    }
-    if (data.containsKey('total_cards_studied')) {
-      context.handle(
-          _totalCardsStudiedMeta,
-          totalCardsStudied.isAcceptableOrUnknown(
-              data['total_cards_studied']!, _totalCardsStudiedMeta));
-    }
-    if (data.containsKey('total_correct')) {
-      context.handle(
-          _totalCorrectMeta,
-          totalCorrect.isAcceptableOrUnknown(
-              data['total_correct']!, _totalCorrectMeta));
-    }
-    if (data.containsKey('total_sessions')) {
-      context.handle(
-          _totalSessionsMeta,
-          totalSessions.isAcceptableOrUnknown(
-              data['total_sessions']!, _totalSessionsMeta));
-    }
-    if (data.containsKey('last_study_date')) {
-      context.handle(
-          _lastStudyDateMeta,
-          lastStudyDate.isAcceptableOrUnknown(
-              data['last_study_date']!, _lastStudyDateMeta));
-    }
-    if (data.containsKey('updated_at')) {
-      context.handle(_updatedAtMeta,
-          updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
-    }
-    return context;
-  }
-
-  @override
-  Set<GeneratedColumn> get $primaryKey => {id};
-  @override
-  UserProgressData map(Map<String, dynamic> data, {String? tablePrefix}) {
-    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return UserProgressData(
-      id: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
-      totalPoints: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}total_points'])!,
-      currentLevel: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}current_level'])!,
-      currentStreak: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}current_streak'])!,
-      longestStreak: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}longest_streak'])!,
-      totalCardsStudied: attachedDatabase.typeMapping.read(
-          DriftSqlType.int, data['${effectivePrefix}total_cards_studied'])!,
-      totalCorrect: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}total_correct'])!,
-      totalSessions: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}total_sessions'])!,
-      lastStudyDate: attachedDatabase.typeMapping.read(
-          DriftSqlType.dateTime, data['${effectivePrefix}last_study_date']),
-      updatedAt: attachedDatabase.typeMapping
-          .read(DriftSqlType.dateTime, data['${effectivePrefix}updated_at'])!,
-    );
-  }
-
-  @override
-  $UserProgressTable createAlias(String alias) {
-    return $UserProgressTable(attachedDatabase, alias);
-  }
-}
-
-class UserProgressData extends DataClass
-    implements Insertable<UserProgressData> {
-  final int id;
-  final int totalPoints;
-  final int currentLevel;
-  final int currentStreak;
-  final int longestStreak;
-  final int totalCardsStudied;
-  final int totalCorrect;
-  final int totalSessions;
-  final DateTime? lastStudyDate;
-  final DateTime updatedAt;
-  const UserProgressData(
-      {required this.id,
-      required this.totalPoints,
-      required this.currentLevel,
-      required this.currentStreak,
-      required this.longestStreak,
-      required this.totalCardsStudied,
-      required this.totalCorrect,
-      required this.totalSessions,
-      this.lastStudyDate,
-      required this.updatedAt});
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    map['id'] = Variable<int>(id);
-    map['total_points'] = Variable<int>(totalPoints);
-    map['current_level'] = Variable<int>(currentLevel);
-    map['current_streak'] = Variable<int>(currentStreak);
-    map['longest_streak'] = Variable<int>(longestStreak);
-    map['total_cards_studied'] = Variable<int>(totalCardsStudied);
-    map['total_correct'] = Variable<int>(totalCorrect);
-    map['total_sessions'] = Variable<int>(totalSessions);
-    if (!nullToAbsent || lastStudyDate != null) {
-      map['last_study_date'] = Variable<DateTime>(lastStudyDate);
-    }
-    map['updated_at'] = Variable<DateTime>(updatedAt);
-    return map;
-  }
-
-  UserProgressCompanion toCompanion(bool nullToAbsent) {
-    return UserProgressCompanion(
-      id: Value(id),
-      totalPoints: Value(totalPoints),
-      currentLevel: Value(currentLevel),
-      currentStreak: Value(currentStreak),
-      longestStreak: Value(longestStreak),
-      totalCardsStudied: Value(totalCardsStudied),
-      totalCorrect: Value(totalCorrect),
-      totalSessions: Value(totalSessions),
-      lastStudyDate: lastStudyDate == null && nullToAbsent
-          ? const Value.absent()
-          : Value(lastStudyDate),
-      updatedAt: Value(updatedAt),
-    );
-  }
-
-  factory UserProgressData.fromJson(Map<String, dynamic> json,
-      {ValueSerializer? serializer}) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return UserProgressData(
-      id: serializer.fromJson<int>(json['id']),
-      totalPoints: serializer.fromJson<int>(json['totalPoints']),
-      currentLevel: serializer.fromJson<int>(json['currentLevel']),
-      currentStreak: serializer.fromJson<int>(json['currentStreak']),
-      longestStreak: serializer.fromJson<int>(json['longestStreak']),
-      totalCardsStudied: serializer.fromJson<int>(json['totalCardsStudied']),
-      totalCorrect: serializer.fromJson<int>(json['totalCorrect']),
-      totalSessions: serializer.fromJson<int>(json['totalSessions']),
-      lastStudyDate: serializer.fromJson<DateTime?>(json['lastStudyDate']),
-      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
-    );
-  }
-  @override
-  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return <String, dynamic>{
-      'id': serializer.toJson<int>(id),
-      'totalPoints': serializer.toJson<int>(totalPoints),
-      'currentLevel': serializer.toJson<int>(currentLevel),
-      'currentStreak': serializer.toJson<int>(currentStreak),
-      'longestStreak': serializer.toJson<int>(longestStreak),
-      'totalCardsStudied': serializer.toJson<int>(totalCardsStudied),
-      'totalCorrect': serializer.toJson<int>(totalCorrect),
-      'totalSessions': serializer.toJson<int>(totalSessions),
-      'lastStudyDate': serializer.toJson<DateTime?>(lastStudyDate),
-      'updatedAt': serializer.toJson<DateTime>(updatedAt),
-    };
-  }
-
-  UserProgressData copyWith(
-          {int? id,
-          int? totalPoints,
-          int? currentLevel,
-          int? currentStreak,
-          int? longestStreak,
-          int? totalCardsStudied,
-          int? totalCorrect,
-          int? totalSessions,
-          Value<DateTime?> lastStudyDate = const Value.absent(),
-          DateTime? updatedAt}) =>
-      UserProgressData(
-        id: id ?? this.id,
-        totalPoints: totalPoints ?? this.totalPoints,
-        currentLevel: currentLevel ?? this.currentLevel,
-        currentStreak: currentStreak ?? this.currentStreak,
-        longestStreak: longestStreak ?? this.longestStreak,
-        totalCardsStudied: totalCardsStudied ?? this.totalCardsStudied,
-        totalCorrect: totalCorrect ?? this.totalCorrect,
-        totalSessions: totalSessions ?? this.totalSessions,
-        lastStudyDate:
-            lastStudyDate.present ? lastStudyDate.value : this.lastStudyDate,
-        updatedAt: updatedAt ?? this.updatedAt,
-      );
-  UserProgressData copyWithCompanion(UserProgressCompanion data) {
-    return UserProgressData(
-      id: data.id.present ? data.id.value : this.id,
-      totalPoints:
-          data.totalPoints.present ? data.totalPoints.value : this.totalPoints,
-      currentLevel: data.currentLevel.present
-          ? data.currentLevel.value
-          : this.currentLevel,
-      currentStreak: data.currentStreak.present
-          ? data.currentStreak.value
-          : this.currentStreak,
-      longestStreak: data.longestStreak.present
-          ? data.longestStreak.value
-          : this.longestStreak,
-      totalCardsStudied: data.totalCardsStudied.present
-          ? data.totalCardsStudied.value
-          : this.totalCardsStudied,
-      totalCorrect: data.totalCorrect.present
-          ? data.totalCorrect.value
-          : this.totalCorrect,
-      totalSessions: data.totalSessions.present
-          ? data.totalSessions.value
-          : this.totalSessions,
-      lastStudyDate: data.lastStudyDate.present
-          ? data.lastStudyDate.value
-          : this.lastStudyDate,
-      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
-    );
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('UserProgressData(')
-          ..write('id: $id, ')
-          ..write('totalPoints: $totalPoints, ')
-          ..write('currentLevel: $currentLevel, ')
-          ..write('currentStreak: $currentStreak, ')
-          ..write('longestStreak: $longestStreak, ')
-          ..write('totalCardsStudied: $totalCardsStudied, ')
-          ..write('totalCorrect: $totalCorrect, ')
-          ..write('totalSessions: $totalSessions, ')
-          ..write('lastStudyDate: $lastStudyDate, ')
-          ..write('updatedAt: $updatedAt')
-          ..write(')'))
-        .toString();
-  }
-
-  @override
-  int get hashCode => Object.hash(
-      id,
-      totalPoints,
-      currentLevel,
-      currentStreak,
-      longestStreak,
-      totalCardsStudied,
-      totalCorrect,
-      totalSessions,
-      lastStudyDate,
-      updatedAt);
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      (other is UserProgressData &&
-          other.id == this.id &&
-          other.totalPoints == this.totalPoints &&
-          other.currentLevel == this.currentLevel &&
-          other.currentStreak == this.currentStreak &&
-          other.longestStreak == this.longestStreak &&
-          other.totalCardsStudied == this.totalCardsStudied &&
-          other.totalCorrect == this.totalCorrect &&
-          other.totalSessions == this.totalSessions &&
-          other.lastStudyDate == this.lastStudyDate &&
-          other.updatedAt == this.updatedAt);
-}
-
-class UserProgressCompanion extends UpdateCompanion<UserProgressData> {
-  final Value<int> id;
-  final Value<int> totalPoints;
-  final Value<int> currentLevel;
-  final Value<int> currentStreak;
-  final Value<int> longestStreak;
-  final Value<int> totalCardsStudied;
-  final Value<int> totalCorrect;
-  final Value<int> totalSessions;
-  final Value<DateTime?> lastStudyDate;
-  final Value<DateTime> updatedAt;
-  const UserProgressCompanion({
-    this.id = const Value.absent(),
-    this.totalPoints = const Value.absent(),
-    this.currentLevel = const Value.absent(),
-    this.currentStreak = const Value.absent(),
-    this.longestStreak = const Value.absent(),
-    this.totalCardsStudied = const Value.absent(),
-    this.totalCorrect = const Value.absent(),
-    this.totalSessions = const Value.absent(),
-    this.lastStudyDate = const Value.absent(),
-    this.updatedAt = const Value.absent(),
-  });
-  UserProgressCompanion.insert({
-    this.id = const Value.absent(),
-    this.totalPoints = const Value.absent(),
-    this.currentLevel = const Value.absent(),
-    this.currentStreak = const Value.absent(),
-    this.longestStreak = const Value.absent(),
-    this.totalCardsStudied = const Value.absent(),
-    this.totalCorrect = const Value.absent(),
-    this.totalSessions = const Value.absent(),
-    this.lastStudyDate = const Value.absent(),
-    this.updatedAt = const Value.absent(),
-  });
-  static Insertable<UserProgressData> custom({
-    Expression<int>? id,
-    Expression<int>? totalPoints,
-    Expression<int>? currentLevel,
-    Expression<int>? currentStreak,
-    Expression<int>? longestStreak,
-    Expression<int>? totalCardsStudied,
-    Expression<int>? totalCorrect,
-    Expression<int>? totalSessions,
-    Expression<DateTime>? lastStudyDate,
-    Expression<DateTime>? updatedAt,
-  }) {
-    return RawValuesInsertable({
-      if (id != null) 'id': id,
-      if (totalPoints != null) 'total_points': totalPoints,
-      if (currentLevel != null) 'current_level': currentLevel,
-      if (currentStreak != null) 'current_streak': currentStreak,
-      if (longestStreak != null) 'longest_streak': longestStreak,
-      if (totalCardsStudied != null) 'total_cards_studied': totalCardsStudied,
-      if (totalCorrect != null) 'total_correct': totalCorrect,
-      if (totalSessions != null) 'total_sessions': totalSessions,
-      if (lastStudyDate != null) 'last_study_date': lastStudyDate,
-      if (updatedAt != null) 'updated_at': updatedAt,
-    });
-  }
-
-  UserProgressCompanion copyWith(
-      {Value<int>? id,
-      Value<int>? totalPoints,
-      Value<int>? currentLevel,
-      Value<int>? currentStreak,
-      Value<int>? longestStreak,
-      Value<int>? totalCardsStudied,
-      Value<int>? totalCorrect,
-      Value<int>? totalSessions,
-      Value<DateTime?>? lastStudyDate,
-      Value<DateTime>? updatedAt}) {
-    return UserProgressCompanion(
-      id: id ?? this.id,
-      totalPoints: totalPoints ?? this.totalPoints,
-      currentLevel: currentLevel ?? this.currentLevel,
-      currentStreak: currentStreak ?? this.currentStreak,
-      longestStreak: longestStreak ?? this.longestStreak,
-      totalCardsStudied: totalCardsStudied ?? this.totalCardsStudied,
-      totalCorrect: totalCorrect ?? this.totalCorrect,
-      totalSessions: totalSessions ?? this.totalSessions,
-      lastStudyDate: lastStudyDate ?? this.lastStudyDate,
-      updatedAt: updatedAt ?? this.updatedAt,
-    );
-  }
-
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    if (id.present) {
-      map['id'] = Variable<int>(id.value);
-    }
-    if (totalPoints.present) {
-      map['total_points'] = Variable<int>(totalPoints.value);
-    }
-    if (currentLevel.present) {
-      map['current_level'] = Variable<int>(currentLevel.value);
-    }
-    if (currentStreak.present) {
-      map['current_streak'] = Variable<int>(currentStreak.value);
-    }
-    if (longestStreak.present) {
-      map['longest_streak'] = Variable<int>(longestStreak.value);
-    }
-    if (totalCardsStudied.present) {
-      map['total_cards_studied'] = Variable<int>(totalCardsStudied.value);
-    }
-    if (totalCorrect.present) {
-      map['total_correct'] = Variable<int>(totalCorrect.value);
-    }
-    if (totalSessions.present) {
-      map['total_sessions'] = Variable<int>(totalSessions.value);
-    }
-    if (lastStudyDate.present) {
-      map['last_study_date'] = Variable<DateTime>(lastStudyDate.value);
-    }
-    if (updatedAt.present) {
-      map['updated_at'] = Variable<DateTime>(updatedAt.value);
-    }
-    return map;
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('UserProgressCompanion(')
-          ..write('id: $id, ')
-          ..write('totalPoints: $totalPoints, ')
-          ..write('currentLevel: $currentLevel, ')
-          ..write('currentStreak: $currentStreak, ')
-          ..write('longestStreak: $longestStreak, ')
-          ..write('totalCardsStudied: $totalCardsStudied, ')
-          ..write('totalCorrect: $totalCorrect, ')
-          ..write('totalSessions: $totalSessions, ')
-          ..write('lastStudyDate: $lastStudyDate, ')
-          ..write('updatedAt: $updatedAt')
-          ..write(')'))
-        .toString();
-  }
-}
-
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -3067,13 +2581,12 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $ReviewHistoryTable reviewHistory = $ReviewHistoryTable(this);
   late final $SettingsTable settings = $SettingsTable(this);
   late final $DailyStatsTable dailyStats = $DailyStatsTable(this);
-  late final $UserProgressTable userProgress = $UserProgressTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
   @override
   List<DatabaseSchemaEntity> get allSchemaEntities =>
-      [decks, cards, reviewHistory, settings, dailyStats, userProgress];
+      [decks, cards, reviewHistory, settings, dailyStats];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules(
         [
@@ -3414,6 +2927,7 @@ typedef $$CardsTableCreateCompanionBuilder = CardsCompanion Function({
   Value<String?> frontVideoUrl,
   Value<String?> backVideoUrl,
   Value<String?> pronunciation,
+  Value<String?> transcription,
   Value<String?> example,
   Value<String?> notes,
   Value<int> easinessFactor,
@@ -3439,6 +2953,7 @@ typedef $$CardsTableUpdateCompanionBuilder = CardsCompanion Function({
   Value<String?> frontVideoUrl,
   Value<String?> backVideoUrl,
   Value<String?> pronunciation,
+  Value<String?> transcription,
   Value<String?> example,
   Value<String?> notes,
   Value<int> easinessFactor,
@@ -3526,6 +3041,9 @@ class $$CardsTableFilterComposer extends Composer<_$AppDatabase, $CardsTable> {
 
   ColumnFilters<String> get pronunciation => $composableBuilder(
       column: $table.pronunciation, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get transcription => $composableBuilder(
+      column: $table.transcription, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get example => $composableBuilder(
       column: $table.example, builder: (column) => ColumnFilters(column));
@@ -3655,6 +3173,10 @@ class $$CardsTableOrderingComposer
       column: $table.pronunciation,
       builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<String> get transcription => $composableBuilder(
+      column: $table.transcription,
+      builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<String> get example => $composableBuilder(
       column: $table.example, builder: (column) => ColumnOrderings(column));
 
@@ -3755,6 +3277,9 @@ class $$CardsTableAnnotationComposer
 
   GeneratedColumn<String> get pronunciation => $composableBuilder(
       column: $table.pronunciation, builder: (column) => column);
+
+  GeneratedColumn<String> get transcription => $composableBuilder(
+      column: $table.transcription, builder: (column) => column);
 
   GeneratedColumn<String> get example =>
       $composableBuilder(column: $table.example, builder: (column) => column);
@@ -3868,6 +3393,7 @@ class $$CardsTableTableManager extends RootTableManager<
             Value<String?> frontVideoUrl = const Value.absent(),
             Value<String?> backVideoUrl = const Value.absent(),
             Value<String?> pronunciation = const Value.absent(),
+            Value<String?> transcription = const Value.absent(),
             Value<String?> example = const Value.absent(),
             Value<String?> notes = const Value.absent(),
             Value<int> easinessFactor = const Value.absent(),
@@ -3893,6 +3419,7 @@ class $$CardsTableTableManager extends RootTableManager<
             frontVideoUrl: frontVideoUrl,
             backVideoUrl: backVideoUrl,
             pronunciation: pronunciation,
+            transcription: transcription,
             example: example,
             notes: notes,
             easinessFactor: easinessFactor,
@@ -3918,6 +3445,7 @@ class $$CardsTableTableManager extends RootTableManager<
             Value<String?> frontVideoUrl = const Value.absent(),
             Value<String?> backVideoUrl = const Value.absent(),
             Value<String?> pronunciation = const Value.absent(),
+            Value<String?> transcription = const Value.absent(),
             Value<String?> example = const Value.absent(),
             Value<String?> notes = const Value.absent(),
             Value<int> easinessFactor = const Value.absent(),
@@ -3943,6 +3471,7 @@ class $$CardsTableTableManager extends RootTableManager<
             frontVideoUrl: frontVideoUrl,
             backVideoUrl: backVideoUrl,
             pronunciation: pronunciation,
+            transcription: transcription,
             example: example,
             notes: notes,
             easinessFactor: easinessFactor,
@@ -4643,256 +4172,6 @@ typedef $$DailyStatsTableProcessedTableManager = ProcessedTableManager<
     ),
     DailyStatsData,
     PrefetchHooks Function()>;
-typedef $$UserProgressTableCreateCompanionBuilder = UserProgressCompanion
-    Function({
-  Value<int> id,
-  Value<int> totalPoints,
-  Value<int> currentLevel,
-  Value<int> currentStreak,
-  Value<int> longestStreak,
-  Value<int> totalCardsStudied,
-  Value<int> totalCorrect,
-  Value<int> totalSessions,
-  Value<DateTime?> lastStudyDate,
-  Value<DateTime> updatedAt,
-});
-typedef $$UserProgressTableUpdateCompanionBuilder = UserProgressCompanion
-    Function({
-  Value<int> id,
-  Value<int> totalPoints,
-  Value<int> currentLevel,
-  Value<int> currentStreak,
-  Value<int> longestStreak,
-  Value<int> totalCardsStudied,
-  Value<int> totalCorrect,
-  Value<int> totalSessions,
-  Value<DateTime?> lastStudyDate,
-  Value<DateTime> updatedAt,
-});
-
-class $$UserProgressTableFilterComposer
-    extends Composer<_$AppDatabase, $UserProgressTable> {
-  $$UserProgressTableFilterComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnFilters<int> get id => $composableBuilder(
-      column: $table.id, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<int> get totalPoints => $composableBuilder(
-      column: $table.totalPoints, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<int> get currentLevel => $composableBuilder(
-      column: $table.currentLevel, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<int> get currentStreak => $composableBuilder(
-      column: $table.currentStreak, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<int> get longestStreak => $composableBuilder(
-      column: $table.longestStreak, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<int> get totalCardsStudied => $composableBuilder(
-      column: $table.totalCardsStudied,
-      builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<int> get totalCorrect => $composableBuilder(
-      column: $table.totalCorrect, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<int> get totalSessions => $composableBuilder(
-      column: $table.totalSessions, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<DateTime> get lastStudyDate => $composableBuilder(
-      column: $table.lastStudyDate, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
-      column: $table.updatedAt, builder: (column) => ColumnFilters(column));
-}
-
-class $$UserProgressTableOrderingComposer
-    extends Composer<_$AppDatabase, $UserProgressTable> {
-  $$UserProgressTableOrderingComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnOrderings<int> get id => $composableBuilder(
-      column: $table.id, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<int> get totalPoints => $composableBuilder(
-      column: $table.totalPoints, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<int> get currentLevel => $composableBuilder(
-      column: $table.currentLevel,
-      builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<int> get currentStreak => $composableBuilder(
-      column: $table.currentStreak,
-      builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<int> get longestStreak => $composableBuilder(
-      column: $table.longestStreak,
-      builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<int> get totalCardsStudied => $composableBuilder(
-      column: $table.totalCardsStudied,
-      builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<int> get totalCorrect => $composableBuilder(
-      column: $table.totalCorrect,
-      builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<int> get totalSessions => $composableBuilder(
-      column: $table.totalSessions,
-      builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<DateTime> get lastStudyDate => $composableBuilder(
-      column: $table.lastStudyDate,
-      builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
-      column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
-}
-
-class $$UserProgressTableAnnotationComposer
-    extends Composer<_$AppDatabase, $UserProgressTable> {
-  $$UserProgressTableAnnotationComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  GeneratedColumn<int> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => column);
-
-  GeneratedColumn<int> get totalPoints => $composableBuilder(
-      column: $table.totalPoints, builder: (column) => column);
-
-  GeneratedColumn<int> get currentLevel => $composableBuilder(
-      column: $table.currentLevel, builder: (column) => column);
-
-  GeneratedColumn<int> get currentStreak => $composableBuilder(
-      column: $table.currentStreak, builder: (column) => column);
-
-  GeneratedColumn<int> get longestStreak => $composableBuilder(
-      column: $table.longestStreak, builder: (column) => column);
-
-  GeneratedColumn<int> get totalCardsStudied => $composableBuilder(
-      column: $table.totalCardsStudied, builder: (column) => column);
-
-  GeneratedColumn<int> get totalCorrect => $composableBuilder(
-      column: $table.totalCorrect, builder: (column) => column);
-
-  GeneratedColumn<int> get totalSessions => $composableBuilder(
-      column: $table.totalSessions, builder: (column) => column);
-
-  GeneratedColumn<DateTime> get lastStudyDate => $composableBuilder(
-      column: $table.lastStudyDate, builder: (column) => column);
-
-  GeneratedColumn<DateTime> get updatedAt =>
-      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
-}
-
-class $$UserProgressTableTableManager extends RootTableManager<
-    _$AppDatabase,
-    $UserProgressTable,
-    UserProgressData,
-    $$UserProgressTableFilterComposer,
-    $$UserProgressTableOrderingComposer,
-    $$UserProgressTableAnnotationComposer,
-    $$UserProgressTableCreateCompanionBuilder,
-    $$UserProgressTableUpdateCompanionBuilder,
-    (
-      UserProgressData,
-      BaseReferences<_$AppDatabase, $UserProgressTable, UserProgressData>
-    ),
-    UserProgressData,
-    PrefetchHooks Function()> {
-  $$UserProgressTableTableManager(_$AppDatabase db, $UserProgressTable table)
-      : super(TableManagerState(
-          db: db,
-          table: table,
-          createFilteringComposer: () =>
-              $$UserProgressTableFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $$UserProgressTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $$UserProgressTableAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback: ({
-            Value<int> id = const Value.absent(),
-            Value<int> totalPoints = const Value.absent(),
-            Value<int> currentLevel = const Value.absent(),
-            Value<int> currentStreak = const Value.absent(),
-            Value<int> longestStreak = const Value.absent(),
-            Value<int> totalCardsStudied = const Value.absent(),
-            Value<int> totalCorrect = const Value.absent(),
-            Value<int> totalSessions = const Value.absent(),
-            Value<DateTime?> lastStudyDate = const Value.absent(),
-            Value<DateTime> updatedAt = const Value.absent(),
-          }) =>
-              UserProgressCompanion(
-            id: id,
-            totalPoints: totalPoints,
-            currentLevel: currentLevel,
-            currentStreak: currentStreak,
-            longestStreak: longestStreak,
-            totalCardsStudied: totalCardsStudied,
-            totalCorrect: totalCorrect,
-            totalSessions: totalSessions,
-            lastStudyDate: lastStudyDate,
-            updatedAt: updatedAt,
-          ),
-          createCompanionCallback: ({
-            Value<int> id = const Value.absent(),
-            Value<int> totalPoints = const Value.absent(),
-            Value<int> currentLevel = const Value.absent(),
-            Value<int> currentStreak = const Value.absent(),
-            Value<int> longestStreak = const Value.absent(),
-            Value<int> totalCardsStudied = const Value.absent(),
-            Value<int> totalCorrect = const Value.absent(),
-            Value<int> totalSessions = const Value.absent(),
-            Value<DateTime?> lastStudyDate = const Value.absent(),
-            Value<DateTime> updatedAt = const Value.absent(),
-          }) =>
-              UserProgressCompanion.insert(
-            id: id,
-            totalPoints: totalPoints,
-            currentLevel: currentLevel,
-            currentStreak: currentStreak,
-            longestStreak: longestStreak,
-            totalCardsStudied: totalCardsStudied,
-            totalCorrect: totalCorrect,
-            totalSessions: totalSessions,
-            lastStudyDate: lastStudyDate,
-            updatedAt: updatedAt,
-          ),
-          withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
-              .toList(),
-          prefetchHooksCallback: null,
-        ));
-}
-
-typedef $$UserProgressTableProcessedTableManager = ProcessedTableManager<
-    _$AppDatabase,
-    $UserProgressTable,
-    UserProgressData,
-    $$UserProgressTableFilterComposer,
-    $$UserProgressTableOrderingComposer,
-    $$UserProgressTableAnnotationComposer,
-    $$UserProgressTableCreateCompanionBuilder,
-    $$UserProgressTableUpdateCompanionBuilder,
-    (
-      UserProgressData,
-      BaseReferences<_$AppDatabase, $UserProgressTable, UserProgressData>
-    ),
-    UserProgressData,
-    PrefetchHooks Function()>;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -4907,6 +4186,4 @@ class $AppDatabaseManager {
       $$SettingsTableTableManager(_db, _db.settings);
   $$DailyStatsTableTableManager get dailyStats =>
       $$DailyStatsTableTableManager(_db, _db.dailyStats);
-  $$UserProgressTableTableManager get userProgress =>
-      $$UserProgressTableTableManager(_db, _db.userProgress);
 }

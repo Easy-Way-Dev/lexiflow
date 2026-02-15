@@ -14,8 +14,8 @@ class Decks extends Table {
   IntColumn get id => integer().autoIncrement()();
   TextColumn get name => text().withLength(min: 1, max: 100)();
   TextColumn get description => text().nullable()();
-  TextColumn get sourceLanguage => text().withLength(min: 2, max: 5)();
-  TextColumn get targetLanguage => text().withLength(min: 2, max: 5)();
+  TextColumn get sourceLanguage => text().withLength(min: 2, max: 10)();
+  TextColumn get targetLanguage => text().withLength(min: 2, max: 10)();
   IntColumn get totalCards => integer().withDefault(const Constant(0))();
   IntColumn get masteredCards => integer().withDefault(const Constant(0))();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
@@ -36,6 +36,7 @@ class Cards extends Table {
   TextColumn get frontVideoUrl => text().nullable()();
   TextColumn get backVideoUrl => text().nullable()();
   TextColumn get pronunciation => text().nullable()();
+  TextColumn get transcription => text().nullable()();
   TextColumn get example => text().nullable()();
   TextColumn get notes => text().nullable()();
   IntColumn get easinessFactor => integer().withDefault(const Constant(250))();
@@ -66,7 +67,6 @@ class Settings extends Table {
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
 }
 
-// ===== ДОБАВЛЕНА АННОТАЦИЯ! =====
 @DataClassName('DailyStatsData')
 class DailyStats extends Table {
   IntColumn get id => integer().autoIncrement()();
@@ -78,39 +78,21 @@ class DailyStats extends Table {
   IntColumn get sessionsCount => integer().withDefault(const Constant(0))();
 }
 
-@DataClassName('UserProgressData')
-class UserProgress extends Table {
-  IntColumn get id => integer().autoIncrement()();
-  IntColumn get totalPoints => integer().withDefault(const Constant(0))();
-  IntColumn get currentLevel => integer().withDefault(const Constant(1))();
-  IntColumn get currentStreak => integer().withDefault(const Constant(0))();
-  IntColumn get longestStreak => integer().withDefault(const Constant(0))();
-  IntColumn get totalCardsStudied => integer().withDefault(const Constant(0))();
-  IntColumn get totalCorrect => integer().withDefault(const Constant(0))();
-  IntColumn get totalSessions => integer().withDefault(const Constant(0))();
-  DateTimeColumn get lastStudyDate => dateTime().nullable()();
-  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
-}
-
 // ============================================
 // DATABASE
 // ============================================
 
-@DriftDatabase(
-    tables: [Decks, Cards, ReviewHistory, Settings, DailyStats, UserProgress])
+@DriftDatabase(tables: [Decks, Cards, ReviewHistory, Settings, DailyStats])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 6;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
         onCreate: (m) async {
           await m.createAll();
-          await into(userProgress).insert(
-            const UserProgressCompanion(),
-          );
         },
         onUpgrade: (m, from, to) async {
           if (from < 2) {
@@ -120,11 +102,8 @@ class AppDatabase extends _$AppDatabase {
             await m.addColumn(cards, cards.frontVideoUrl);
             await m.addColumn(cards, cards.backVideoUrl);
           }
-          if (from < 4) {
-            await m.createTable(userProgress);
-            await into(userProgress).insert(
-              const UserProgressCompanion(),
-            );
+          if (from < 6) {
+            await m.addColumn(cards, cards.transcription);
           }
         },
       );
@@ -291,137 +270,33 @@ class AppDatabase extends _$AppDatabase {
   }
 
   // ============================================
-  // USER PROGRESS
+  // STREAK CALCULATION
   // ============================================
 
-  Future<UserProgressData?> getUserProgress() =>
-      (select(userProgress)..limit(1)).getSingleOrNull();
+  Future<int> getCurrentStreak() async {
+    final today = DateTime.now();
+    final stats = await select(dailyStats).get();
 
-  Future<int> addPoints(int points) async {
-    final progress = await getUserProgress();
-    if (progress == null) return 0;
+    if (stats.isEmpty) return 0;
 
-    final newTotal = progress.totalPoints + points;
-    final newLevel = LevelSystem.getLevelForPoints(newTotal);
-    final newStudied = progress.totalCardsStudied + 1;
-    final newCorrect =
-        points > 0 ? progress.totalCorrect + 1 : progress.totalCorrect;
+    stats.sort((a, b) => b.date.compareTo(a.date));
 
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    int newStreak = progress.currentStreak;
-    int newLongest = progress.longestStreak;
+    int streak = 0;
+    DateTime checkDate = DateTime(today.year, today.month, today.day);
 
-    if (progress.lastStudyDate != null) {
-      final last = progress.lastStudyDate!;
-      final lastDate = DateTime(last.year, last.month, last.day);
-      final diff = today.difference(lastDate).inDays;
-      if (diff == 1) {
-        newStreak++;
-      } else if (diff > 1) {
-        newStreak = 1;
+    for (final stat in stats) {
+      final statDate = DateTime(stat.date.year, stat.date.month, stat.date.day);
+
+      if (statDate == checkDate) {
+        streak++;
+        checkDate = checkDate.subtract(const Duration(days: 1));
+      } else if (statDate.isBefore(checkDate)) {
+        break;
       }
-    } else {
-      newStreak = 1;
     }
-    if (newStreak > newLongest) newLongest = newStreak;
 
-    await (update(userProgress)..where((tbl) => tbl.id.equals(progress.id)))
-        .write(UserProgressCompanion(
-      totalPoints: Value(newTotal),
-      currentLevel: Value(newLevel),
-      currentStreak: Value(newStreak),
-      longestStreak: Value(newLongest),
-      totalCardsStudied: Value(newStudied),
-      totalCorrect: Value(newCorrect),
-      lastStudyDate: Value(now),
-      updatedAt: Value(now),
-    ));
-
-    return newTotal;
+    return streak;
   }
-
-  Future<void> addSessionBonus(int cardsCount, int correctCount) async {
-    final bonus = LevelSystem.sessionBonus(cardsCount, correctCount);
-    if (bonus > 0) await addPoints(bonus);
-  }
-}
-
-// ============================================
-// СИСТЕМА УРОВНЕЙ
-// ============================================
-
-class LevelSystem {
-  static int pointsForQuality(int quality, {int hintsUsed = 0}) {
-    if (quality < 3) return 0;
-    final base = switch (quality) {
-      3 => 5,
-      4 => 10,
-      5 => 15,
-      _ => 0,
-    };
-    final penalty = hintsUsed * 2;
-    return (base - penalty).clamp(0, base);
-  }
-
-  static int sessionBonus(int total, int correct) {
-    if (total == 0) return 0;
-    final accuracy = correct / total;
-    if (accuracy >= 1.0) return 30;
-    if (accuracy >= 0.8) return 15;
-    if (accuracy >= 0.6) return 5;
-    return 0;
-  }
-
-  static int getLevelForPoints(int points) {
-    for (int i = levels.length - 1; i >= 0; i--) {
-      if (points >= levels[i].minPoints) return levels[i].level;
-    }
-    return 1;
-  }
-
-  static LevelInfo getLevelInfo(int level) =>
-      levels.firstWhere((l) => l.level == level, orElse: () => levels.last);
-
-  static LevelInfo? getNextLevel(int level) {
-    final idx = levels.indexWhere((l) => l.level == level);
-    if (idx == -1 || idx == levels.length - 1) return null;
-    return levels[idx + 1];
-  }
-
-  static double levelProgress(int totalPoints, int level) {
-    final current = getLevelInfo(level);
-    final next = getNextLevel(level);
-    if (next == null) return 1.0;
-    final range = next.minPoints - current.minPoints;
-    final earned = totalPoints - current.minPoints;
-    return (earned / range).clamp(0.0, 1.0);
-  }
-
-  static const List<LevelInfo> levels = [
-    LevelInfo(level: 1, name: 'Новичок', emoji: '🌱', minPoints: 0),
-    LevelInfo(level: 2, name: 'Ученик', emoji: '📖', minPoints: 100),
-    LevelInfo(level: 3, name: 'Студент', emoji: '🎓', minPoints: 300),
-    LevelInfo(level: 4, name: 'Знаток', emoji: '🧠', minPoints: 700),
-    LevelInfo(level: 5, name: 'Эксперт', emoji: '⭐', minPoints: 1500),
-    LevelInfo(level: 6, name: 'Мастер', emoji: '🏆', minPoints: 3000),
-    LevelInfo(level: 7, name: 'Полиглот', emoji: '🌍', minPoints: 6000),
-    LevelInfo(level: 8, name: 'Легенда', emoji: '👑', minPoints: 12000),
-  ];
-}
-
-class LevelInfo {
-  final int level;
-  final String name;
-  final String emoji;
-  final int minPoints;
-
-  const LevelInfo({
-    required this.level,
-    required this.name,
-    required this.emoji,
-    required this.minPoints,
-  });
 }
 
 LazyDatabase _openConnection() {

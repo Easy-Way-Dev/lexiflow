@@ -1,12 +1,9 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:lexiflow/core/database/app_database.dart';
 import 'package:lexiflow/core/services/import_export_service.dart';
 import 'package:lexiflow/features/cards/presentation/screens/import_screen.dart';
-import 'package:lexiflow/features/cards/presentation/screens/cards_list_screen.dart';
-import 'package:file_picker/file_picker.dart';
 import 'package:drift/drift.dart' as drift;
+import 'package:lexiflow/features/cards/presentation/screens/cards_list_screen.dart';
 
 class DecksScreen extends StatefulWidget {
   final AppDatabase db;
@@ -44,18 +41,18 @@ class _DecksScreenState extends State<DecksScreen> {
     }
   }
 
-  // ============ СОЗДАНИЕ / РЕДАКТИРОВАНИЕ ============
-
   Future<void> _createDeck() => _showDeckDialog(deckToEdit: null);
   Future<void> _editDeck(Deck deck) => _showDeckDialog(deckToEdit: deck);
 
   Future<void> _showDeckDialog({Deck? deckToEdit}) async {
     final isEditing = deckToEdit != null;
-    final nameController =
-        TextEditingController(text: isEditing ? deckToEdit.name : '');
+    final nameController = TextEditingController(
+      text: isEditing ? deckToEdit.name : '',
+    );
     final descController = TextEditingController(
-        text: isEditing ? (deckToEdit.description ?? '') : '');
-    String sourceLang = isEditing ? deckToEdit.sourceLanguage : 'en';
+      text: isEditing ? (deckToEdit.description ?? '') : '',
+    );
+    String sourceLang = isEditing ? deckToEdit.sourceLanguage : 'en-US';
     String targetLang = isEditing ? deckToEdit.targetLanguage : 'ru';
 
     final result = await showDialog<bool>(
@@ -93,7 +90,12 @@ class _DecksScreenState extends State<DecksScreen> {
                     border: OutlineInputBorder(),
                   ),
                   items: const [
-                    DropdownMenuItem(value: 'en', child: Text('🇬🇧 English')),
+                    DropdownMenuItem(
+                        value: 'en-GB', child: Text('🇬🇧 English (UK)')),
+                    DropdownMenuItem(
+                        value: 'en-US', child: Text('🇺🇸 English (US)')),
+                    DropdownMenuItem(
+                        value: 'en-CA', child: Text('🇨🇦 English (Canada)')),
                     DropdownMenuItem(value: 'es', child: Text('🇪🇸 Español')),
                     DropdownMenuItem(value: 'fr', child: Text('🇫🇷 Français')),
                     DropdownMenuItem(value: 'de', child: Text('🇩🇪 Deutsch')),
@@ -112,7 +114,8 @@ class _DecksScreenState extends State<DecksScreen> {
                   ),
                   items: const [
                     DropdownMenuItem(value: 'ru', child: Text('🇷🇺 Русский')),
-                    DropdownMenuItem(value: 'en', child: Text('🇬🇧 English')),
+                    DropdownMenuItem(
+                        value: 'en-US', child: Text('🇺🇸 English (US)')),
                     DropdownMenuItem(
                         value: 'uk', child: Text('🇺🇦 Українська')),
                   ],
@@ -144,9 +147,11 @@ class _DecksScreenState extends State<DecksScreen> {
                 DecksCompanion(
                   id: drift.Value(deckToEdit.id),
                   name: drift.Value(nameController.text.trim()),
-                  description: drift.Value(descController.text.trim().isEmpty
-                      ? null
-                      : descController.text.trim()),
+                  description: drift.Value(
+                    descController.text.trim().isEmpty
+                        ? null
+                        : descController.text.trim(),
+                  ),
                   sourceLanguage: drift.Value(sourceLang),
                   targetLanguage: drift.Value(targetLang),
                   totalCards: drift.Value(deckToEdit.totalCards),
@@ -157,9 +162,11 @@ class _DecksScreenState extends State<DecksScreen> {
         } else {
           await widget.db.createDeck(DecksCompanion(
             name: drift.Value(nameController.text.trim()),
-            description: drift.Value(descController.text.trim().isEmpty
-                ? null
-                : descController.text.trim()),
+            description: drift.Value(
+              descController.text.trim().isEmpty
+                  ? null
+                  : descController.text.trim(),
+            ),
             sourceLanguage: drift.Value(sourceLang),
             targetLanguage: drift.Value(targetLang),
           ));
@@ -184,15 +191,14 @@ class _DecksScreenState extends State<DecksScreen> {
     }
   }
 
-  // ============ УДАЛЕНИЕ ============
-
   Future<void> _deleteDeck(Deck deck) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Удалить колоду?'),
         content: Text(
-            'Колода "${deck.name}" и все её карточки будут удалены безвозвратно.'),
+          'Колода "${deck.name}" и все её карточки будут удалены безвозвратно.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -218,552 +224,189 @@ class _DecksScreenState extends State<DecksScreen> {
     }
   }
 
-  // ============ ЭКСПОРТ ============
-
-  Future<void> _showExportDialog({Deck? preselectedDeck}) async {
-    final selectedDecks = <int>{};
-    if (preselectedDeck != null) selectedDecks.add(preselectedDeck.id);
-    String savePath = '';
-    bool isExporting = false;
-    String? exportedFilePath;
-
-    await showDialog(
-      context: context,
-      barrierDismissible: !isExporting,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (dialogContext, setDialogState) => AlertDialog(
-          title: const Row(children: [
-            Icon(Icons.ios_share, color: Colors.blue, size: 24),
-            SizedBox(width: 8),
-            Text('Экспорт колод'),
+  Future<void> _exportDeck(Deck deck) async {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(children: [
+            const SizedBox(
+              width: 18,
+              height: 18,
+              child: CircularProgressIndicator(
+                  strokeWidth: 2, color: Colors.white),
+            ),
+            const SizedBox(width: 12),
+            Text('Создаём архив "${deck.name}"...'),
           ]),
-          content: SizedBox(
-            width: 440,
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // ===== СПИСОК КОЛОД =====
-                  Text(
-                    'Выберите колоды:',
-                    style: Theme.of(dialogContext)
-                        .textTheme
-                        .bodyMedium
-                        ?.copyWith(fontWeight: FontWeight.w600),
-                  ),
-                  const SizedBox(height: 8),
-                  Container(
-                    constraints: const BoxConstraints(maxHeight: 180),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey[300]!),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: _decks.isEmpty
-                        ? const Padding(
-                            padding: EdgeInsets.all(16),
-                            child: Text('Нет колод для экспорта'),
-                          )
-                        : SingleChildScrollView(
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                // Выбрать все
-                                CheckboxListTile(
-                                  value: selectedDecks.length == _decks.length,
-                                  tristate: true,
-                                  onChanged: (_) {
-                                    setDialogState(() {
-                                      if (selectedDecks.length ==
-                                          _decks.length) {
-                                        selectedDecks.clear();
-                                      } else {
-                                        selectedDecks
-                                            .addAll(_decks.map((d) => d.id));
-                                      }
-                                    });
-                                  },
-                                  title: Text(
-                                    'Выбрать все (${_decks.length})',
-                                    style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 13),
-                                  ),
-                                  dense: true,
-                                ),
-                                const Divider(height: 1),
-                                ..._decks.map((deck) => CheckboxListTile(
-                                      value: selectedDecks.contains(deck.id),
-                                      onChanged: (v) {
-                                        setDialogState(() {
-                                          if (v == true) {
-                                            selectedDecks.add(deck.id);
-                                          } else {
-                                            selectedDecks.remove(deck.id);
-                                          }
-                                        });
-                                      },
-                                      title: Text(deck.name,
-                                          style: const TextStyle(fontSize: 13)),
-                                      subtitle: Text(
-                                        '${deck.totalCards} карт. • ${deck.sourceLanguage.toUpperCase()}→${deck.targetLanguage.toUpperCase()}',
-                                        style: TextStyle(
-                                            fontSize: 11,
-                                            color: Colors.grey[500]),
-                                      ),
-                                      secondary: Container(
-                                        width: 30,
-                                        height: 30,
-                                        decoration: BoxDecoration(
-                                          color: Colors.blue[50],
-                                          borderRadius:
-                                              BorderRadius.circular(6),
-                                        ),
-                                        child: Icon(Icons.inventory_2,
-                                            size: 16, color: Colors.blue[700]),
-                                      ),
-                                      dense: true,
-                                    )),
-                              ],
-                            ),
-                          ),
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  // ===== ПАПКА СОХРАНЕНИЯ =====
-                  Text(
-                    'Папка сохранения:',
-                    style: Theme.of(dialogContext)
-                        .textTheme
-                        .bodyMedium
-                        ?.copyWith(fontWeight: FontWeight.w600),
-                  ),
-                  const SizedBox(height: 8),
-                  InkWell(
-                    onTap: isExporting
-                        ? null
-                        : () async {
-                            final path =
-                                await FilePicker.platform.getDirectoryPath(
-                              dialogTitle: 'Выберите папку для сохранения',
-                            );
-                            if (path != null) {
-                              setDialogState(() => savePath = path);
-                            }
-                          },
-                    borderRadius: BorderRadius.circular(8),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 10),
-                      decoration: BoxDecoration(
-                        border: Border.all(
-                          color: savePath.isNotEmpty
-                              ? Colors.blue
-                              : Colors.grey[400]!,
-                        ),
-                        borderRadius: BorderRadius.circular(8),
-                        color: savePath.isNotEmpty
-                            ? Colors.blue[50]
-                            : Colors.grey[50],
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.folder_open,
-                            color: savePath.isNotEmpty
-                                ? Colors.blue[700]
-                                : Colors.grey[500],
-                            size: 20,
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Text(
-                              savePath.isNotEmpty
-                                  ? savePath
-                                  : 'Нажмите чтобы выбрать папку...',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: savePath.isNotEmpty
-                                    ? Colors.blue[800]
-                                    : Colors.grey[500],
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          if (savePath.isNotEmpty)
-                            Icon(Icons.check_circle,
-                                color: Colors.blue[600], size: 16),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                  // ===== РЕЗУЛЬТАТ СОХРАНЕНИЯ =====
-                  if (exportedFilePath != null) ...[
-                    const SizedBox(height: 12),
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: Colors.green[50],
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.green[200]!),
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.check_circle,
-                              color: Colors.green, size: 18),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              'Сохранено:\n$exportedFilePath',
-                              style: const TextStyle(
-                                  fontSize: 11, color: Colors.green),
-                            ),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.copy,
-                                size: 16, color: Colors.green),
-                            onPressed: () {
-                              Clipboard.setData(
-                                  ClipboardData(text: exportedFilePath!));
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                    content: Text('✅ Путь скопирован!')),
-                              );
-                            },
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-
-                  if (isExporting) ...[
-                    const SizedBox(height: 12),
-                    const LinearProgressIndicator(),
-                    const SizedBox(height: 4),
-                    const Text('Создаём архив...',
-                        style: TextStyle(fontSize: 12)),
-                  ],
-                ],
-              ),
-            ),
-          ),
-
-          // ===== КНОПКИ =====
-          actions: [
-            TextButton(
-              onPressed:
-                  isExporting ? null : () => Navigator.pop(dialogContext),
-              child: const Text('Закрыть'),
-            ),
-
-            // СОХРАНИТЬ
-            OutlinedButton.icon(
-              onPressed:
-                  (isExporting || selectedDecks.isEmpty || savePath.isEmpty)
-                      ? null
-                      : () async {
-                          setDialogState(() => isExporting = true);
-                          try {
-                            final service = ImportExportService(widget.db);
-                            String? lastPath;
-                            for (final deckId in selectedDecks) {
-                              final path = await service.exportToLexiflow(
-                                deckId,
-                                customDir: savePath,
-                              );
-                              lastPath = path;
-                            }
-                            setDialogState(() {
-                              isExporting = false;
-                              exportedFilePath = lastPath;
-                            });
-                          } catch (e) {
-                            setDialogState(() => isExporting = false);
-                            if (mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                    content: Text('❌ Ошибка: $e'),
-                                    backgroundColor: Colors.red),
-                              );
-                            }
-                          }
-                        },
-              icon: const Icon(Icons.save_alt, size: 18),
-              label: const Text('Сохранить'),
-            ),
-
-            // ПОДЕЛИТЬСЯ
-            FilledButton.icon(
-              onPressed: (isExporting || selectedDecks.isEmpty)
-                  ? null
-                  : () async {
-                      setDialogState(() => isExporting = true);
-                      try {
-                        final service = ImportExportService(widget.db);
-                        final paths = <String>[];
-                        for (final deckId in selectedDecks) {
-                          final path = await service.exportToLexiflow(deckId);
-                          paths.add(path);
-                        }
-                        setDialogState(() => isExporting = false);
-
-                        if (!mounted) return;
-                        Navigator.pop(dialogContext);
-
-                        // Небольшая задержка чтобы диалог закрылся
-                        await Future.delayed(const Duration(milliseconds: 300));
-                        if (!mounted) return;
-
-                        _showShareDialog(paths.first);
-                      } catch (e) {
-                        setDialogState(() => isExporting = false);
-                        if (mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                                content: Text('❌ Ошибка: $e'),
-                                backgroundColor: Colors.red),
-                          );
-                        }
-                      }
-                    },
-              icon: const Icon(Icons.share, size: 18),
-              label: const Text('Поделиться'),
-            ),
-          ],
+          duration: const Duration(seconds: 30),
+          backgroundColor: Colors.blue[700],
         ),
-      ),
-    );
-  }
+      );
+    }
 
-  // ============ ДИАЛОГ МЕССЕНДЖЕРОВ ============
+    try {
+      final service = ImportExportService(widget.db);
+      final filePath = await service.exportToLexiflow(deck.id);
 
-  void _showShareDialog(String filePath) {
-    if (!mounted) return;
-    showDialog(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Row(children: [
-          Icon(Icons.share, color: Colors.blue, size: 22),
-          SizedBox(width: 8),
-          Text('Поделиться через'),
-        ]),
-        content: SizedBox(
-          width: 360,
-          child: Column(
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+      await showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Row(children: [
+            Icon(Icons.check_circle, color: Colors.green, size: 28),
+            SizedBox(width: 8),
+            Text('Экспорт готов!'),
+          ]),
+          content: Column(
             mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Text(
+                '📦 ${deck.name}.lexiflow',
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Карточек: ${deck.totalCards}',
+                style: TextStyle(color: Colors.grey[600], fontSize: 13),
+              ),
+              const SizedBox(height: 16),
               const Text(
-                'Выберите способ отправки:',
-                style: TextStyle(fontSize: 13),
+                'Поделитесь колодой:',
+                style: TextStyle(fontWeight: FontWeight.w500),
               ),
-              const SizedBox(height: 16),
-
-              // Ряд 1
-              Row(
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
                 children: [
-                  Expanded(
-                    child: _buildMessengerTile(
-                      emoji: '✈️',
-                      label: 'Telegram',
-                      color: const Color(0xFF2AABEE),
-                      onTap: () {
-                        Navigator.pop(dialogContext);
-                        _openTelegram(filePath);
-                      },
-                    ),
+                  _buildShareAppChip(
+                    icon: '✈️',
+                    label: 'Telegram',
+                    color: Colors.blue,
+                    onTap: () => _shareToApp(filePath, deck.name),
                   ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: _buildMessengerTile(
-                      emoji: '💬',
-                      label: 'WhatsApp',
-                      color: const Color(0xFF25D366),
-                      onTap: () {
-                        Navigator.pop(dialogContext);
-                        _openWhatsApp();
-                      },
-                    ),
+                  _buildShareAppChip(
+                    icon: '💬',
+                    label: 'WhatsApp',
+                    color: Colors.green,
+                    onTap: () => _shareToApp(filePath, deck.name),
                   ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: _buildMessengerTile(
-                      emoji: '📘',
-                      label: 'Facebook',
-                      color: const Color(0xFF1877F2),
-                      onTap: () {
-                        Navigator.pop(dialogContext);
-                        _openFacebook();
-                      },
-                    ),
+                  _buildShareAppChip(
+                    icon: '📘',
+                    label: 'Facebook',
+                    color: Colors.indigo,
+                    onTap: () => _shareToApp(filePath, deck.name),
+                  ),
+                  _buildShareAppChip(
+                    icon: '📤',
+                    label: 'Другое',
+                    color: Colors.grey,
+                    onTap: () => _shareToApp(filePath, deck.name),
                   ),
                 ],
               ),
-              const SizedBox(height: 8),
-
-              // Ряд 2
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildMessengerTile(
-                      emoji: '🔵',
-                      label: 'VK',
-                      color: const Color(0xFF4680C2),
-                      onTap: () {
-                        Navigator.pop(dialogContext);
-                        _openVK();
-                      },
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.grey[100],
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.folder, size: 16, color: Colors.grey),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        filePath,
+                        style:
+                            const TextStyle(fontSize: 10, color: Colors.grey),
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: _buildMessengerTile(
-                      emoji: '📧',
-                      label: 'Email',
-                      color: Colors.red,
-                      onTap: () {
-                        Navigator.pop(dialogContext);
-                        _openEmail(filePath);
-                      },
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: _buildMessengerTile(
-                      emoji: '📤',
-                      label: 'Другое',
-                      color: Colors.grey,
-                      onTap: () {
-                        Navigator.pop(dialogContext);
-                        ImportExportService.shareToMessengers(filePath);
-                      },
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-
-              // Кнопка копировать путь
-              OutlinedButton.icon(
-                onPressed: () {
-                  Clipboard.setData(ClipboardData(text: filePath));
-                  Navigator.pop(dialogContext);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('✅ Путь к файлу скопирован!'),
-                      backgroundColor: Colors.green,
-                    ),
-                  );
-                },
-                icon: const Icon(Icons.copy, size: 16),
-                label: const Text('Скопировать путь к файлу',
-                    style: TextStyle(fontSize: 12)),
-                style: OutlinedButton.styleFrom(
-                  minimumSize: const Size(double.infinity, 36),
+                  ],
                 ),
               ),
             ],
           ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Закрыть'),
+            ),
+            FilledButton.icon(
+              onPressed: () {
+                Navigator.pop(context);
+                _shareToApp(filePath, deck.name);
+              },
+              icon: const Icon(Icons.share),
+              label: const Text('Поделиться'),
+            ),
+          ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Закрыть'),
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('❌ Ошибка экспорта: $e'),
+            backgroundColor: Colors.red,
           ),
-        ],
-      ),
-    );
+        );
+      }
+    }
   }
 
-  Widget _buildMessengerTile({
-    required String emoji,
+  Future<void> _shareToApp(String filePath, String deckName) async {
+    try {
+      await ImportExportService.shareToMessengers(
+        filePath,
+        deckName: deckName,
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Ошибка шаринга: $e')),
+        );
+      }
+    }
+  }
+
+  Widget _buildShareAppChip({
+    required String icon,
     required String label,
     required Color color,
     required VoidCallback onTap,
   }) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(10),
+      borderRadius: BorderRadius.circular(20),
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
           color: color.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: color.withValues(alpha: 0.3)),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: color.withValues(alpha: 0.4)),
         ),
-        child: Column(
+        child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(emoji, style: const TextStyle(fontSize: 22)),
-            const SizedBox(height: 4),
+            Text(icon, style: const TextStyle(fontSize: 16)),
+            const SizedBox(width: 6),
             Text(
               label,
               style: TextStyle(
-                fontSize: 11,
-                color: color,
-                fontWeight: FontWeight.w600,
-              ),
-              textAlign: TextAlign.center,
+                  color: color, fontWeight: FontWeight.w500, fontSize: 13),
             ),
           ],
         ),
       ),
     );
   }
-
-  // ===== ОТКРЫТИЕ МЕССЕНДЖЕРОВ =====
-
-  Future<void> _openTelegram(String filePath) async {
-    try {
-      await Process.run('cmd', ['/c', 'start', 'tg://'], runInShell: true);
-    } catch (_) {
-      await Process.run('cmd', ['/c', 'start', 'https://web.telegram.org'],
-          runInShell: true);
-    }
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('📎 Telegram открыт — прикрепите файл вручную'),
-          duration: Duration(seconds: 4),
-        ),
-      );
-    }
-  }
-
-  Future<void> _openWhatsApp() async {
-    try {
-      await Process.run('cmd', ['/c', 'start', 'whatsapp://'],
-          runInShell: true);
-    } catch (_) {
-      await Process.run('cmd', ['/c', 'start', 'https://web.whatsapp.com'],
-          runInShell: true);
-    }
-  }
-
-  Future<void> _openFacebook() async {
-    await Process.run('cmd', ['/c', 'start', 'https://www.facebook.com'],
-        runInShell: true);
-  }
-
-  Future<void> _openVK() async {
-    await Process.run('cmd', ['/c', 'start', 'https://vk.com'],
-        runInShell: true);
-  }
-
-  Future<void> _openEmail(String filePath) async {
-    final fileName = filePath.split(r'\').last.split('/').last;
-    final subject = Uri.encodeComponent('LexiFlow — $fileName');
-    final body = Uri.encodeComponent(
-        'Привет!\n\nДелюсь колодой из LexiFlow.\nФайл: $filePath\n\n— LexiFlow App');
-    await Process.run(
-        'cmd', ['/c', 'start', 'mailto:?subject=$subject&body=$body'],
-        runInShell: true);
-  }
-
-  // ============ ИМПОРТ ============
 
   Future<void> _import() async {
     final result = await Navigator.push<bool>(
@@ -775,8 +418,6 @@ class _DecksScreenState extends State<DecksScreen> {
     if (result == true) await _loadDecks();
   }
 
-  // ============ BUILD ============
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -787,11 +428,6 @@ class _DecksScreenState extends State<DecksScreen> {
             icon: const Icon(Icons.file_download),
             onPressed: _import,
             tooltip: 'Импорт',
-          ),
-          IconButton(
-            icon: const Icon(Icons.ios_share),
-            onPressed: () => _showExportDialog(),
-            tooltip: 'Экспорт колод',
           ),
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -912,9 +548,9 @@ class _DecksScreenState extends State<DecksScreen> {
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.ios_share, color: Colors.blue),
-                    onPressed: () => _showExportDialog(preselectedDeck: deck),
-                    tooltip: 'Экспорт и поделиться',
+                    icon: const Icon(Icons.share, color: Colors.blue),
+                    onPressed: () => _exportDeck(deck),
+                    tooltip: 'Поделиться колодой',
                   ),
                   PopupMenuButton<String>(
                     icon: const Icon(Icons.more_vert),
@@ -946,7 +582,7 @@ class _DecksScreenState extends State<DecksScreen> {
                     ],
                     onSelected: (value) {
                       if (value == 'export') {
-                        _showExportDialog(preselectedDeck: deck);
+                        _exportDeck(deck);
                       } else if (value == 'edit') {
                         _editDeck(deck);
                       } else if (value == 'delete') {
@@ -1005,7 +641,10 @@ class _DecksScreenState extends State<DecksScreen> {
   }
 
   Widget _buildLangChip(String langCode) {
-    const langNames = {
+    final langNames = {
+      'en-GB': 'EN 🇬🇧',
+      'en-US': 'EN 🇺🇸',
+      'en-CA': 'EN 🇨🇦',
       'en': 'EN',
       'ru': 'RU',
       'es': 'ES',
