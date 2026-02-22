@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:lexiflow/core/database/app_database.dart';
 import 'package:lexiflow/core/services/image_service.dart';
 import 'package:lexiflow/core/utils/audio_helper.dart';
@@ -57,7 +58,6 @@ class _AddCardScreenState extends State<AddCardScreen> {
         TextEditingController(text: card?.frontVideoUrl ?? '');
     _backVideoController =
         TextEditingController(text: card?.backVideoUrl ?? '');
-
     _frontImagePath = card?.frontImagePath;
     _backImagePath = card?.backImagePath;
     _frontAudioPath = card?.frontAudioPath;
@@ -78,28 +78,27 @@ class _AddCardScreenState extends State<AddCardScreen> {
   }
 
   Future<void> _pickImage(bool isFront) async {
+    final l = AppLocalizations.of(context);
     final choice = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(isFront
-            ? 'Изображение лицевой стороны'
-            : 'Изображение обратной стороны'),
+        title: Text(isFront ? l.frontImageTitle : l.backImageTitle),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
               leading: const Icon(Icons.photo_library),
-              title: const Text('Выбрать из галереи'),
+              title: Text(l.galleryOption),
               onTap: () => Navigator.pop(context, 'gallery'),
             ),
             ListTile(
               leading: const Icon(Icons.camera_alt),
-              title: const Text('Сделать фото'),
+              title: Text(l.cameraOption),
               onTap: () => Navigator.pop(context, 'camera'),
             ),
             ListTile(
               leading: const Icon(Icons.search),
-              title: const Text('Поиск в интернете'),
+              title: Text(l.searchOnlineOption),
               onTap: () => Navigator.pop(context, 'search'),
             ),
           ],
@@ -113,22 +112,20 @@ class _AddCardScreenState extends State<AddCardScreen> {
       final imagePath = await ImageService.pickImageFromGallery();
       if (imagePath != null) {
         setState(() {
-          if (isFront) {
+          if (isFront)
             _frontImagePath = imagePath;
-          } else {
+          else
             _backImagePath = imagePath;
-          }
         });
       }
     } else if (choice == 'camera') {
       final imagePath = await ImageService.pickImageFromCamera();
       if (imagePath != null) {
         setState(() {
-          if (isFront) {
+          if (isFront)
             _frontImagePath = imagePath;
-          } else {
+          else
             _backImagePath = imagePath;
-          }
         });
       }
     } else if (choice == 'search') {
@@ -138,11 +135,10 @@ class _AddCardScreenState extends State<AddCardScreen> {
 
   Future<void> _removeImage(bool isFront) async {
     setState(() {
-      if (isFront) {
+      if (isFront)
         _frontImagePath = null;
-      } else {
+      else
         _backImagePath = null;
-      }
     });
   }
 
@@ -150,120 +146,89 @@ class _AddCardScreenState extends State<AddCardScreen> {
     final videoPath = await VideoHelper.pickVideoFromFile();
     if (videoPath != null) {
       setState(() {
-        if (isFront) {
+        if (isFront)
           _frontVideoController.text = videoPath;
-        } else {
+        else
           _backVideoController.text = videoPath;
-        }
       });
     }
   }
 
   void _searchYouGlish(String word, String lang, bool isFront) {
+    final l = AppLocalizations.of(context);
     if (word.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Введите слово для поиска')),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(l.wordRequired)));
       return;
     }
-
     final encodedWord = Uri.encodeComponent(word.trim());
     final url = 'https://youglish.com/pronounce/$encodedWord/$lang';
-
     setState(() {
-      if (isFront) {
+      if (isFront)
         _frontVideoController.text = url;
-      } else {
+      else
         _backVideoController.text = url;
-      }
     });
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('✅ Добавлена ссылка YouGlish ($lang)'),
-        backgroundColor: Colors.green,
-      ),
-    );
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(l.youglishAdded(lang)),
+      backgroundColor: Colors.green,
+    ));
   }
 
   Future<void> _searchTranscription() async {
+    final l = AppLocalizations.of(context);
     final word = _frontTextController.text.trim();
     if (word.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Введите слово в лицевой стороне')),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(l.wordRequired)));
       return;
     }
-
     final encodedWord = Uri.encodeComponent(word);
     final url =
         'https://dictionary.cambridge.org/dictionary/english/$encodedWord';
-
     if (await VideoHelper.canLaunchUrl(url)) {
       await VideoHelper.launchUrlInBrowser(url);
-
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-                '📖 Открыт Cambridge Dictionary. Скопируйте транскрипцию.'),
-            duration: Duration(seconds: 3),
-          ),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(AppLocalizations.of(context).openedCambridge),
+          duration: const Duration(seconds: 3),
+        ));
       }
     }
   }
 
   Future<void> _searchImageOnline() async {
+    final l = AppLocalizations.of(context);
     final word = _frontTextController.text.trim();
     if (word.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Введите слово в лицевой стороне')),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(l.wordRequired)));
       return;
     }
-
     final encodedWord = Uri.encodeComponent(word);
     final url = 'https://www.google.com/search?tbm=isch&q=$encodedWord';
-
     if (await VideoHelper.canLaunchUrl(url)) {
       await VideoHelper.launchUrlInBrowser(url);
-
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-                '🖼️ Открыт Google Images. Сохраните картинку и загрузите её.'),
-            duration: Duration(seconds: 3),
-          ),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(AppLocalizations.of(context).openedGoogleImages),
+          duration: const Duration(seconds: 3),
+        ));
       }
     }
   }
 
   void _onAudioChanged(String? audioPath, bool isFront) {
-    if (audioPath != null) {
-      setState(() {
-        if (isFront) {
-          _frontAudioPath = audioPath;
-        } else {
-          _backAudioPath = audioPath;
-        }
-      });
-    } else {
-      setState(() {
-        if (isFront) {
-          _frontAudioPath = null;
-        } else {
-          _backAudioPath = null;
-        }
-      });
-    }
+    setState(() {
+      if (isFront)
+        _frontAudioPath = audioPath;
+      else
+        _backAudioPath = audioPath;
+    });
   }
 
   Future<void> _saveCard() async {
     if (!_formKey.currentState!.validate()) return;
-
     setState(() => _isLoading = true);
 
     try {
@@ -321,7 +286,6 @@ class _AddCardScreenState extends State<AddCardScreen> {
           createdAt: drift.Value(card.createdAt),
           updatedAt: drift.Value(DateTime.now()),
         );
-
         await widget.db
             .into(widget.db.cards)
             .insertOnConflictUpdate(updatedCard);
@@ -368,32 +332,32 @@ class _AddCardScreenState extends State<AddCardScreen> {
       }
 
       if (mounted) {
+        final l = AppLocalizations.of(context);
         Navigator.pop(context, true);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-                isEditing ? '✅ Карточка обновлена!' : '✅ Карточка создана!'),
-            backgroundColor: Colors.green,
-          ),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(isEditing ? l.cardUpdated : l.cardCreated),
+          backgroundColor: Colors.green,
+        ));
       }
     } catch (e) {
       setState(() => _isLoading = false);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Ошибка: $e')),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content:
+              Text(AppLocalizations.of(context).errorGeneric(e.toString())),
+        ));
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final isEditing = widget.cardToEdit != null;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(isEditing ? 'Редактировать карточку' : 'Новая карточка'),
+        title: Text(isEditing ? l.editCardTitle : l.addCardTitle),
         actions: [
           if (_isLoading)
             const Center(
@@ -410,7 +374,7 @@ class _AddCardScreenState extends State<AddCardScreen> {
             IconButton(
               icon: const Icon(Icons.check),
               onPressed: _saveCard,
-              tooltip: 'Сохранить',
+              tooltip: l.save,
             ),
         ],
       ),
@@ -419,9 +383,9 @@ class _AddCardScreenState extends State<AddCardScreen> {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            // ===== ЛИЦЕВАЯ СТОРОНА =====
+            // ===== FRONT SIDE =====
             Text(
-              'Лицевая сторона',
+              l.frontSide,
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: Theme.of(context).colorScheme.primary,
@@ -431,15 +395,15 @@ class _AddCardScreenState extends State<AddCardScreen> {
 
             TextFormField(
               controller: _frontTextController,
-              decoration: const InputDecoration(
-                labelText: 'Текст (обязательно) *',
-                hintText: 'Например: Hello',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.text_fields),
+              decoration: InputDecoration(
+                labelText: l.frontTextLabel,
+                hintText: l.frontTextHint,
+                border: const OutlineInputBorder(),
+                prefixIcon: const Icon(Icons.text_fields),
               ),
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
-                  return 'Введите текст';
+                  return l.fieldRequired;
                 }
                 return null;
               },
@@ -448,7 +412,7 @@ class _AddCardScreenState extends State<AddCardScreen> {
             ),
             const SizedBox(height: 12),
 
-            // Изображение (лицо)
+            // Front image
             if (_frontImagePath != null) ...[
               Stack(
                 children: [
@@ -473,9 +437,8 @@ class _AddCardScreenState extends State<AddCardScreen> {
                     child: IconButton(
                       onPressed: () => _removeImage(true),
                       icon: const Icon(Icons.close, color: Colors.white),
-                      style: IconButton.styleFrom(
-                        backgroundColor: Colors.black54,
-                      ),
+                      style:
+                          IconButton.styleFrom(backgroundColor: Colors.black54),
                     ),
                   ),
                 ],
@@ -485,26 +448,24 @@ class _AddCardScreenState extends State<AddCardScreen> {
               OutlinedButton.icon(
                 onPressed: () => _pickImage(true),
                 icon: const Icon(Icons.image),
-                label: const Text('Добавить изображение'),
+                label: Text(l.addImage),
               ),
 
             const SizedBox(height: 12),
 
-            // Аудио (лицо)
             AudioRecorderWidget(
               audioPath: _frontAudioPath,
               onAudioChanged: (path) => _onAudioChanged(path, true),
-              label: 'Аудио (лицевая сторона)',
+              label: l.audioFront,
             ),
 
             const SizedBox(height: 12),
 
-            // Видео (лицо)
             TextFormField(
               controller: _frontVideoController,
               decoration: InputDecoration(
-                labelText: 'Видео URL (YouTube/YouGlish) или файл',
-                hintText: 'https://youtube.com/... или локальный путь',
+                labelText: l.videoUrlLabel,
+                hintText: l.videoUrlHint,
                 border: const OutlineInputBorder(),
                 prefixIcon: const Icon(Icons.video_library),
                 suffixIcon: Row(
@@ -519,12 +480,10 @@ class _AddCardScreenState extends State<AddCardScreen> {
                                 context, _frontVideoController.text);
                           }
                         },
-                        tooltip: 'Просмотр',
                       ),
                     IconButton(
                       icon: const Icon(Icons.attach_file),
                       onPressed: () => _pickVideo(true),
-                      tooltip: 'Выбрать файл',
                     ),
                   ],
                 ),
@@ -536,7 +495,7 @@ class _AddCardScreenState extends State<AddCardScreen> {
               onPressed: () =>
                   _searchYouGlish(_frontTextController.text, 'us', true),
               icon: const Text('🇺🇸', style: TextStyle(fontSize: 18)),
-              label: const Text('YouGlish (US English)'),
+              label: Text(l.youglishUs),
               style: OutlinedButton.styleFrom(
                 foregroundColor: Colors.blue,
                 minimumSize: const Size(double.infinity, 44),
@@ -545,9 +504,9 @@ class _AddCardScreenState extends State<AddCardScreen> {
 
             const SizedBox(height: 24),
 
-            // ===== ОБРАТНАЯ СТОРОНА =====
+            // ===== BACK SIDE =====
             Text(
-              'Обратная сторона',
+              l.backSide,
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: Theme.of(context).colorScheme.secondary,
@@ -557,15 +516,15 @@ class _AddCardScreenState extends State<AddCardScreen> {
 
             TextFormField(
               controller: _backTextController,
-              decoration: const InputDecoration(
-                labelText: 'Текст (обязательно) *',
-                hintText: 'Например: Привет',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.text_fields),
+              decoration: InputDecoration(
+                labelText: l.backTextLabel,
+                hintText: l.backTextHint,
+                border: const OutlineInputBorder(),
+                prefixIcon: const Icon(Icons.text_fields),
               ),
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
-                  return 'Введите перевод';
+                  return l.translationRequired;
                 }
                 return null;
               },
@@ -574,33 +533,32 @@ class _AddCardScreenState extends State<AddCardScreen> {
             ),
             const SizedBox(height: 12),
 
-            // Pronunciation (русское чтение)
+            // Pronunciation
             TextFormField(
               controller: _pronunciationController,
-              decoration: const InputDecoration(
-                labelText: 'Произношение (русское)',
-                hintText: 'Например: хэлоу',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.record_voice_over),
-                helperText: 'Как читается по-русски',
+              decoration: InputDecoration(
+                labelText: l.pronunciationLabel,
+                hintText: l.pronunciationHint,
+                border: const OutlineInputBorder(),
+                prefixIcon: const Icon(Icons.record_voice_over),
+                helperText: l.pronunciationHelper,
               ),
               maxLines: 1,
             ),
             const SizedBox(height: 12),
 
-            // Transcription (МФА)
+            // Transcription
             TextFormField(
               controller: _transcriptionController,
               decoration: InputDecoration(
-                labelText: 'Транскрипция (МФА)',
-                hintText: 'Например: [hɛˈloʊ]',
+                labelText: l.transcriptionLabel,
+                hintText: l.transcriptionHint,
                 border: const OutlineInputBorder(),
                 prefixIcon: const Icon(Icons.translate),
-                helperText: 'Международный фонетический алфавит',
+                helperText: l.transcriptionHelper,
                 suffixIcon: IconButton(
                   icon: const Icon(Icons.search, color: Colors.purple),
                   onPressed: _searchTranscription,
-                  tooltip: 'Найти в словаре',
                 ),
               ),
               style: const TextStyle(fontFamily: 'monospace'),
@@ -608,7 +566,7 @@ class _AddCardScreenState extends State<AddCardScreen> {
             ),
             const SizedBox(height: 12),
 
-            // Изображение (обратная сторона)
+            // Back image
             if (_backImagePath != null) ...[
               Stack(
                 children: [
@@ -633,9 +591,8 @@ class _AddCardScreenState extends State<AddCardScreen> {
                     child: IconButton(
                       onPressed: () => _removeImage(false),
                       icon: const Icon(Icons.close, color: Colors.white),
-                      style: IconButton.styleFrom(
-                        backgroundColor: Colors.black54,
-                      ),
+                      style:
+                          IconButton.styleFrom(backgroundColor: Colors.black54),
                     ),
                   ),
                 ],
@@ -645,26 +602,24 @@ class _AddCardScreenState extends State<AddCardScreen> {
               OutlinedButton.icon(
                 onPressed: () => _pickImage(false),
                 icon: const Icon(Icons.image),
-                label: const Text('Добавить изображение'),
+                label: Text(l.addImage),
               ),
 
             const SizedBox(height: 12),
 
-            // Аудио (обратная сторона)
             AudioRecorderWidget(
               audioPath: _backAudioPath,
               onAudioChanged: (path) => _onAudioChanged(path, false),
-              label: 'Аудио (обратная сторона)',
+              label: l.audioBack,
             ),
 
             const SizedBox(height: 12),
 
-            // Видео (обратная сторона)
             TextFormField(
               controller: _backVideoController,
               decoration: InputDecoration(
-                labelText: 'Видео URL (YouTube/YouGlish) или файл',
-                hintText: 'https://youtube.com/... или локальный путь',
+                labelText: l.videoUrlLabel,
+                hintText: l.videoUrlHint,
                 border: const OutlineInputBorder(),
                 prefixIcon: const Icon(Icons.video_library),
                 suffixIcon: Row(
@@ -679,12 +634,10 @@ class _AddCardScreenState extends State<AddCardScreen> {
                                 context, _backVideoController.text);
                           }
                         },
-                        tooltip: 'Просмотр',
                       ),
                     IconButton(
                       icon: const Icon(Icons.attach_file),
                       onPressed: () => _pickVideo(false),
-                      tooltip: 'Выбрать файл',
                     ),
                   ],
                 ),
@@ -696,7 +649,7 @@ class _AddCardScreenState extends State<AddCardScreen> {
               onPressed: () =>
                   _searchYouGlish(_backTextController.text, 'us', false),
               icon: const Text('🇺🇸', style: TextStyle(fontSize: 18)),
-              label: const Text('YouGlish (US English)'),
+              label: Text(l.youglishUs),
               style: OutlinedButton.styleFrom(
                 foregroundColor: Colors.blue,
                 minimumSize: const Size(double.infinity, 44),
@@ -705,22 +658,23 @@ class _AddCardScreenState extends State<AddCardScreen> {
 
             const SizedBox(height: 24),
 
-            // ===== ДОПОЛНИТЕЛЬНО =====
+            // ===== ADDITIONAL =====
             Text(
-              'Дополнительно',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+              l.additional,
+              style: Theme.of(context)
+                  .textTheme
+                  .titleLarge
+                  ?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
 
             TextFormField(
               controller: _exampleController,
-              decoration: const InputDecoration(
-                labelText: 'Пример использования',
-                hintText: 'Hello, how are you?',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.lightbulb_outline),
+              decoration: InputDecoration(
+                labelText: l.exampleLabel,
+                hintText: l.exampleHint,
+                border: const OutlineInputBorder(),
+                prefixIcon: const Icon(Icons.lightbulb_outline),
               ),
               maxLines: 3,
             ),
@@ -728,24 +682,23 @@ class _AddCardScreenState extends State<AddCardScreen> {
 
             TextFormField(
               controller: _notesController,
-              decoration: const InputDecoration(
-                labelText: 'Заметки',
-                hintText: 'Дополнительная информация...',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.note),
+              decoration: InputDecoration(
+                labelText: l.notesLabel,
+                hintText: l.notesHint,
+                border: const OutlineInputBorder(),
+                prefixIcon: const Icon(Icons.note),
               ),
               maxLines: 3,
             ),
 
             const SizedBox(height: 24),
 
-            // ===== КНОПКИ =====
             Row(
               children: [
                 Expanded(
                   child: OutlinedButton(
                     onPressed: _isLoading ? null : () => Navigator.pop(context),
-                    child: const Text('Отмена'),
+                    child: Text(l.cancel),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -758,12 +711,10 @@ class _AddCardScreenState extends State<AddCardScreen> {
                             width: 16,
                             height: 16,
                             child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
+                                strokeWidth: 2, color: Colors.white),
                           )
                         : const Icon(Icons.save),
-                    label: Text(isEditing ? 'Сохранить' : 'Создать'),
+                    label: Text(isEditing ? l.save : l.create),
                   ),
                 ),
               ],

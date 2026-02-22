@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:drift/drift.dart' as drift;
 import 'package:lexiflow/core/database/app_database.dart';
 import 'package:lexiflow/core/services/image_service.dart';
@@ -24,6 +25,7 @@ class CardsListScreen extends StatefulWidget {
 
 class _CardsListScreenState extends State<CardsListScreen> {
   List<CardData> _cards = [];
+  int _cardsToStudy = 0;
   bool _isLoading = true;
   bool _showFront = true;
 
@@ -34,39 +36,51 @@ class _CardsListScreenState extends State<CardsListScreen> {
   }
 
   Future<void> _loadCards() async {
-    setState(() => _isLoading = true);
+    setState(() {
+      _isLoading = true;
+    });
+
     try {
       final cards = await widget.db.getCardsByDeckId(widget.deckId);
+      final cardsForReview = await widget.db.getCardsForReview(widget.deckId);
+
       setState(() {
         _cards = cards;
+        _cardsToStudy =
+            cardsForReview.isEmpty ? cards.length : cardsForReview.length;
         _isLoading = false;
       });
     } catch (e) {
-      setState(() => _isLoading = false);
+      setState(() {
+        _isLoading = false;
+      });
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Ошибка загрузки: $e')),
+          SnackBar(
+              content: Text(
+                  AppLocalizations.of(context).errorLoading(e.toString()))),
         );
       }
     }
   }
 
   Future<void> _deleteCard(CardData card) async {
+    final l = AppLocalizations.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Удалить карточку?'),
-        content:
-            Text('Карточка "${card.frontText}" будет удалена безвозвратно.'),
+        title: Text(l.deleteCardTitle),
+        content: Text(l.deleteCardContent(card.frontText)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Отмена'),
+            child: Text(l.cancel),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
             style: FilledButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Удалить'),
+            child: Text(l.delete),
           ),
         ],
       ),
@@ -84,13 +98,15 @@ class _CardsListScreenState extends State<CardsListScreen> {
         await _loadCards();
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Карточка удалена')),
+            SnackBar(content: Text(AppLocalizations.of(context).cardDeleted)),
           );
         }
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Ошибка удаления: $e')),
+            SnackBar(
+                content: Text(
+                    AppLocalizations.of(context).errorGeneric(e.toString()))),
           );
         }
       }
@@ -115,10 +131,12 @@ class _CardsListScreenState extends State<CardsListScreen> {
         example: drift.Value(card.example),
         notes: drift.Value(card.notes),
         easinessFactor: drift.Value(card.easinessFactor),
-        repetitions: drift.Value(card.repetitions),
-        interval: drift.Value(card.interval),
+        repetitions: drift.Value(card.isMastered ? 0 : 999),
+        interval: drift.Value(card.isMastered ? 0 : 30),
         nextReviewDate: drift.Value<DateTime?>(
-          card.isMastered ? null : DateTime.now().add(const Duration(days: 30)),
+          card.isMastered
+              ? DateTime.now()
+              : DateTime.now().add(const Duration(days: 30)),
         ),
         lastReviewedAt: drift.Value<DateTime?>(card.lastReviewedAt),
         correctCount: drift.Value(card.correctCount),
@@ -132,13 +150,10 @@ class _CardsListScreenState extends State<CardsListScreen> {
       await _loadCards();
 
       if (mounted) {
+        final l = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              !card.isMastered
-                  ? '✅ Карточка отмечена как выученная'
-                  : 'Карточка возвращена в обучение',
-            ),
+            content: Text(!card.isMastered ? l.cardMastered : l.cardReturned),
             backgroundColor: !card.isMastered ? Colors.green : Colors.blue,
           ),
         );
@@ -146,7 +161,9 @@ class _CardsListScreenState extends State<CardsListScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Ошибка: $e')),
+          SnackBar(
+              content: Text(
+                  AppLocalizations.of(context).errorGeneric(e.toString()))),
         );
       }
     }
@@ -167,7 +184,8 @@ class _CardsListScreenState extends State<CardsListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final cardsToReview = _cards.where((c) => !c.isMastered).length;
+    final l = AppLocalizations.of(context);
+    final masteredCount = _cards.where((c) => c.isMastered).length;
 
     return Scaffold(
       appBar: AppBar(
@@ -175,14 +193,15 @@ class _CardsListScreenState extends State<CardsListScreen> {
         actions: [
           IconButton(
             icon: Icon(_showFront ? Icons.flip_to_back : Icons.flip_to_front),
-            onPressed: () => setState(() => _showFront = !_showFront),
-            tooltip:
-                _showFront ? 'Показать обратную сторону' : 'Показать переднюю',
+            onPressed: () => setState(() {
+              _showFront = !_showFront;
+            }),
+            tooltip: _showFront ? l.showBack : l.showFront,
           ),
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: _loadCards,
-            tooltip: 'Обновить',
+            tooltip: l.refresh,
           ),
         ],
       ),
@@ -201,20 +220,20 @@ class _CardsListScreenState extends State<CardsListScreen> {
                         children: [
                           _buildStatItem(
                             icon: Icons.style,
-                            label: 'Всего',
+                            label: l.totalCards,
                             value: '${_cards.length}',
                             color: Colors.blue,
                           ),
                           _buildStatItem(
                             icon: Icons.school,
-                            label: 'К изучению',
-                            value: '$cardsToReview',
+                            label: l.toStudy,
+                            value: '$_cardsToStudy',
                             color: Colors.orange,
                           ),
                           _buildStatItem(
                             icon: Icons.check_circle,
-                            label: 'Освоено',
-                            value: '${_cards.length - cardsToReview}',
+                            label: l.mastered,
+                            value: '$masteredCount',
                             color: Colors.green,
                           ),
                         ],
@@ -233,14 +252,15 @@ class _CardsListScreenState extends State<CardsListScreen> {
       floatingActionButton: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (cardsToReview > 0)
+          if (_cardsToStudy > 0) ...[
             FloatingActionButton.extended(
               onPressed: _startStudy,
               icon: const Icon(Icons.school),
-              label: Text('Начать обучение ($cardsToReview)'),
+              label: Text(l.startStudy(_cardsToStudy)),
               heroTag: 'study',
             ),
-          const SizedBox(height: 12),
+            const SizedBox(height: 12),
+          ],
           FloatingActionButton(
             heroTag: 'add',
             onPressed: () async {
@@ -263,6 +283,7 @@ class _CardsListScreenState extends State<CardsListScreen> {
   }
 
   Widget _buildEmptyState() {
+    final l = AppLocalizations.of(context);
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -270,7 +291,7 @@ class _CardsListScreenState extends State<CardsListScreen> {
           Icon(Icons.style_outlined, size: 80, color: Colors.grey[400]),
           const SizedBox(height: 16),
           Text(
-            'Нет карточек',
+            l.noCards,
             style: Theme.of(context)
                 .textTheme
                 .headlineSmall
@@ -278,7 +299,7 @@ class _CardsListScreenState extends State<CardsListScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Добавьте первую карточку для изучения',
+            l.noCardsSubtitle,
             style: Theme.of(context)
                 .textTheme
                 .bodyMedium
@@ -299,7 +320,7 @@ class _CardsListScreenState extends State<CardsListScreen> {
               _loadCards();
             },
             icon: const Icon(Icons.add),
-            label: const Text('Создать карточку'),
+            label: Text(l.createCard),
           ),
         ],
       ),
@@ -319,20 +340,15 @@ class _CardsListScreenState extends State<CardsListScreen> {
         Text(
           value,
           style: TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-            color: color,
-          ),
+              fontSize: 24, fontWeight: FontWeight.bold, color: color),
         ),
-        Text(
-          label,
-          style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-        ),
+        Text(label, style: TextStyle(fontSize: 12, color: Colors.grey[600])),
       ],
     );
   }
 
   Widget _buildCardItem(CardData card) {
+    final l = AppLocalizations.of(context);
     final text = _showFront ? card.frontText : card.backText;
 
     return Card(
@@ -364,12 +380,10 @@ class _CardsListScreenState extends State<CardsListScreen> {
                       style: Theme.of(context).textTheme.titleLarge,
                     ),
                   ),
-                  if (card.isMastered)
+                  if (card.isMastered) ...[
                     Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
+                          horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color: Colors.green[100],
                         borderRadius: BorderRadius.circular(12),
@@ -381,7 +395,7 @@ class _CardsListScreenState extends State<CardsListScreen> {
                               size: 16, color: Colors.green[700]),
                           const SizedBox(width: 4),
                           Text(
-                            'Освоено',
+                            l.masteredBadge,
                             style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.bold,
@@ -391,6 +405,7 @@ class _CardsListScreenState extends State<CardsListScreen> {
                         ],
                       ),
                     ),
+                  ],
                 ],
               ),
               if (card.pronunciation != null &&
@@ -437,26 +452,21 @@ class _CardsListScreenState extends State<CardsListScreen> {
                 children: [
                   _buildCardStat(
                     icon: Icons.repeat,
-                    label: 'Повторений',
+                    label: l.repetitions,
                     value: '${card.repetitions}',
                   ),
                   const SizedBox(width: 16),
                   _buildCardStat(
                     icon: Icons.check_circle_outline,
-                    label: 'Правильно',
+                    label: l.correct,
                     value: '${card.correctCount}',
                     color: Colors.green,
                   ),
-                  const SizedBox(width: 16),
-                  _buildCardStat(
-                    icon: Icons.cancel_outlined,
-                    label: 'Ошибок',
-                    value: '${card.incorrectCount}',
-                    color: Colors.red,
-                  ),
                   const Spacer(),
-                  if (card.frontImagePath != null || card.backImagePath != null)
+                  if (card.frontImagePath != null ||
+                      card.backImagePath != null) ...[
                     const Icon(Icons.image, size: 16, color: Colors.grey),
+                  ],
                   if (card.frontAudioPath != null ||
                       card.backAudioPath != null) ...[
                     const SizedBox(width: 4),
@@ -482,7 +492,7 @@ class _CardsListScreenState extends State<CardsListScreen> {
                         size: 18,
                       ),
                       label: Text(
-                        card.isMastered ? 'Вернуть' : 'Выучено',
+                        card.isMastered ? l.returnToStudy : l.markAsMastered,
                         style: const TextStyle(fontSize: 13),
                       ),
                       style: OutlinedButton.styleFrom(
@@ -511,15 +521,14 @@ class _CardsListScreenState extends State<CardsListScreen> {
                         _loadCards();
                       },
                       icon: const Icon(Icons.edit, size: 18),
-                      label: const Text('Изменить',
-                          style: TextStyle(fontSize: 13)),
+                      label: Text(l.edit, style: const TextStyle(fontSize: 13)),
                     ),
                   ),
                   const SizedBox(width: 8),
                   IconButton(
                     onPressed: () => _deleteCard(card),
                     icon: const Icon(Icons.delete, color: Colors.red),
-                    tooltip: 'Удалить',
+                    tooltip: l.delete,
                   ),
                 ],
               ),
@@ -547,15 +556,9 @@ class _CardsListScreenState extends State<CardsListScreen> {
             Text(
               value,
               style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.bold,
-                color: color,
-              ),
+                  fontSize: 13, fontWeight: FontWeight.bold, color: color),
             ),
-            Text(
-              label,
-              style: TextStyle(fontSize: 9, color: Colors.grey[600]),
-            ),
+            Text(label, style: TextStyle(fontSize: 9, color: Colors.grey[600])),
           ],
         ),
       ],
