@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart'; // Правильный импорт
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:lexiflow/app/language_select_screen.dart';
+import 'package:lexiflow/app/onboarding_screen.dart';
 import 'package:lexiflow/core/database/app_database.dart';
 import 'package:lexiflow/features/decks/presentation/screens/decks_screen.dart';
-import 'package:lexiflow/app/language_select_screen.dart';
 
 void main() {
   runApp(const LexiFlowApp());
@@ -12,11 +12,17 @@ void main() {
 class LexiFlowApp extends StatefulWidget {
   const LexiFlowApp({super.key});
 
-  static final localeNotifier =
-      ValueNotifier<Locale>(const Locale('en')); // Стандартный язык - EN
+  static final ValueNotifier<Locale> localeNotifier =
+      ValueNotifier(const Locale('en'));
+  static final ValueNotifier<ThemeMode> themeNotifier =
+      ValueNotifier(ThemeMode.system);
 
   static void setLocale(Locale locale) {
     localeNotifier.value = locale;
+  }
+
+  static void setTheme(ThemeMode mode) {
+    themeNotifier.value = mode;
   }
 
   @override
@@ -27,12 +33,47 @@ class _LexiFlowAppState extends State<LexiFlowApp> {
   late final AppDatabase _database;
   bool _isLoading = true;
   bool _showLanguageSelect = false;
+  bool _showOnboarding = false;
 
   @override
   void initState() {
     super.initState();
     _database = AppDatabase();
-    _checkFirstLaunch();
+    _initializeApp();
+  }
+
+  Future<void> _initializeApp() async {
+    // --- ВРЕМЕННЫЙ СБРОС (ИСПРАВЛЕНО И ЗАКОММЕНТИРОВАНО) ---
+    // try {
+    //   // Используем одинарные кавычки для текстовых значений ключей
+    //   await _database.customStatement(
+    //       "DELETE FROM settings WHERE key IN ('app_locale', 'onboarding_complete')");
+    // } catch (e) {
+    //   debugPrint('Reset error: $e');
+    // }
+    // ---------------------------------------------------------
+
+    await _loadThemePreference();
+    await _checkFirstLaunch();
+    await _checkOnboarding();
+  }
+
+  Future<void> _loadThemePreference() async {
+    final themeSetting = await _database.getSetting('theme_mode');
+    if (themeSetting != null) {
+      ThemeMode mode;
+      switch (themeSetting.value) {
+        case 'light':
+          mode = ThemeMode.light;
+          break;
+        case 'dark':
+          mode = ThemeMode.dark;
+          break;
+        default:
+          mode = ThemeMode.system;
+      }
+      LexiFlowApp.setTheme(mode);
+    }
   }
 
   Future<void> _checkFirstLaunch() async {
@@ -40,16 +81,24 @@ class _LexiFlowAppState extends State<LexiFlowApp> {
     if (setting == null) {
       setState(() {
         _showLanguageSelect = true;
-        _isLoading = false;
       });
     } else {
-      final locale = Locale(setting.value);
-      LexiFlowApp.localeNotifier.value = locale;
+      LexiFlowApp.setLocale(Locale(setting.value));
+    }
+  }
+
+  Future<void> _checkOnboarding() async {
+    final onboardingComplete =
+        await _database.getSetting('onboarding_complete');
+    if (onboardingComplete == null) {
       setState(() {
-        _showLanguageSelect = false;
-        _isLoading = false;
+        _showOnboarding = true;
       });
     }
+
+    setState(() {
+      _isLoading = false;
+    });
   }
 
   @override
@@ -62,45 +111,66 @@ class _LexiFlowAppState extends State<LexiFlowApp> {
   Widget build(BuildContext context) {
     return ValueListenableBuilder<Locale>(
       valueListenable: LexiFlowApp.localeNotifier,
-      builder: (context, locale, _) {
-        return MaterialApp(
-          title: 'LexiFlow',
-          debugShowCheckedModeBanner: false,
-          locale: locale,
-
-          // ИСПОЛЬЗУЕМ АВТОМАТИЧЕСКИЕ СПИСКИ ИЗ ГЕНЕРАТОРА
-          supportedLocales: AppLocalizations.supportedLocales,
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-
-          theme: ThemeData(
-            colorScheme: ColorScheme.fromSeed(
-              seedColor: const Color(0xFF6366F1),
-              brightness: Brightness.light,
-            ),
-            useMaterial3: true,
-          ),
-          darkTheme: ThemeData(
-            colorScheme: ColorScheme.fromSeed(
-              seedColor: const Color(0xFF6366F1),
-              brightness: Brightness.dark,
-            ),
-            useMaterial3: true,
-          ),
-          themeMode: ThemeMode.system,
-
-          home: _isLoading
-              ? const Scaffold(body: Center(child: CircularProgressIndicator()))
-              : _showLanguageSelect
-                  ? LanguageSelectScreen(
-                      db: _database,
-                      onLanguageSelected: (newLocale) {
-                        LexiFlowApp.setLocale(newLocale);
-                        setState(() => _showLanguageSelect = false);
-                      },
-                    )
-                  : DecksScreen(db: _database),
+      builder: (context, locale, child) {
+        return ValueListenableBuilder<ThemeMode>(
+          valueListenable: LexiFlowApp.themeNotifier,
+          builder: (context, themeMode, child) {
+            return MaterialApp(
+              title: 'LexiFlow',
+              debugShowCheckedModeBanner: false,
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              locale: locale,
+              theme: ThemeData(
+                useMaterial3: true,
+                colorScheme: ColorScheme.fromSeed(
+                  seedColor: Colors.blue,
+                  brightness: Brightness.light,
+                ),
+              ),
+              darkTheme: ThemeData(
+                useMaterial3: true,
+                colorScheme: ColorScheme.fromSeed(
+                  seedColor: Colors.blue,
+                  brightness: Brightness.dark,
+                ),
+              ),
+              themeMode: themeMode,
+              initialRoute: '/',
+              routes: {
+                '/': (context) => _getInitialScreen(),
+                '/home': (context) => DecksScreen(db: _database),
+              },
+            );
+          },
         );
       },
     );
+  }
+
+  Widget _getInitialScreen() {
+    if (_isLoading) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (_showLanguageSelect) {
+      return LanguageSelectScreen(
+        db: _database,
+        onLanguageSelected: (Locale locale) {
+          setState(() {
+            _showLanguageSelect = false;
+            _checkOnboarding();
+          });
+        },
+      );
+    }
+
+    if (_showOnboarding) {
+      return OnboardingScreen(db: _database);
+    }
+
+    return DecksScreen(db: _database);
   }
 }

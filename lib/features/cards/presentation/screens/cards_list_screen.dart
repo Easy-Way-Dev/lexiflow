@@ -1,9 +1,7 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:drift/drift.dart' as drift;
 import 'package:lexiflow/core/database/app_database.dart';
-import 'package:lexiflow/core/services/image_service.dart';
 import 'package:lexiflow/features/decks/presentation/screens/add_card_screen.dart';
 import 'package:lexiflow/features/cards/presentation/screens/study_screen.dart';
 
@@ -88,12 +86,6 @@ class _CardsListScreenState extends State<CardsListScreen> {
 
     if (confirmed == true) {
       try {
-        if (card.frontImagePath != null) {
-          await ImageService.deleteImage(card.frontImagePath);
-        }
-        if (card.backImagePath != null) {
-          await ImageService.deleteImage(card.backImagePath);
-        }
         await widget.db.deleteCard(card.id);
         await _loadCards();
         if (mounted) {
@@ -193,9 +185,11 @@ class _CardsListScreenState extends State<CardsListScreen> {
         actions: [
           IconButton(
             icon: Icon(_showFront ? Icons.flip_to_back : Icons.flip_to_front),
-            onPressed: () => setState(() {
-              _showFront = !_showFront;
-            }),
+            onPressed: () {
+              setState(() {
+                _showFront = !_showFront;
+              });
+            },
             tooltip: _showFront ? l.showBack : l.showFront,
           ),
           IconButton(

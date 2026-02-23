@@ -69,7 +69,7 @@ class _AudioRecorderWidgetState extends State<AudioRecorderWidget> {
   }
 
   Future<void> _toggleRecording() async {
-    final l = AppLocalizations.of(context)!;
+    final l = AppLocalizations.of(context);
     if (_isRecording) {
       _stopTimer();
       setState(() => _isRecording = false);
@@ -120,7 +120,7 @@ class _AudioRecorderWidgetState extends State<AudioRecorderWidget> {
   }
 
   Future<void> _pickAudioFromFile() async {
-    final l = AppLocalizations.of(context)!;
+    final l = AppLocalizations.of(context);
     try {
       final result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
@@ -140,8 +140,9 @@ class _AudioRecorderWidgetState extends State<AudioRecorderWidget> {
       final destPath = p.join(audioDir.path, 'audio_$timestamp$ext');
 
       await File(pickedFile.path!).copy(destPath);
-      if (_currentAudioPath != null)
+      if (_currentAudioPath != null) {
         await AudioHelper.deleteAudio(_currentAudioPath);
+      }
 
       setState(() => _currentAudioPath = destPath);
       widget.onAudioChanged(destPath);
@@ -149,7 +150,7 @@ class _AudioRecorderWidgetState extends State<AudioRecorderWidget> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(l.audioLoadedSuccess(pickedFile.name)),
+            content: Text(l.audioLoadedSuccess),
             backgroundColor: Colors.green,
           ),
         );
@@ -173,7 +174,7 @@ class _AudioRecorderWidgetState extends State<AudioRecorderWidget> {
   }
 
   Future<void> _deleteAudio() async {
-    final l = AppLocalizations.of(context)!;
+    final l = AppLocalizations.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -203,7 +204,7 @@ class _AudioRecorderWidgetState extends State<AudioRecorderWidget> {
 
   @override
   Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context)!;
+    final l = AppLocalizations.of(context);
     final hasAudio = _currentAudioPath != null && _currentAudioPath!.isNotEmpty;
 
     return Column(

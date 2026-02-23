@@ -86,8 +86,9 @@ class DailyStats extends Table {
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
+  // Подняли версию до 7, чтобы форсировать миграцию
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 7;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -104,6 +105,14 @@ class AppDatabase extends _$AppDatabase {
           }
           if (from < 6) {
             await m.addColumn(cards, cards.transcription);
+          }
+          // Новая миграция для фикса пропущенных таблиц
+          if (from < 7) {
+            try {
+              await m.createTable(dailyStats);
+            } catch (_) {
+              // Если таблица уже есть, просто идем дальше
+            }
           }
         },
       );

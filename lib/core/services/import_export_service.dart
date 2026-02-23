@@ -33,7 +33,7 @@ class ImportExportService {
     };
     archive.addFile(_createArchiveFile(
       'manifest.json',
-      JsonEncoder.withIndent('  ').convert(manifest),
+      const JsonEncoder.withIndent('  ').convert(manifest),
     ));
 
     // 2. deck.json
@@ -47,7 +47,7 @@ class ImportExportService {
     };
     archive.addFile(_createArchiveFile(
       'deck.json',
-      JsonEncoder.withIndent('  ').convert(deckData),
+      const JsonEncoder.withIndent('  ').convert(deckData),
     ));
 
     // 3. cards.json + медиа
@@ -120,7 +120,7 @@ class ImportExportService {
 
     archive.addFile(_createArchiveFile(
       'cards.json',
-      JsonEncoder.withIndent('  ').convert(cardsData),
+      const JsonEncoder.withIndent('  ').convert(cardsData),
     ));
 
     // 4. Сохраняем ZIP
@@ -194,8 +194,8 @@ class ImportExportService {
     final deckId = await db.createDeck(
       DecksCompanion(
         name: drift.Value(deckName),
-        sourceLanguage: drift.Value('en'),
-        targetLanguage: drift.Value('ru'),
+        sourceLanguage: const drift.Value('en'),
+        targetLanguage: const drift.Value('ru'),
       ),
     );
 

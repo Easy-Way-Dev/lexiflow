@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:lexiflow/core/database/app_database.dart';
 import 'package:lexiflow/core/services/image_service.dart';
-import 'package:lexiflow/core/utils/audio_helper.dart';
 import 'package:lexiflow/core/utils/video_helper.dart';
 import 'package:lexiflow/shared/widgets/audio_recorder_widget.dart';
 import 'package:drift/drift.dart' as drift;
@@ -106,26 +105,30 @@ class _AddCardScreenState extends State<AddCardScreen> {
       ),
     );
 
-    if (choice == null) return;
+    if (choice == null) {
+      return;
+    }
 
     if (choice == 'gallery') {
       final imagePath = await ImageService.pickImageFromGallery();
       if (imagePath != null) {
         setState(() {
-          if (isFront)
+          if (isFront) {
             _frontImagePath = imagePath;
-          else
+          } else {
             _backImagePath = imagePath;
+          }
         });
       }
     } else if (choice == 'camera') {
       final imagePath = await ImageService.pickImageFromCamera();
       if (imagePath != null) {
         setState(() {
-          if (isFront)
+          if (isFront) {
             _frontImagePath = imagePath;
-          else
+          } else {
             _backImagePath = imagePath;
+          }
         });
       }
     } else if (choice == 'search') {
@@ -135,10 +138,11 @@ class _AddCardScreenState extends State<AddCardScreen> {
 
   Future<void> _removeImage(bool isFront) async {
     setState(() {
-      if (isFront)
+      if (isFront) {
         _frontImagePath = null;
-      else
+      } else {
         _backImagePath = null;
+      }
     });
   }
 
@@ -146,10 +150,11 @@ class _AddCardScreenState extends State<AddCardScreen> {
     final videoPath = await VideoHelper.pickVideoFromFile();
     if (videoPath != null) {
       setState(() {
-        if (isFront)
+        if (isFront) {
           _frontVideoController.text = videoPath;
-        else
+        } else {
           _backVideoController.text = videoPath;
+        }
       });
     }
   }
@@ -164,10 +169,11 @@ class _AddCardScreenState extends State<AddCardScreen> {
     final encodedWord = Uri.encodeComponent(word.trim());
     final url = 'https://youglish.com/pronounce/$encodedWord/$lang';
     setState(() {
-      if (isFront)
+      if (isFront) {
         _frontVideoController.text = url;
-      else
+      } else {
         _backVideoController.text = url;
+      }
     });
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text(l.youglishAdded(lang)),
@@ -220,15 +226,18 @@ class _AddCardScreenState extends State<AddCardScreen> {
 
   void _onAudioChanged(String? audioPath, bool isFront) {
     setState(() {
-      if (isFront)
+      if (isFront) {
         _frontAudioPath = audioPath;
-      else
+      } else {
         _backAudioPath = audioPath;
+      }
     });
   }
 
   Future<void> _saveCard() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
     setState(() => _isLoading = true);
 
     try {
@@ -383,7 +392,6 @@ class _AddCardScreenState extends State<AddCardScreen> {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            // ===== FRONT SIDE =====
             Text(
               l.frontSide,
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
@@ -392,7 +400,6 @@ class _AddCardScreenState extends State<AddCardScreen> {
                   ),
             ),
             const SizedBox(height: 12),
-
             TextFormField(
               controller: _frontTextController,
               decoration: InputDecoration(
@@ -411,8 +418,6 @@ class _AddCardScreenState extends State<AddCardScreen> {
               textInputAction: TextInputAction.next,
             ),
             const SizedBox(height: 12),
-
-            // Front image
             if (_frontImagePath != null) ...[
               Stack(
                 children: [
@@ -450,17 +455,13 @@ class _AddCardScreenState extends State<AddCardScreen> {
                 icon: const Icon(Icons.image),
                 label: Text(l.addImage),
               ),
-
             const SizedBox(height: 12),
-
             AudioRecorderWidget(
               audioPath: _frontAudioPath,
               onAudioChanged: (path) => _onAudioChanged(path, true),
               label: l.audioFront,
             ),
-
             const SizedBox(height: 12),
-
             TextFormField(
               controller: _frontVideoController,
               decoration: InputDecoration(
@@ -501,10 +502,7 @@ class _AddCardScreenState extends State<AddCardScreen> {
                 minimumSize: const Size(double.infinity, 44),
               ),
             ),
-
             const SizedBox(height: 24),
-
-            // ===== BACK SIDE =====
             Text(
               l.backSide,
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
@@ -513,7 +511,6 @@ class _AddCardScreenState extends State<AddCardScreen> {
                   ),
             ),
             const SizedBox(height: 12),
-
             TextFormField(
               controller: _backTextController,
               decoration: InputDecoration(
@@ -532,8 +529,6 @@ class _AddCardScreenState extends State<AddCardScreen> {
               textInputAction: TextInputAction.next,
             ),
             const SizedBox(height: 12),
-
-            // Pronunciation
             TextFormField(
               controller: _pronunciationController,
               decoration: InputDecoration(
@@ -546,8 +541,6 @@ class _AddCardScreenState extends State<AddCardScreen> {
               maxLines: 1,
             ),
             const SizedBox(height: 12),
-
-            // Transcription
             TextFormField(
               controller: _transcriptionController,
               decoration: InputDecoration(
@@ -565,8 +558,6 @@ class _AddCardScreenState extends State<AddCardScreen> {
               maxLines: 1,
             ),
             const SizedBox(height: 12),
-
-            // Back image
             if (_backImagePath != null) ...[
               Stack(
                 children: [
@@ -604,17 +595,13 @@ class _AddCardScreenState extends State<AddCardScreen> {
                 icon: const Icon(Icons.image),
                 label: Text(l.addImage),
               ),
-
             const SizedBox(height: 12),
-
             AudioRecorderWidget(
               audioPath: _backAudioPath,
               onAudioChanged: (path) => _onAudioChanged(path, false),
               label: l.audioBack,
             ),
-
             const SizedBox(height: 12),
-
             TextFormField(
               controller: _backVideoController,
               decoration: InputDecoration(
@@ -655,10 +642,7 @@ class _AddCardScreenState extends State<AddCardScreen> {
                 minimumSize: const Size(double.infinity, 44),
               ),
             ),
-
             const SizedBox(height: 24),
-
-            // ===== ADDITIONAL =====
             Text(
               l.additional,
               style: Theme.of(context)
@@ -667,7 +651,6 @@ class _AddCardScreenState extends State<AddCardScreen> {
                   ?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
-
             TextFormField(
               controller: _exampleController,
               decoration: InputDecoration(
@@ -679,7 +662,6 @@ class _AddCardScreenState extends State<AddCardScreen> {
               maxLines: 3,
             ),
             const SizedBox(height: 12),
-
             TextFormField(
               controller: _notesController,
               decoration: InputDecoration(
@@ -690,9 +672,7 @@ class _AddCardScreenState extends State<AddCardScreen> {
               ),
               maxLines: 3,
             ),
-
             const SizedBox(height: 24),
-
             Row(
               children: [
                 Expanded(

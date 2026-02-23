@@ -1,155 +1,244 @@
 {
   "@@locale": "en",
+  
   "appTitle": "LexiFlow",
-  "languageSelectTitle": "Choose your language",
-  "languageSelectSubtitle": "You can change this later in Settings",
-  "continueButton": "Continue",
-  "decksTitle": "LexiFlow",
-  "noDecks": "No decks",
-  "noDecksSubtitle": "Create a new one or import a ready-made deck",
-  "createDeck": "Create deck",
-  "importButton": "Import",
-  "newDeck": "New deck",
-  "refresh": "Refresh",
-  "deckNameLabel": "Name *",
-  "deckNameHint": "For example: English words",
-  "deckDescriptionLabel": "Description (optional)",
-  "studyLanguageLabel": "Language to learn",
-  "nativeLanguageLabel": "Native language",
-  "editDeck": "Edit deck",
-  "createDeckTitle": "Create deck",
   "cancel": "Cancel",
   "save": "Save",
-  "create": "Create",
   "delete": "Delete",
   "edit": "Edit",
-  "exportShare": "Export & Share",
-  "deleteDeckTitle": "Delete deck?",
-  "deleteDeckContent": "Deck \"{name}\" and all its cards will be deleted permanently.",
-  "deckUpdated": "✅ Deck updated!",
-  "deckCreated": "✅ Deck created!",
-  "deckDeleted": "Deck deleted",
-  "errorLoading": "Loading error: {error}",
-  "errorGeneric": "Error: {error}",
-  "progress": "Progress",
-  "cards": "cards",
-  "exportReady": "Export ready!",
-  "shareWith": "Share deck:",
+  "create": "Create",
   "close": "Close",
+  "refresh": "Refresh",
+  "next": "Next",
+  "skip": "Skip",
+  "getStarted": "Get Started!",
+  "settings": "Settings",
+  
+  "onboardingWelcomeTitle": "Welcome to LexiFlow!",
+  "onboardingWelcomeDescription": "Smart flashcards powered by science",
+  "onboardingCreateTitle": "Create Your First Set",
+  "onboardingCreateDescription": "Organize words by topic, language, or skill level",
+  "onboardingStudyTitle": "Study with SM-2 Algorithm",
+  "onboardingStudyDescription": "Cards appear when you need to review them",
+  "onboardingMultimediaTitle": "Add Multimedia",
+  "onboardingMultimediaDescription": "Make learning visual and interactive",
+  
+  "settingsAppearance": "Appearance",
+  "settingsTheme": "Theme",
+  "settingsThemeLight": "Light",
+  "settingsThemeDark": "Dark",
+  "settingsThemeSystem": "System Default",
+  "settingsLanguageSection": "Language & Region",
+  "settingsLanguage": "App Language",
+  "settingsAbout": "About",
+  "settingsVersion": "Version",
+  "settingsDeveloper": "Developer",
+  
+  "decksTitle": "My Sets",
+  "noDecks": "No sets yet",
+  "noDecksSubtitle": "Create your first set to start learning",
+  "createDeck": "Create Set",
+  "newDeck": "New Set",
+  "createDeckTitle": "Create New Set",
+  "editDeck": "Edit Set",
+  "deleteDeckTitle": "Delete Set?",
+  "deleteDeckContent": "Are you sure you want to delete \"{name}\"? All cards will be deleted.",
+  "@deleteDeckContent": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "deckNameLabel": "Set Name",
+  "deckNameHint": "e.g., Business English",
+  "deckDescriptionLabel": "Description (optional)",
+  "dart": "Dart",
+  
+  "setsTitle": "My Sets",
+  "noSets": "No sets yet",
+  "noSetsSubtitle": "Create your first set to start learning",
+  "createSet": "Create Set",
+  "newSet": "New Set",
+  "createSetTitle": "Create New Set",
+  "editSet": "Edit Set",
+  "deleteSetTitle": "Delete Set?",
+  "deleteSetContent": "Are you sure you want to delete \"{name}\"? All cards will be deleted.",
+  "@deleteSetContent": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "setNameLabel": "Set Name",
+  "setNameHint": "e.g., Business English",
+  "setDescriptionLabel": "Description (optional)",
+  "studyLanguageLabel": "Study Language",
+  "nativeLanguageLabel": "Native Language",
+  "exportShare": "Export & Share",
+  "exportReady": "Export Ready!",
+  "exportCreating": "Creating export for {name}...",
+  "@exportCreating": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "exportError": "Export error: {error}",
+  "@exportError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "shareWith": "Share with:",
   "share": "Share",
-  "exportCreating": "Creating archive \"{name}\"...",
-  "exportError": "❌ Export error: {error}",
-  "cardsListTitle": "Cards",
+  
+  "cards": "cards",
   "totalCards": "Total",
-  "toStudy": "To study",
+  "toStudy": "To Study",
   "mastered": "Mastered",
-  "noCards": "No cards",
-  "noCardsSubtitle": "Add your first card to start studying",
-  "createCard": "Create card",
-  "startStudy": "Start studying ({count})",
-  "showBack": "Show back side",
-  "showFront": "Show front side",
-  "deleteCardTitle": "Delete card?",
-  "deleteCardContent": "Card \"{text}\" will be deleted permanently.",
+  "noCards": "No cards yet",
+  "noCardsSubtitle": "Add your first card",
+  "createCard": "Add Card",
+  "deleteCardTitle": "Delete Card?",
+  "deleteCardContent": "Delete \"{text}\"?",
+  "@deleteCardContent": {
+    "placeholders": {
+      "text": {
+        "type": "String"
+      }
+    }
+  },
   "cardDeleted": "Card deleted",
-  "markAsMastered": "Learned",
-  "returnToStudy": "Return",
-  "cardMastered": "✅ Card marked as learned",
+  "cardMastered": "Card mastered!",
   "cardReturned": "Card returned to study",
+  "masteredBadge": "Mastered",
+  "markAsMastered": "Mark as Mastered",
+  "returnToStudy": "Return to Study",
   "repetitions": "Reps",
   "correct": "Correct",
   "errors": "Errors",
-  "masteredBadge": "Mastered",
-  "addCardTitle": "New card",
-  "editCardTitle": "Edit card",
-  "frontSide": "Front side",
-  "backSide": "Back side",
-  "additional": "Additional",
-  "frontTextLabel": "Text (required) *",
-  "frontTextHint": "For example: Hello",
-  "backTextLabel": "Text (required) *",
-  "backTextHint": "For example: Hi",
-  "pronunciationLabel": "Pronunciation (native script)",
-  "pronunciationHint": "For example: kheh-LOW",
-  "pronunciationHelper": "How it sounds in your language",
-  "transcriptionLabel": "Transcription (IPA)",
-  "transcriptionHint": "For example: [hɛˈloʊ]",
-  "transcriptionHelper": "International Phonetic Alphabet",
-  "exampleLabel": "Example usage",
-  "exampleHint": "Hello, how are you?",
-  "notesLabel": "Notes",
-  "notesHint": "Additional information...",
-  "addImage": "Add image",
-  "videoUrlLabel": "Video URL (YouTube/YouGlish) or file",
-  "videoUrlHint": "https://youtube.com/... or local path",
-  "youglishUs": "YouGlish (US English)",
-  "cardUpdated": "✅ Card updated!",
-  "cardCreated": "✅ Card created!",
-  "fieldRequired": "Please enter text",
-  "translationRequired": "Please enter translation",
-  "galleryOption": "Choose from gallery",
-  "cameraOption": "Take a photo",
-  "searchOnlineOption": "Search online",
-  "frontImageTitle": "Front side image",
-  "backImageTitle": "Back side image",
-  "wordRequired": "Enter a word on the front side",
-  "openedCambridge": "📖 Cambridge Dictionary opened. Copy the transcription.",
-  "openedGoogleImages": "🖼️ Google Images opened. Save an image and upload it.",
-  "youglishAdded": "✅ YouGlish link added ({lang})",
-  "studyNoCards": "No cards to study",
-  "studyAllLearned": "All cards learned!\nCome back later.",
-  "back": "Back",
-  "tapToReveal": "Tap the card to reveal the answer",
-  "hints": "Hints",
-  "hintsWithPenalty": "Hints (−{count} to score)",
-  "hintImage": "Image",
-  "hintAudio": "Audio",
-  "hintVideo": "Video",
-  "hintFirstLetter": "First letter",
-  "penaltyIndicator": "Hints used: {count}  •  −{count} to score",
-  "answerForgot": "Forgot",
-  "answerHard": "Hard",
-  "answerGood": "Good",
-  "answerEasy": "Easy",
-  "masteredButton": "Learned! Don't show again",
-  "masteredSnackbar": "✅ Card marked as learned!",
-  "sessionComplete": "Session complete!",
-  "sessionCards": "cards",
-  "sessionCorrect": "correct",
-  "sessionAccuracy": "accuracy",
-  "done": "Done",
-  "repeatSession": "Repeat",
-  "audioFront": "Audio (front side)",
-  "audioBack": "Audio (back side)",
-  "listenButton": "Listen",
-  "stopButton": "Stop",
-  "settingsLanguage": "Interface language",
-  "audioRecordedSuccess": "✅ Audio recorded!",
-  "recordingError": "❌ Recording error",
-  "micPermissionError": "❌ No mic permission",
-  "audioLoadedSuccess": "✅ Loaded: {name}",
-  "audioAdded": "Audio added ✅",
-  "playingPreview": "▶ Playing...",
-  "recordAgain": "Record again",
-  "pickFile": "Pick file",
-  "recordButton": "Record",
-  "fromComputer": "From computer",
-  "audioDefaultLabel": "Audio pronunciation",
-  "importTitle": "Import cards",
-  "importInProgress": "Importing cards...",
-  "supportedFormats": "Supported formats",
-  "formatCsvDesc": "Text format (Excel, Google Sheets)",
-  "formatJsonDesc": "Structured data format",
-  "formatLexiflowDesc": "Our format with images and audio",
-  "stepSelectFile": "Step 1: Select file",
-  "stepDeckName": "Step 2: Deck name",
-  "csvHelperText": "CSV files do not contain deck information",
-  "howToImport": "How to import",
-  "importInstructions": "1. Select a file in CSV, JSON, or .lexiflow format\n2. For CSV, specify the deck name\n3. Click \"Import\"\n4. Cards will be added to a new deck",
-  "importTip": "Tip: Use .lexiflow to import decks with images and audio",
-  "importSuccess": "✅ Cards imported: {count}",
-  "selectFileError": "File selection error: {error}",
-  "pickFileToImport": "Please select a file to import",
+  "progress": "Progress",
+  
+  "startStudy": "Start Study ({count})",
+  "@startStudy": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "showFront": "Show Front",
+  "showBack": "Show Back",
+  
+  "importButton": "Import",
+  "importTitle": "Import Cards",
+  "importFromFile": "Import from File",
+  "importSuccess": "Imported {count} cards",
+  "@importSuccess": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "selectFileError": "Please select a file",
   "enterDeckName": "Please enter a deck name",
-  "formatLabel": "Format: {format}"
+  "pickFileToImport": "Pick a file to import",
+  "supportedFormats": "Supported formats: CSV, JSON, .lexiflow",
+  "formatCsvDesc": "CSV format",
+  "formatJsonDesc": "JSON format",
+  "formatLexiflowDesc": ".lexiflow format",
+  "stepSelectFile": "Select File",
+  "deckNameLabel": "Deck Name",
+  "deckNameHint": "My vocabulary",
+  "csvHelperText": "First row: headers (front, back, etc.)",
+  "importInProgress": "Importing...",
+  "importTip": "Tip: First row should contain column names",
+  
+  "addCardTitle": "Add Card",
+  "editCardTitle": "Edit Card",
+  "frontSide": "Front Side",
+  "backSide": "Back Side",
+  "additional": "Additional",
+  "frontTextLabel": "Front Text",
+  "frontTextHint": "Word or phrase",
+  "backTextLabel": "Translation",
+  "backTextHint": "Translation or definition",
+  "pronunciationLabel": "Pronunciation",
+  "pronunciationHint": "e.g., /həˈləʊ/",
+  "pronunciationHelper": "How to pronounce this word",
+  "transcriptionLabel": "Transcription",
+  "transcriptionHint": "IPA transcription",
+  "transcriptionHelper": "International Phonetic Alphabet",
+  "exampleLabel": "Example",
+  "exampleHint": "Example sentence",
+  "notesLabel": "Notes",
+  "notesHint": "Any additional notes",
+  "fieldRequired": "This field is required",
+  "translationRequired": "Translation is required",
+  "cardCreated": "Card created successfully",
+  "cardUpdated": "Card updated successfully",
+  "frontImageTitle": "Front Image",
+  "backImageTitle": "Back Image",
+  "galleryOption": "Choose from Gallery",
+  "cameraOption": "Take a Photo",
+  "searchOnlineOption": "Search Online",
+  "addImage": "Add Image",
+  "videoUrlLabel": "Video URL",
+  "videoUrlHint": "YouTube or YouGlish link",
+  "youglishUs": "YouGlish (US)",
+  "audioFront": "Front Audio",
+  "audioBack": "Back Audio",
+  "wordRequired": "Please enter a word first",
+  "youglishAdded": "YouGlish link added ({lang})",
+  "@youglishAdded": {
+    "placeholders": {
+      "lang": {
+        "type": "String"
+      }
+    }
+  },
+  "openedCambridge": "Opened Cambridge Dictionary",
+  "openedGoogleImages": "Opened Google Images",
+  
+  "audioRecordedSuccess": "Audio recorded successfully!",
+  "recordingError": "Recording error",
+  "playingPreview": "Playing preview...",
+  "recordAgain": "Record Again",
+  "pickFile": "Pick File",
+  "fromComputer": "From Computer",
+  "recordButton": "Record",
+  "stopButton": "Stop",
+  "audioLoaded": "Audio loaded",
+  "audioDeleted": "Audio deleted",
+  
+  "errorLoading": "Error loading: {error}",
+  "@errorLoading": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorGeneric": "Error: {error}",
+  "@errorGeneric": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "formatLabel": "Format Label",
+  "stepDeckName": "Step: Deck Name",
+  "howToImport": "How to Import",
+  "importInstructions": "Import Instructions",
+  "micPermissionError": "Microphone permission denied",
+  "audioLoadedSuccess": "Audio loaded successfully",
+  "audioDefaultLabel": "Audio",
+  "audioAdded": "Audio added"
 }

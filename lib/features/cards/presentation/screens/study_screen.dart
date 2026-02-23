@@ -27,7 +27,7 @@ class StudyScreen extends StatefulWidget {
 class _StudyScreenState extends State<StudyScreen>
     with SingleTickerProviderStateMixin {
   List<CardData> _cards = [];
-  List<CardData> _incorrectCards = [];
+  final List<CardData> _incorrectCards = [];
   int _currentIndex = 0;
   bool _isFlipped = false;
   bool _isLoading = true;
@@ -368,8 +368,8 @@ class _StudyScreenState extends State<StudyScreen>
                           style: TextStyle(fontSize: 16)),
                     ],
                   )
-                : Row(
-                    children: const [
+                : const Row(
+                    children: [
                       Icon(Icons.celebration, color: Colors.amber, size: 32),
                       SizedBox(width: 8),
                       Text('Session Complete!'),
@@ -846,7 +846,7 @@ class _StudyScreenState extends State<StudyScreen>
                   ClipRRect(
                     borderRadius: BorderRadius.circular(16),
                     child: Image.file(
-                      File(imagePath!),
+                      File(imagePath),
                       height: 180,
                       width: double.infinity,
                       fit: BoxFit.cover,
@@ -896,11 +896,11 @@ class _StudyScreenState extends State<StudyScreen>
                 ],
                 if (hasAudio && !isFront) ...[
                   const SizedBox(height: 16),
-                  _AudioPlayButton(audioPath: audioPath!),
+                  _AudioPlayButton(audioPath: audioPath),
                 ],
                 if (hasVideo && !isFront) ...[
                   const SizedBox(height: 12),
-                  _VideoButton(videoUrl: videoUrl!),
+                  _VideoButton(videoUrl: videoUrl),
                 ],
                 if (!isFront &&
                     card.example != null &&

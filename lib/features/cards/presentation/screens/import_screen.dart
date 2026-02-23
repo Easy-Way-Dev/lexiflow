@@ -24,7 +24,7 @@ class _ImportScreenState extends State<ImportScreen> {
   }
 
   Future<void> _pickFile() async {
-    final l = AppLocalizations.of(context)!;
+    final l = AppLocalizations.of(context);
     try {
       final filePath = await ImportExportService.pickImportFile();
       if (filePath != null) {
@@ -39,8 +39,7 @@ class _ImportScreenState extends State<ImportScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-              content: Text(l.selectFileError(e.toString())),
-              backgroundColor: Colors.red),
+              content: Text(l.selectFileError), backgroundColor: Colors.red),
         );
       }
     }
@@ -54,7 +53,7 @@ class _ImportScreenState extends State<ImportScreen> {
   }
 
   Future<void> _import() async {
-    final l = AppLocalizations.of(context)!;
+    final l = AppLocalizations.of(context);
     if (_selectedFilePath == null) {
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text(l.pickFileToImport)));
@@ -110,7 +109,7 @@ class _ImportScreenState extends State<ImportScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context)!;
+    final l = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(title: Text(l.importTitle)),
       body: _isImporting
@@ -183,7 +182,7 @@ class _ImportScreenState extends State<ImportScreen> {
                               child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                Text(l.formatLabel(_selectedFormat!),
+                                Text(_selectedFormat!,
                                     style: const TextStyle(
                                         fontWeight: FontWeight.bold,
                                         color: Colors.green)),
