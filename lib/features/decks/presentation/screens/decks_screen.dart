@@ -1687,6 +1687,17 @@ class _MicroSessionOverlayState extends State<MicroSessionOverlay>
             padding: const EdgeInsets.all(32.0),
             child: GestureDetector(
               onTap: _flipCard,
+              // FIX: горизонтальный свайп — Помню / Сложно
+              onHorizontalDragEnd: (details) {
+                final velocity = details.primaryVelocity ?? 0;
+                if (velocity > 300) {
+                  // свайп вправо — Помню
+                  _nextCard(true);
+                } else if (velocity < -300) {
+                  // свайп влево — Сложно
+                  _nextCard(false);
+                }
+              },
               child: AnimatedBuilder(
                 animation: _flipController,
                 builder: (context, child) {
