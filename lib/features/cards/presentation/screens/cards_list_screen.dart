@@ -46,7 +46,7 @@ class _CardsListScreenState extends State<CardsListScreen> {
       setState(() {
         _cards = cards;
         _cardsToStudy =
-            cardsForReview.isEmpty ? cards.length : cardsForReview.length;
+            cardsForReview.length;
         _isLoading = false;
       });
     } catch (e) {
@@ -566,4 +566,5 @@ class _CardsListScreenState extends State<CardsListScreen> {
     );
   }
 }
+
 
