@@ -1235,72 +1235,78 @@ class _DecksScreenState extends State<DecksScreen>
               tooltip: l.refresh),
         ],
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                  child: AnimatedBuilder(
-                    animation: Listenable.merge(
-                        [_pulseAnimation, _gradientController]),
-                    builder: (context, child) {
-                      return Transform.scale(
-                        scale: _pulseAnimation.value,
-                        child: InkWell(
-                          onTap: _showMicroSessionOptions,
-                          borderRadius: BorderRadius.circular(16),
-                          child: Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.symmetric(
-                                vertical: 20, horizontal: 16),
-                            decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                    colors: const [
-                                      Color(0xFF6366F1),
-                                      Color(0xFFEC4899),
-                                      Color(0xFF6366F1)
-                                    ],
-                                    begin: _gradientBegin.value,
-                                    end: _gradientEnd.value),
-                                borderRadius: BorderRadius.circular(16),
-                                boxShadow: [
-                                  BoxShadow(
-                                      color: const Color(0xFFEC4899)
-                                          .withValues(alpha: 0.3),
-                                      blurRadius: 15,
-                                      spreadRadius: 2,
-                                      offset: const Offset(0, 5))
-                                ]),
-                            child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  const Icon(Icons.bolt,
-                                      color: Colors.white, size: 28),
-                                  const SizedBox(width: 8),
-                                  Text(l.microSessionTitle,
-                                      style: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 20,
-                                          fontWeight: FontWeight.bold,
-                                          letterSpacing: 0.5))
-                                ]),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 720),
+          child: _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                      child: AnimatedBuilder(
+                        animation: Listenable.merge(
+                            [_pulseAnimation, _gradientController]),
+                        builder: (context, child) {
+                          return Transform.scale(
+                            scale: _pulseAnimation.value,
+                            child: InkWell(
+                              onTap: _showMicroSessionOptions,
+                              borderRadius: BorderRadius.circular(16),
+                              child: Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.symmetric(
+                                    vertical: 20, horizontal: 16),
+                                decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                        colors: const [
+                                          Color(0xFF6366F1),
+                                          Color(0xFFEC4899),
+                                          Color(0xFF6366F1)
+                                        ],
+                                        begin: _gradientBegin.value,
+                                        end: _gradientEnd.value),
+                                    borderRadius: BorderRadius.circular(16),
+                                    boxShadow: [
+                                      BoxShadow(
+                                          color: const Color(0xFFEC4899)
+                                              .withValues(alpha: 0.3),
+                                          blurRadius: 15,
+                                          spreadRadius: 2,
+                                          offset: const Offset(0, 5))
+                                    ]),
+                                child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      const Icon(Icons.bolt,
+                                          color: Colors.white, size: 28),
+                                      const SizedBox(width: 8),
+                                      Text(l.microSessionTitle,
+                                          style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 20,
+                                              fontWeight: FontWeight.bold,
+                                              letterSpacing: 0.5))
+                                    ]),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    Expanded(
+                        child: _decks.isEmpty
+                            ? _buildEmptyState(l)
+                            : ListView.builder(
+                                padding:
+                                    const EdgeInsets.fromLTRB(16, 8, 16, 100),
+                                itemCount: _decks.length,
+                                itemBuilder: (context, index) =>
+                                    _buildDeckCard(_decks[index], l))),
+                  ],
                 ),
-                Expanded(
-                    child: _decks.isEmpty
-                        ? _buildEmptyState(l)
-                        : ListView.builder(
-                            padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
-                            itemCount: _decks.length,
-                            itemBuilder: (context, index) =>
-                                _buildDeckCard(_decks[index], l))),
-              ],
-            ),
+        ),
+      ),
       floatingActionButton: FloatingActionButton.extended(
           onPressed: () => _showDeckDialog(),
           icon: const Icon(Icons.add),
@@ -1592,8 +1598,13 @@ class _MicroSessionOverlayState extends State<MicroSessionOverlay> {
           ),
         ],
       ),
-      body: SafeArea(
-        child: isFinished ? _buildSuccessView(l) : _buildCardView(l),
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 720),
+          child: SafeArea(
+            child: isFinished ? _buildSuccessView(l) : _buildCardView(l),
+          ),
+        ),
       ),
     );
   }
