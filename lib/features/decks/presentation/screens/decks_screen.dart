@@ -1701,136 +1701,144 @@ class _MicroSessionOverlayState extends State<MicroSessionOverlay>
             backgroundColor: Colors.grey[200],
             color: const Color(0xFF6366F1)),
 
-        // Карточка — растягивается на доступное пространство
+        // Пространство вокруг карточки — центрируем, ограничиваем высоту
         Expanded(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(24, 16, 24, 16),
-            child: GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: _flipCard,
-              onPanStart: (_) {
-                if (_isAnimating) return;
-                if (_swipeAnimController.isAnimating)
-                  _swipeAnimController.stop();
-              },
-              onPanUpdate: (details) {
-                if (_isAnimating) return;
-                setState(() {
-                  _dragPosition += details.delta;
-                  // Лёгкий наклон как в онбординге
-                  _dragAngle = 45 *
-                      (_dragPosition.dx / MediaQuery.of(context).size.width) *
-                      (pi / 180);
-                });
-              },
-              onPanEnd: (details) {
-                if (_isAnimating) return;
-                final screenWidth = MediaQuery.of(context).size.width;
-                if (_dragPosition.dx > 100) {
-                  _animateSwipe(
-                      Offset(screenWidth + 200, _dragPosition.dy), true);
-                } else if (_dragPosition.dx < -100) {
-                  _animateSwipe(
-                      Offset(-(screenWidth + 200), _dragPosition.dy), false);
-                } else {
-                  // Возврат на место — как в онбординге через анимацию
-                  _swipeAnim =
-                      Tween<Offset>(begin: _dragPosition, end: Offset.zero)
-                          .animate(CurvedAnimation(
-                              parent: _swipeAnimController,
-                              curve: Curves.elasticOut));
-                  _swipeAnimController.forward(from: 0).then((_) {
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+              child: SizedBox(
+                width: double.infinity,
+                // Ограничиваем высоту как в онбординге
+                height: MediaQuery.of(context).size.height * 0.48,
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: _flipCard,
+                  onPanStart: (_) {
+                    if (_isAnimating) return;
+                    if (_swipeAnimController.isAnimating)
+                      _swipeAnimController.stop();
+                  },
+                  onPanUpdate: (details) {
+                    if (_isAnimating) return;
                     setState(() {
-                      _dragPosition = Offset.zero;
-                      _dragAngle = 0;
+                      _dragPosition += details.delta;
+                      _dragAngle = 45 *
+                          (_dragPosition.dx /
+                              MediaQuery.of(context).size.width) *
+                          (pi / 180);
                     });
-                  });
-                }
-              },
-              child: Transform.translate(
-                offset: _dragPosition,
-                child: Transform.rotate(
-                  angle: _dragAngle,
-                  child: Stack(
-                    children: [
-                      // Сама карточка с flip-анимацией
-                      AnimatedBuilder(
-                        animation: _flipController,
-                        builder: (context, child) {
-                          final angle = _flipController.value * pi;
-                          final transform = Matrix4.identity()
-                            ..setEntry(3, 2, 0.001)
-                            ..rotateY(angle);
-                          return Transform(
-                            transform: transform,
-                            alignment: Alignment.center,
-                            child: angle >= pi / 2
-                                ? Transform(
-                                    transform: Matrix4.identity()..rotateY(pi),
-                                    alignment: Alignment.center,
-                                    child:
-                                        _buildCardContent(currentCard, true, l))
-                                : _buildCardContent(currentCard, false, l),
-                          );
-                        },
+                  },
+                  onPanEnd: (details) {
+                    if (_isAnimating) return;
+                    final screenWidth = MediaQuery.of(context).size.width;
+                    if (_dragPosition.dx > 100) {
+                      _animateSwipe(
+                          Offset(screenWidth + 200, _dragPosition.dy), true);
+                    } else if (_dragPosition.dx < -100) {
+                      _animateSwipe(
+                          Offset(-(screenWidth + 200), _dragPosition.dy),
+                          false);
+                    } else {
+                      _swipeAnim =
+                          Tween<Offset>(begin: _dragPosition, end: Offset.zero)
+                              .animate(CurvedAnimation(
+                                  parent: _swipeAnimController,
+                                  curve: Curves.elasticOut));
+                      _swipeAnimController.forward(from: 0).then((_) {
+                        setState(() {
+                          _dragPosition = Offset.zero;
+                          _dragAngle = 0;
+                        });
+                      });
+                    }
+                  },
+                  child: Transform.translate(
+                    offset: _dragPosition,
+                    child: Transform.rotate(
+                      angle: _dragAngle,
+                      child: Stack(
+                        children: [
+                          // Сама карточка с flip-анимацией
+                          AnimatedBuilder(
+                            animation: _flipController,
+                            builder: (context, child) {
+                              final angle = _flipController.value * pi;
+                              final transform = Matrix4.identity()
+                                ..setEntry(3, 2, 0.001)
+                                ..rotateY(angle);
+                              return Transform(
+                                transform: transform,
+                                alignment: Alignment.center,
+                                child: angle >= pi / 2
+                                    ? Transform(
+                                        transform: Matrix4.identity()
+                                          ..rotateY(pi),
+                                        alignment: Alignment.center,
+                                        child: _buildCardContent(
+                                            currentCard, true, l))
+                                    : _buildCardContent(currentCard, false, l),
+                              );
+                            },
+                          ),
+
+                          // Индикатор «ПОМНЮ» при свайпе вправо
+                          if (dx > 20)
+                            Positioned(
+                              top: 40,
+                              left: 40,
+                              child: Transform.rotate(
+                                angle: -0.2,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 16, vertical: 8),
+                                  decoration: BoxDecoration(
+                                    border: Border.all(
+                                        color: Colors.green
+                                            .withValues(alpha: opacity),
+                                        width: 4),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Text(l.btnKnow.toUpperCase(),
+                                      style: TextStyle(
+                                          color: Colors.green
+                                              .withValues(alpha: opacity),
+                                          fontSize: 32,
+                                          fontWeight: FontWeight.bold,
+                                          letterSpacing: 2)),
+                                ),
+                              ),
+                            ),
+
+                          // Индикатор «СЛОЖНО» при свайпе влево
+                          if (dx < -20)
+                            Positioned(
+                              top: 40,
+                              right: 40,
+                              child: Transform.rotate(
+                                angle: 0.2,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 16, vertical: 8),
+                                  decoration: BoxDecoration(
+                                    border: Border.all(
+                                        color: Colors.redAccent
+                                            .withValues(alpha: opacity),
+                                        width: 4),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Text(l.btnHard.toUpperCase(),
+                                      style: TextStyle(
+                                          color: Colors.redAccent
+                                              .withValues(alpha: opacity),
+                                          fontSize: 32,
+                                          fontWeight: FontWeight.bold,
+                                          letterSpacing: 2)),
+                                ),
+                              ),
+                            ),
+                        ],
                       ),
-
-                      // Индикатор «ПОМНЮ» при свайпе вправо
-                      if (dx > 20)
-                        Positioned(
-                          top: 40,
-                          left: 40,
-                          child: Transform.rotate(
-                            angle: -0.2,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 16, vertical: 8),
-                              decoration: BoxDecoration(
-                                border: Border.all(
-                                    color:
-                                        Colors.green.withValues(alpha: opacity),
-                                    width: 4),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Text(l.btnKnow.toUpperCase(),
-                                  style: TextStyle(
-                                      color: Colors.green
-                                          .withValues(alpha: opacity),
-                                      fontSize: 32,
-                                      fontWeight: FontWeight.bold,
-                                      letterSpacing: 2)),
-                            ),
-                          ),
-                        ),
-
-                      // Индикатор «СЛОЖНО» при свайпе влево
-                      if (dx < -20)
-                        Positioned(
-                          top: 40,
-                          right: 40,
-                          child: Transform.rotate(
-                            angle: 0.2,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 16, vertical: 8),
-                              decoration: BoxDecoration(
-                                border: Border.all(
-                                    color: Colors.redAccent
-                                        .withValues(alpha: opacity),
-                                    width: 4),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Text(l.btnHard.toUpperCase(),
-                                  style: TextStyle(
-                                      color: Colors.redAccent
-                                          .withValues(alpha: opacity),
-                                      fontSize: 32,
-                                      fontWeight: FontWeight.bold,
-                                      letterSpacing: 2)),
-                            ),
-                          ),
-                        ),
-                    ],
+                    ),
                   ),
                 ),
               ),
@@ -1876,7 +1884,6 @@ class _MicroSessionOverlayState extends State<MicroSessionOverlay>
         isBack ? (card.backAudioPath != null) : (card.frontAudioPath != null);
     return Container(
       width: double.infinity,
-      height: double.infinity,
       decoration: BoxDecoration(
           color: isBack
               ? Theme.of(context).colorScheme.primaryContainer
