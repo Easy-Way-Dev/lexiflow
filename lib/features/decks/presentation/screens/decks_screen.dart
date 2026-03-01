@@ -15,7 +15,6 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:lexiflow/app/onboarding_screen.dart';
 import 'package:lexiflow/app/paywall_screen.dart';
-import 'package:lexiflow/shared/widgets/adaptive_layout.dart';
 
 String _transliterate(String text) {
   const map = {
@@ -179,9 +178,7 @@ class _DecksScreenState extends State<DecksScreen>
                 t.sourceLanguage.isIn(['en-US', 'en-GB', 'en-CA']) |
                 t.targetLanguage.isIn(['en-US', 'en-GB', 'en-CA'])))
           .get();
-      if (legacyDecks.isEmpty) {
-        return;
-      }
+      if (legacyDecks.isEmpty) return;
       for (final deck in legacyDecks) {
         await widget.db.into(widget.db.decks).insertOnConflictUpdate(
               deck.toCompanion(true).copyWith(
@@ -318,12 +315,13 @@ class _DecksScreenState extends State<DecksScreen>
     );
   }
 
-  Widget _buildMilestoneReward(
-      {required int dayRequired,
-      required String title,
-      required IconData icon,
-      required Color color,
-      String? oldPrice}) {
+  Widget _buildMilestoneReward({
+    required int dayRequired,
+    required String title,
+    required IconData icon,
+    required Color color,
+    String? oldPrice,
+  }) {
     final l = AppLocalizations.of(context);
     final bool isUnlocked = _currentStreak >= dayRequired;
     final double progress = (_currentStreak / dayRequired).clamp(0.0, 1.0);
@@ -544,12 +542,13 @@ class _DecksScreenState extends State<DecksScreen>
     );
   }
 
-  Widget _buildSessionOptionCard(
-      {required String title,
-      required String subtitle,
-      required IconData icon,
-      required Color color,
-      required VoidCallback onTap}) {
+  Widget _buildSessionOptionCard({
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(16),
@@ -589,9 +588,7 @@ class _DecksScreenState extends State<DecksScreen>
   Future<void> _startMicroSession(int count, {String? filter}) async {
     final l = AppLocalizations.of(context);
 
-    if (filter == null) {
-      return;
-    }
+    if (filter == null) return;
     List<CardData> targetCards = [];
 
     if (filter.startsWith('mix_')) {
@@ -642,95 +639,98 @@ class _DecksScreenState extends State<DecksScreen>
 
   Future<void> _exportDeck(Deck deck) async {
     final l = AppLocalizations.of(context);
-    showDialog(
+    showModalBottomSheet(
         context: context,
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
         builder: (context) {
-          return Dialog(
-            backgroundColor: Theme.of(context).colorScheme.surface,
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-            insetPadding: const EdgeInsets.all(24),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 480),
-              child: Padding(
-                padding: const EdgeInsets.all(24.0),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(l.exportFormatTitle,
-                        style: Theme.of(context)
-                            .textTheme
-                            .titleLarge
-                            ?.copyWith(fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 24),
-                    ListTile(
-                      contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 8),
-                      leading: const Icon(Icons.inventory_2,
-                          color: Colors.blue, size: 32),
-                      title: const Text('.lexiflow',
-                          style: TextStyle(
+          return SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                          color: Colors.grey[300],
+                          borderRadius: BorderRadius.circular(2))),
+                  const SizedBox(height: 24),
+                  Text(l.exportFormatTitle,
+                      style: Theme.of(context)
+                          .textTheme
+                          .titleLarge
+                          ?.copyWith(fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 24),
+                  ListTile(
+                    contentPadding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    leading: const Icon(Icons.inventory_2,
+                        color: Colors.blue, size: 32),
+                    title: const Text('.lexiflow',
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 16)),
+                    subtitle: Text(l.exportLexiflowDesc,
+                        style: TextStyle(color: Colors.grey)),
+                    trailing: const Icon(Icons.download, color: Colors.blue),
+                    onTap: () {
+                      Navigator.pop(context);
+                      _processExportToLexiflow(deck);
+                    },
+                  ),
+                  const Divider(height: 1),
+                  ListTile(
+                    contentPadding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    leading: const Icon(Icons.table_chart,
+                        color: Colors.green, size: 32),
+                    title: Row(children: [
+                      Text(l.exportCsvTitle,
+                          style: const TextStyle(
                               fontWeight: FontWeight.bold, fontSize: 16)),
-                      subtitle: Text(l.exportLexiflowDesc,
-                          style: TextStyle(color: Colors.grey)),
-                      trailing: const Icon(Icons.download, color: Colors.blue),
-                      onTap: () {
-                        Navigator.pop(context);
-                        _processExportToLexiflow(deck);
-                      },
-                    ),
-                    const Divider(height: 1),
-                    ListTile(
-                      contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 8),
-                      leading: const Icon(Icons.table_chart,
-                          color: Colors.green, size: 32),
-                      title: Row(children: [
-                        Text(l.exportCsvTitle,
-                            style: const TextStyle(
-                                fontWeight: FontWeight.bold, fontSize: 16)),
-                        const SizedBox(width: 8),
-                        const Icon(Icons.workspace_premium,
-                            color: Colors.amber, size: 18)
-                      ]),
-                      subtitle: Text(l.exportCsvDesc,
-                          style: TextStyle(color: Colors.grey)),
-                      trailing: const Icon(Icons.lock, color: Colors.amber),
-                      onTap: () {
-                        Navigator.pop(context);
-                        Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (_) => const PaywallScreen()));
-                      },
-                    ),
-                    const Divider(height: 1),
-                    ListTile(
-                      contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 8),
-                      leading: const Icon(Icons.data_object,
-                          color: Colors.purple, size: 32),
-                      title: Row(children: [
-                        Text(l.exportJsonTitle,
-                            style: const TextStyle(
-                                fontWeight: FontWeight.bold, fontSize: 16)),
-                        const SizedBox(width: 8),
-                        const Icon(Icons.workspace_premium,
-                            color: Colors.amber, size: 18)
-                      ]),
-                      subtitle: Text(l.exportJsonDesc,
-                          style: TextStyle(color: Colors.grey)),
-                      trailing: const Icon(Icons.lock, color: Colors.amber),
-                      onTap: () {
-                        Navigator.pop(context);
-                        Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (_) => const PaywallScreen()));
-                      },
-                    ),
-                  ],
-                ),
+                      const SizedBox(width: 8),
+                      const Icon(Icons.workspace_premium,
+                          color: Colors.amber, size: 18)
+                    ]),
+                    subtitle: Text(l.exportCsvDesc,
+                        style: TextStyle(color: Colors.grey)),
+                    trailing: const Icon(Icons.lock, color: Colors.amber),
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (_) => const PaywallScreen()));
+                    },
+                  ),
+                  const Divider(height: 1),
+                  ListTile(
+                    contentPadding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    leading: const Icon(Icons.data_object,
+                        color: Colors.purple, size: 32),
+                    title: Row(children: [
+                      Text(l.exportJsonTitle,
+                          style: const TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 16)),
+                      const SizedBox(width: 8),
+                      const Icon(Icons.workspace_premium,
+                          color: Colors.amber, size: 18)
+                    ]),
+                    subtitle: Text(l.exportJsonDesc,
+                        style: TextStyle(color: Colors.grey)),
+                    trailing: const Icon(Icons.lock, color: Colors.amber),
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (_) => const PaywallScreen()));
+                    },
+                  ),
+                ],
               ),
             ),
           );
@@ -756,9 +756,7 @@ class _DecksScreenState extends State<DecksScreen>
     try {
       final service = ImportExportService(widget.db);
       final filePath = await service.exportToLexiflow(deck.id);
-      if (!mounted) {
-        return;
-      }
+      if (!mounted) return;
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
       await _showExportDialog(deck, filePath);
     } catch (e) {
@@ -779,7 +777,6 @@ class _DecksScreenState extends State<DecksScreen>
     final descController = TextEditingController(
         text: isEditing ? (deckToEdit.description ?? '') : '');
 
-    // Подставляем целевой язык на основе языка приложения, если мы создаем новую колоду
     final currentAppLocale = Localizations.localeOf(context).languageCode;
     String defaultTarget =
         ['ru', 'uk', 'en'].contains(currentAppLocale) ? currentAppLocale : 'ru';
@@ -1066,11 +1063,12 @@ class _DecksScreenState extends State<DecksScreen>
     return null;
   }
 
-  Widget _buildBigShareButton(
-      {required String emoji,
-      required String label,
-      required Color color,
-      required VoidCallback onTap}) {
+  Widget _buildBigShareButton({
+    required String emoji,
+    required String label,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -1212,9 +1210,7 @@ class _DecksScreenState extends State<DecksScreen>
       onTap: () async {
         await widget.db.setSetting('app_locale', code);
         LexiFlowApp.setLocale(Locale(code));
-        if (mounted) {
-          Navigator.pop(context);
-        }
+        if (mounted) Navigator.pop(context);
       },
     );
   }
@@ -1241,13 +1237,14 @@ class _DecksScreenState extends State<DecksScreen>
           ),
         ),
         actions: [
+          // ✅ ИСПРАВЛЕНО: tooltip из ARB-локализации, не хардкод
           IconButton(
               icon: const Icon(Icons.school, color: Colors.blue),
               onPressed: () => Navigator.push(
                   context,
                   MaterialPageRoute(
                       builder: (context) => OnboardingScreen(db: widget.db))),
-              tooltip: 'Onboarding Test'),
+              tooltip: AppLocalizations.of(context).onboardingWelcomeTitle),
           IconButton(
               icon: const Icon(Icons.language),
               onPressed: _showLanguageSettings,
@@ -1266,76 +1263,72 @@ class _DecksScreenState extends State<DecksScreen>
               tooltip: l.refresh),
         ],
       ),
-      body: AdaptiveLayout(
-        maxWidth: AppLayout.contentMaxWidth,
-        child: _isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : Column(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                    child: AnimatedBuilder(
-                      animation: Listenable.merge(
-                          [_pulseAnimation, _gradientController]),
-                      builder: (context, child) {
-                        return Transform.scale(
-                          scale: _pulseAnimation.value,
-                          child: InkWell(
-                            onTap: _showMicroSessionOptions,
-                            borderRadius: BorderRadius.circular(16),
-                            child: Container(
-                              width: double.infinity,
-                              padding: const EdgeInsets.symmetric(
-                                  vertical: 20, horizontal: 16),
-                              decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                      colors: const [
-                                        Color(0xFF6366F1),
-                                        Color(0xFFEC4899),
-                                        Color(0xFF6366F1)
-                                      ],
-                                      begin: _gradientBegin.value,
-                                      end: _gradientEnd.value),
-                                  borderRadius: BorderRadius.circular(16),
-                                  boxShadow: [
-                                    BoxShadow(
-                                        color: const Color(0xFFEC4899)
-                                            .withValues(alpha: 0.3),
-                                        blurRadius: 15,
-                                        spreadRadius: 2,
-                                        offset: const Offset(0, 5))
-                                  ]),
-                              child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    const Icon(Icons.bolt,
-                                        color: Colors.white, size: 28),
-                                    const SizedBox(width: 8),
-                                    Text(l.microSessionTitle,
-                                        style: const TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 20,
-                                            fontWeight: FontWeight.bold,
-                                            letterSpacing: 0.5))
-                                  ]),
-                            ),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                  child: AnimatedBuilder(
+                    animation: Listenable.merge(
+                        [_pulseAnimation, _gradientController]),
+                    builder: (context, child) {
+                      return Transform.scale(
+                        scale: _pulseAnimation.value,
+                        child: InkWell(
+                          onTap: _showMicroSessionOptions,
+                          borderRadius: BorderRadius.circular(16),
+                          child: Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.symmetric(
+                                vertical: 20, horizontal: 16),
+                            decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                    colors: const [
+                                      Color(0xFF6366F1),
+                                      Color(0xFFEC4899),
+                                      Color(0xFF6366F1)
+                                    ],
+                                    begin: _gradientBegin.value,
+                                    end: _gradientEnd.value),
+                                borderRadius: BorderRadius.circular(16),
+                                boxShadow: [
+                                  BoxShadow(
+                                      color: const Color(0xFFEC4899)
+                                          .withValues(alpha: 0.3),
+                                      blurRadius: 15,
+                                      spreadRadius: 2,
+                                      offset: const Offset(0, 5))
+                                ]),
+                            child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const Icon(Icons.bolt,
+                                      color: Colors.white, size: 28),
+                                  const SizedBox(width: 8),
+                                  Text(l.microSessionTitle,
+                                      style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.bold,
+                                          letterSpacing: 0.5))
+                                ]),
                           ),
-                        );
-                      },
-                    ),
+                        ),
+                      );
+                    },
                   ),
-                  Expanded(
-                      child: _decks.isEmpty
-                          ? _buildEmptyState(l)
-                          : ListView.builder(
-                              padding:
-                                  const EdgeInsets.fromLTRB(16, 8, 16, 100),
-                              itemCount: _decks.length,
-                              itemBuilder: (context, index) =>
-                                  _buildDeckCard(_decks[index], l))),
-                ],
-              ),
-      ), // AdaptiveLayout
+                ),
+                Expanded(
+                    child: _decks.isEmpty
+                        ? _buildEmptyState(l)
+                        : ListView.builder(
+                            padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
+                            itemCount: _decks.length,
+                            itemBuilder: (context, index) =>
+                                _buildDeckCard(_decks[index], l))),
+              ],
+            ),
       floatingActionButton: FloatingActionButton.extended(
           onPressed: () => _showDeckDialog(),
           icon: const Icon(Icons.add),
@@ -1424,15 +1417,9 @@ class _DecksScreenState extends State<DecksScreen>
                   PopupMenuButton<String>(
                     icon: const Icon(Icons.more_vert),
                     onSelected: (val) {
-                      if (val == 'export') {
-                        _exportDeck(deck);
-                      }
-                      if (val == 'edit') {
-                        _showDeckDialog(deckToEdit: deck);
-                      }
-                      if (val == 'delete') {
-                        _deleteDeck(deck);
-                      }
+                      if (val == 'export') _exportDeck(deck);
+                      if (val == 'edit') _showDeckDialog(deckToEdit: deck);
+                      if (val == 'delete') _deleteDeck(deck);
                     },
                     itemBuilder: (context) => [
                       PopupMenuItem(
@@ -1526,46 +1513,73 @@ class _DecksScreenState extends State<DecksScreen>
   }
 }
 
+// ============================================================
+// MicroSessionOverlay — быстрая тренировка со свайпом
+// ============================================================
 class MicroSessionOverlay extends StatefulWidget {
   final List<CardData> initialCards;
   final int requestedCount;
   final String currentFilter;
   final AppDatabase db;
 
-  const MicroSessionOverlay(
-      {super.key,
-      required this.initialCards,
-      required this.db,
-      required this.requestedCount,
-      required this.currentFilter});
+  const MicroSessionOverlay({
+    super.key,
+    required this.initialCards,
+    required this.db,
+    required this.requestedCount,
+    required this.currentFilter,
+  });
+
   @override
   State<MicroSessionOverlay> createState() => _MicroSessionOverlayState();
 }
 
 class _MicroSessionOverlayState extends State<MicroSessionOverlay>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late List<CardData> _currentCards;
   int _currentIndex = 0;
   bool _isFlipped = false;
   int _correctAnswers = 0;
+
+  // Контроллер для flip-анимации карточки
   late AnimationController _flipController;
+
+  // Контроллер для анимации свайпа (улёт карточки)
+  late AnimationController _swipeController;
+  late Animation<Offset> _swipeAnimation;
+
+  // Текущее смещение при перетаскивании
+  double _dragDx = 0.0;
+  // Флаг: сейчас летит карточка
+  bool _isSwiping = false;
+  // Направление свайпа: true = вправо (знаю), false = влево (сложно)
+  bool _swipeRight = false;
 
   @override
   void initState() {
     super.initState();
     _currentCards = List.from(widget.initialCards);
+
     _flipController = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 400));
+
+    _swipeController = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 300));
+    _swipeAnimation = Tween<Offset>(begin: Offset.zero, end: Offset.zero)
+        .animate(
+            CurvedAnimation(parent: _swipeController, curve: Curves.easeOut));
   }
 
   @override
   void dispose() {
     _flipController.dispose();
+    _swipeController.dispose();
     AudioHelper.stopAudio();
     super.dispose();
   }
 
   void _flipCard() {
+    if (_isSwiping) return;
     HapticFeedback.lightImpact();
     if (_isFlipped) {
       _flipController.reverse();
@@ -1575,26 +1589,54 @@ class _MicroSessionOverlayState extends State<MicroSessionOverlay>
     setState(() => _isFlipped = !_isFlipped);
   }
 
-  void _nextCard(bool isKnown) async {
+  /// Запускает анимацию улёта карточки, затем переходит к следующей
+  void _animateSwipeAndNext(bool isKnown) {
+    if (_isSwiping) return;
     HapticFeedback.mediumImpact();
+
+    setState(() {
+      _isSwiping = true;
+      _swipeRight = isKnown;
+    });
+
+    // Конечная точка: улетает за экран
+    final screenWidth = MediaQuery.of(context).size.width;
+    final endX = isKnown ? screenWidth * 1.5 : -screenWidth * 1.5;
+
+    _swipeAnimation = Tween<Offset>(
+      begin: Offset(_dragDx, 0),
+      end: Offset(endX, 0),
+    ).animate(CurvedAnimation(parent: _swipeController, curve: Curves.easeOut));
+
+    _swipeController.forward(from: 0).then((_) {
+      _goToNextCard(isKnown);
+    });
+  }
+
+  void _goToNextCard(bool isKnown) async {
     AudioHelper.stopAudio();
-    if (isKnown) {
-      _correctAnswers++;
-    }
+    if (isKnown) _correctAnswers++;
 
     if (_currentIndex < _currentCards.length - 1) {
       setState(() {
         _currentIndex++;
         _isFlipped = false;
+        _dragDx = 0;
+        _isSwiping = false;
         _flipController.reset();
+        _swipeController.reset();
       });
     } else {
+      // Конец сессии
       await widget.db.updateDailyStats(
         cardsStudied: _currentCards.length,
         correct: _correctAnswers,
         incorrect: _currentCards.length - _correctAnswers,
       );
-      setState(() => _currentIndex++);
+      setState(() {
+        _currentIndex++;
+        _isSwiping = false;
+      });
       HapticFeedback.heavyImpact();
     }
   }
@@ -1604,7 +1646,10 @@ class _MicroSessionOverlayState extends State<MicroSessionOverlay>
       _currentIndex = 0;
       _correctAnswers = 0;
       _isFlipped = false;
+      _dragDx = 0;
+      _isSwiping = false;
       _flipController.reset();
+      _swipeController.reset();
     });
   }
 
@@ -1635,7 +1680,10 @@ class _MicroSessionOverlayState extends State<MicroSessionOverlay>
       _currentIndex = 0;
       _correctAnswers = 0;
       _isFlipped = false;
+      _dragDx = 0;
+      _isSwiping = false;
       _flipController.reset();
+      _swipeController.reset();
     });
   }
 
@@ -1667,66 +1715,198 @@ class _MicroSessionOverlayState extends State<MicroSessionOverlay>
         ],
       ),
       body: SafeArea(
-          child: AdaptiveLayout(
-        maxWidth: AppLayout.narrowMaxWidth,
-        child: isFinished ? _buildSuccessView(l) : _buildCardView(l),
-      )),
+          child: isFinished ? _buildSuccessView(l) : _buildCardView(l)),
     );
   }
 
   Widget _buildCardView(AppLocalizations l) {
     final currentCard = _currentCards[_currentIndex];
+
+    // Смещение для визуальной обратной связи при drag
+    final double displayDx = _isSwiping ? _swipeAnimation.value.dx : _dragDx;
+    final double swipeOpacity = (displayDx.abs() / 80).clamp(0.0, 1.0);
+    final double swipeAngle = (displayDx / 600) * 0.2;
+
     return Column(
       children: [
+        // Прогресс-бар
         LinearProgressIndicator(
-            value: (_currentIndex) / _currentCards.length,
+            value: _currentIndex / _currentCards.length,
             backgroundColor: Colors.grey[200],
             color: const Color(0xFF6366F1)),
+
+        // Область карточки — занимает всё свободное пространство
         Expanded(
-          child: Padding(
-            padding: const EdgeInsets.all(32.0),
-            child: GestureDetector(
-              onTap: _flipCard,
-              // FIX: горизонтальный свайп — Помню / Сложно
-              onHorizontalDragEnd: (details) {
-                final velocity = details.primaryVelocity ?? 0;
-                if (velocity > 300) {
-                  // свайп вправо — Помню
-                  _nextCard(true);
-                } else if (velocity < -300) {
-                  // свайп влево — Сложно
-                  _nextCard(false);
-                }
-              },
-              child: AnimatedBuilder(
-                animation: _flipController,
-                builder: (context, child) {
-                  final angle = _flipController.value * pi;
-                  final transform = Matrix4.identity()
-                    ..setEntry(3, 2, 0.001)
-                    ..rotateY(angle);
-                  return Transform(
-                    transform: transform,
-                    alignment: Alignment.center,
-                    child: angle >= pi / 2
-                        ? Transform(
-                            transform: Matrix4.identity()..rotateY(pi),
-                            alignment: Alignment.center,
-                            child: _buildCardContent(currentCard, true, l))
-                        : _buildCardContent(currentCard, false, l),
-                  );
-                },
-              ),
-            ),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              return Stack(
+                children: [
+                  // Подсказки свайпа на фоне
+                  Positioned(
+                    top: 0,
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    child: Row(
+                      children: [
+                        // Левый фон — «Сложно»
+                        Expanded(
+                          child: AnimatedOpacity(
+                            opacity: displayDx < -10 ? swipeOpacity * 0.15 : 0,
+                            duration: Duration.zero,
+                            child: Container(
+                                color: Colors.red.withValues(alpha: 0.2)),
+                          ),
+                        ),
+                        // Правый фон — «Помню»
+                        Expanded(
+                          child: AnimatedOpacity(
+                            opacity: displayDx > 10 ? swipeOpacity * 0.15 : 0,
+                            duration: Duration.zero,
+                            child: Container(
+                                color: Colors.green.withValues(alpha: 0.2)),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Карточка с жестом
+                  AnimatedBuilder(
+                    animation: _swipeController,
+                    builder: (context, child) {
+                      return Transform.translate(
+                        offset: Offset(displayDx, 0),
+                        child: Transform.rotate(
+                          angle: swipeAngle,
+                          child: child,
+                        ),
+                      );
+                    },
+                    child: GestureDetector(
+                      // Тап — переворот (только если не свайп)
+                      onTap: _flipCard,
+                      // Горизонтальный drag
+                      onHorizontalDragStart: (_) {
+                        if (_isSwiping) return;
+                      },
+                      onHorizontalDragUpdate: (details) {
+                        if (_isSwiping) return;
+                        setState(() => _dragDx += details.delta.dx);
+                      },
+                      onHorizontalDragEnd: (details) {
+                        if (_isSwiping) return;
+                        final velocity = details.primaryVelocity ?? 0;
+                        if (_dragDx > 80 || velocity > 400) {
+                          // Свайп вправо → «Помню»
+                          _animateSwipeAndNext(true);
+                        } else if (_dragDx < -80 || velocity < -400) {
+                          // Свайп влево → «Сложно»
+                          _animateSwipeAndNext(false);
+                        } else {
+                          // Недостаточно — плавно возвращаем
+                          setState(() => _dragDx = 0);
+                        }
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(24, 16, 24, 16),
+                        child: SizedBox(
+                          width: double.infinity,
+                          height: constraints.maxHeight,
+                          child: AnimatedBuilder(
+                            animation: _flipController,
+                            builder: (context, child) {
+                              final angle = _flipController.value * pi;
+                              final transform = Matrix4.identity()
+                                ..setEntry(3, 2, 0.001)
+                                ..rotateY(angle);
+                              return Transform(
+                                transform: transform,
+                                alignment: Alignment.center,
+                                child: angle >= pi / 2
+                                    ? Transform(
+                                        transform: Matrix4.identity()
+                                          ..rotateY(pi),
+                                        alignment: Alignment.center,
+                                        child: _buildCardContent(
+                                            currentCard, true, l))
+                                    : _buildCardContent(currentCard, false, l),
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  // Индикатор «ПОМНЮ» при свайпе вправо
+                  if (displayDx > 10)
+                    Positioned(
+                      top: 40,
+                      left: 32,
+                      child: Opacity(
+                        opacity: swipeOpacity,
+                        child: Transform.rotate(
+                          angle: -0.2,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 8),
+                            decoration: BoxDecoration(
+                              border: Border.all(color: Colors.green, width: 3),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(l.btnKnow.toUpperCase(),
+                                style: const TextStyle(
+                                    color: Colors.green,
+                                    fontSize: 28,
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: 2)),
+                          ),
+                        ),
+                      ),
+                    ),
+
+                  // Индикатор «СЛОЖНО» при свайпе влево
+                  if (displayDx < -10)
+                    Positioned(
+                      top: 40,
+                      right: 32,
+                      child: Opacity(
+                        opacity: swipeOpacity,
+                        child: Transform.rotate(
+                          angle: 0.2,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 8),
+                            decoration: BoxDecoration(
+                              border:
+                                  Border.all(color: Colors.redAccent, width: 3),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(l.btnHard.toUpperCase(),
+                                style: const TextStyle(
+                                    color: Colors.redAccent,
+                                    fontSize: 28,
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: 2)),
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              );
+            },
           ),
         ),
+
+        // Кнопки «Сложно» / «Помню»
         Padding(
           padding: const EdgeInsets.fromLTRB(24, 0, 24, 48),
           child: Row(
             children: [
               Expanded(
                   child: FilledButton.tonal(
-                      onPressed: () => _nextCard(false),
+                      onPressed: () => _animateSwipeAndNext(false),
                       style: FilledButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 20),
                           shape: RoundedRectangleBorder(
@@ -1736,7 +1916,7 @@ class _MicroSessionOverlayState extends State<MicroSessionOverlay>
               const SizedBox(width: 16),
               Expanded(
                   child: FilledButton(
-                      onPressed: () => _nextCard(true),
+                      onPressed: () => _animateSwipeAndNext(true),
                       style: FilledButton.styleFrom(
                           backgroundColor: Colors.green,
                           padding: const EdgeInsets.symmetric(vertical: 20),
