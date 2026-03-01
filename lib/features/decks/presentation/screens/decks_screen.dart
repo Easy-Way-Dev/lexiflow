@@ -215,7 +215,6 @@ class _DecksScreenState extends State<DecksScreen>
   void _showStoreAndStreaksDialog() {
     HapticFeedback.lightImpact();
     final l = AppLocalizations.of(context);
-
     showDialog(
       context: context,
       builder: (context) {
@@ -355,10 +354,9 @@ class _DecksScreenState extends State<DecksScreen>
                 const SizedBox(width: 16),
                 Expanded(
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(children: [
                           Expanded(
                               child: Text(title,
                                   style: TextStyle(
@@ -375,22 +373,21 @@ class _DecksScreenState extends State<DecksScreen>
                                     color: Colors.red,
                                     decoration: TextDecoration.lineThrough,
                                     fontWeight: FontWeight.bold)),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                          isUnlocked
-                              ? l.streakUnlocked
-                              : l.streakAvailableOn(dayRequired),
-                          style: TextStyle(
-                              color:
-                                  isUnlocked ? Colors.green : Colors.grey[500],
-                              fontWeight: isUnlocked
-                                  ? FontWeight.bold
-                                  : FontWeight.normal,
-                              fontSize: 13)),
-                    ],
-                  ),
+                        ]),
+                        const SizedBox(height: 4),
+                        Text(
+                            isUnlocked
+                                ? l.streakUnlocked
+                                : l.streakAvailableOn(dayRequired),
+                            style: TextStyle(
+                                color: isUnlocked
+                                    ? Colors.green
+                                    : Colors.grey[500],
+                                fontWeight: isUnlocked
+                                    ? FontWeight.bold
+                                    : FontWeight.normal,
+                                fontSize: 13)),
+                      ]),
                 ),
               ],
             ),
@@ -423,9 +420,7 @@ class _DecksScreenState extends State<DecksScreen>
           (pair) => pair.split('||')[1].startsWith(currentAppLocale));
       selectedFilter = 'mix_$defaultPair';
     } catch (e) {
-      if (mixPairs.isNotEmpty) {
-        selectedFilter = 'mix_${mixPairs.first}';
-      }
+      if (mixPairs.isNotEmpty) selectedFilter = 'mix_${mixPairs.first}';
     }
 
     showDialog(
@@ -587,7 +582,6 @@ class _DecksScreenState extends State<DecksScreen>
 
   Future<void> _startMicroSession(int count, {String? filter}) async {
     final l = AppLocalizations.of(context);
-
     if (filter == null) return;
     List<CardData> targetCards = [];
 
@@ -603,9 +597,8 @@ class _DecksScreenState extends State<DecksScreen>
           allCards.where((c) => matchingDeckIds.contains(c.deckId)).toList();
     } else if (filter.startsWith('deck_')) {
       final deckId = int.tryParse(filter.replaceFirst('deck_', ''));
-      if (deckId != null) {
+      if (deckId != null)
         targetCards = await widget.db.getCardsByDeckId(deckId);
-      }
     }
 
     if (targetCards.isEmpty) {
@@ -673,7 +666,7 @@ class _DecksScreenState extends State<DecksScreen>
                         style: TextStyle(
                             fontWeight: FontWeight.bold, fontSize: 16)),
                     subtitle: Text(l.exportLexiflowDesc,
-                        style: TextStyle(color: Colors.grey)),
+                        style: const TextStyle(color: Colors.grey)),
                     trailing: const Icon(Icons.download, color: Colors.blue),
                     onTap: () {
                       Navigator.pop(context);
@@ -695,7 +688,7 @@ class _DecksScreenState extends State<DecksScreen>
                           color: Colors.amber, size: 18)
                     ]),
                     subtitle: Text(l.exportCsvDesc,
-                        style: TextStyle(color: Colors.grey)),
+                        style: const TextStyle(color: Colors.grey)),
                     trailing: const Icon(Icons.lock, color: Colors.amber),
                     onTap: () {
                       Navigator.pop(context);
@@ -720,7 +713,7 @@ class _DecksScreenState extends State<DecksScreen>
                           color: Colors.amber, size: 18)
                     ]),
                     subtitle: Text(l.exportJsonDesc,
-                        style: TextStyle(color: Colors.grey)),
+                        style: const TextStyle(color: Colors.grey)),
                     trailing: const Icon(Icons.lock, color: Colors.amber),
                     onTap: () {
                       Navigator.pop(context);
@@ -780,7 +773,6 @@ class _DecksScreenState extends State<DecksScreen>
     final currentAppLocale = Localizations.localeOf(context).languageCode;
     String defaultTarget =
         ['ru', 'uk', 'en'].contains(currentAppLocale) ? currentAppLocale : 'ru';
-
     String sourceLang = isEditing ? deckToEdit.sourceLanguage : 'en';
     String targetLang = isEditing ? deckToEdit.targetLanguage : defaultTarget;
 
@@ -898,7 +890,6 @@ class _DecksScreenState extends State<DecksScreen>
   Future<void> _showExportDialog(Deck deck, String filePath) async {
     final l = AppLocalizations.of(context);
     final pathController = TextEditingController(text: filePath);
-
     await showDialog(
       context: context,
       builder: (context) => StatefulBuilder(
@@ -924,55 +915,53 @@ class _DecksScreenState extends State<DecksScreen>
                     style: const TextStyle(
                         fontWeight: FontWeight.w600, fontSize: 15)),
                 const SizedBox(height: 16),
-                Column(
-                  children: [
-                    Row(children: [
-                      Expanded(
-                          child: _buildBigShareButton(
-                              emoji: '✈️',
-                              label: 'Telegram',
-                              color: const Color(0xFF0088CC),
-                              onTap: () => _shareToTelegram(filePath))),
-                      const SizedBox(width: 12),
-                      Expanded(
-                          child: _buildBigShareButton(
-                              emoji: '💬',
-                              label: 'WhatsApp',
-                              color: const Color(0xFF25D366),
-                              onTap: () => _shareToWhatsApp(filePath))),
-                      const SizedBox(width: 12),
-                      Expanded(
-                          child: _buildBigShareButton(
-                              emoji: '📘',
-                              label: 'Facebook',
-                              color: const Color(0xFF1877F2),
-                              onTap: () => _shareToFacebook(filePath))),
-                    ]),
-                    const SizedBox(height: 12),
-                    Row(children: [
-                      Expanded(
-                          child: _buildBigShareButton(
-                              emoji: '📧',
-                              label: 'Email',
-                              color: const Color(0xFFEA4335),
-                              onTap: () => _shareToEmail(filePath, deck.name))),
-                      const SizedBox(width: 12),
-                      Expanded(
-                          child: _buildBigShareButton(
-                              emoji: '💾',
-                              label: 'Discord',
-                              color: const Color(0xFF5865F2),
-                              onTap: () => _shareToDiscord(filePath))),
-                      const SizedBox(width: 12),
-                      Expanded(
-                          child: _buildBigShareButton(
-                              emoji: '📤',
-                              label: l.share,
-                              color: const Color(0xFF757575),
-                              onTap: () => _shareToApp(filePath, deck.name))),
-                    ]),
-                  ],
-                ),
+                Column(children: [
+                  Row(children: [
+                    Expanded(
+                        child: _buildBigShareButton(
+                            emoji: '✈️',
+                            label: 'Telegram',
+                            color: const Color(0xFF0088CC),
+                            onTap: () => _shareToTelegram(filePath))),
+                    const SizedBox(width: 12),
+                    Expanded(
+                        child: _buildBigShareButton(
+                            emoji: '💬',
+                            label: 'WhatsApp',
+                            color: const Color(0xFF25D366),
+                            onTap: () => _shareToWhatsApp(filePath))),
+                    const SizedBox(width: 12),
+                    Expanded(
+                        child: _buildBigShareButton(
+                            emoji: '📘',
+                            label: 'Facebook',
+                            color: const Color(0xFF1877F2),
+                            onTap: () => _shareToFacebook(filePath))),
+                  ]),
+                  const SizedBox(height: 12),
+                  Row(children: [
+                    Expanded(
+                        child: _buildBigShareButton(
+                            emoji: '📧',
+                            label: 'Email',
+                            color: const Color(0xFFEA4335),
+                            onTap: () => _shareToEmail(filePath, deck.name))),
+                    const SizedBox(width: 12),
+                    Expanded(
+                        child: _buildBigShareButton(
+                            emoji: '💾',
+                            label: 'Discord',
+                            color: const Color(0xFF5865F2),
+                            onTap: () => _shareToDiscord(filePath))),
+                    const SizedBox(width: 12),
+                    Expanded(
+                        child: _buildBigShareButton(
+                            emoji: '📤',
+                            label: l.share,
+                            color: const Color(0xFF757575),
+                            onTap: () => _shareToApp(filePath, deck.name))),
+                  ]),
+                ]),
                 const SizedBox(height: 20),
                 Text(l.exportPath,
                     style: TextStyle(
@@ -980,37 +969,34 @@ class _DecksScreenState extends State<DecksScreen>
                         fontWeight: FontWeight.w500,
                         color: Colors.grey[700])),
                 const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Expanded(
-                        child: TextField(
-                            controller: pathController,
-                            decoration: InputDecoration(
-                                isDense: true,
-                                contentPadding: const EdgeInsets.symmetric(
-                                    horizontal: 12, vertical: 10),
-                                border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8)),
-                                prefixIcon: const Icon(Icons.folder, size: 18)),
-                            style: const TextStyle(fontSize: 12),
-                            readOnly: true)),
-                    const SizedBox(width: 8),
-                    OutlinedButton.icon(
-                      onPressed: () async {
-                        final newPath =
-                            await _pickSaveLocation(deck.name, filePath);
-                        if (newPath != null) {
-                          setDialogState(() => pathController.text = newPath);
-                        }
-                      },
-                      icon: const Icon(Icons.folder_open, size: 18),
-                      label: Text(l.exportBrowse),
-                      style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 12)),
-                    ),
-                  ],
-                ),
+                Row(children: [
+                  Expanded(
+                      child: TextField(
+                          controller: pathController,
+                          decoration: InputDecoration(
+                              isDense: true,
+                              contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 10),
+                              border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8)),
+                              prefixIcon: const Icon(Icons.folder, size: 18)),
+                          style: const TextStyle(fontSize: 12),
+                          readOnly: true)),
+                  const SizedBox(width: 8),
+                  OutlinedButton.icon(
+                    onPressed: () async {
+                      final newPath =
+                          await _pickSaveLocation(deck.name, filePath);
+                      if (newPath != null)
+                        setDialogState(() => pathController.text = newPath);
+                    },
+                    icon: const Icon(Icons.folder_open, size: 18),
+                    label: Text(l.exportBrowse),
+                    style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 12)),
+                  ),
+                ]),
               ],
             ),
           ),
@@ -1024,14 +1010,13 @@ class _DecksScreenState extends State<DecksScreen>
   }
 
   Future<String> _getDownloadsPath() async {
-    if (Platform.isWindows) {
+    if (Platform.isWindows)
       return '${Platform.environment['USERPROFILE']}\\Downloads';
-    } else if (Platform.isAndroid) {
+    else if (Platform.isAndroid)
       return (await getExternalStorageDirectory())?.path ??
           '/storage/emulated/0/Download';
-    } else if (Platform.isIOS || Platform.isMacOS) {
+    else if (Platform.isIOS || Platform.isMacOS)
       return (await getApplicationDocumentsDirectory()).path;
-    }
     return Platform.environment['HOME'] ?? '/tmp';
   }
 
@@ -1063,12 +1048,11 @@ class _DecksScreenState extends State<DecksScreen>
     return null;
   }
 
-  Widget _buildBigShareButton({
-    required String emoji,
-    required String label,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
+  Widget _buildBigShareButton(
+      {required String emoji,
+      required String label,
+      required Color color,
+      required VoidCallback onTap}) {
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -1097,11 +1081,10 @@ class _DecksScreenState extends State<DecksScreen>
   Future<void> _shareToTelegram(String path) async {
     try {
       final uri = Uri.parse('tg://msg');
-      if (await canLaunchUrl(uri)) {
+      if (await canLaunchUrl(uri))
         await launchUrl(uri, mode: LaunchMode.externalApplication);
-      } else {
+      else
         _shareToApp(path, '');
-      }
     } catch (e) {
       _shareToApp(path, '');
     }
@@ -1110,11 +1093,10 @@ class _DecksScreenState extends State<DecksScreen>
   Future<void> _shareToWhatsApp(String path) async {
     try {
       final uri = Uri.parse('whatsapp://send');
-      if (await canLaunchUrl(uri)) {
+      if (await canLaunchUrl(uri))
         await launchUrl(uri, mode: LaunchMode.externalApplication);
-      } else {
+      else
         _shareToApp(path, '');
-      }
     } catch (e) {
       _shareToApp(path, '');
     }
@@ -1123,11 +1105,10 @@ class _DecksScreenState extends State<DecksScreen>
   Future<void> _shareToFacebook(String path) async {
     try {
       final uri = Uri.parse('fb://');
-      if (await canLaunchUrl(uri)) {
+      if (await canLaunchUrl(uri))
         await launchUrl(uri, mode: LaunchMode.externalApplication);
-      } else {
+      else
         _shareToApp(path, '');
-      }
     } catch (e) {
       _shareToApp(path, '');
     }
@@ -1139,11 +1120,10 @@ class _DecksScreenState extends State<DecksScreen>
         'subject': 'LexiFlow: $name',
         'body': 'File: ${path.split(Platform.pathSeparator).last}'
       });
-      if (await canLaunchUrl(uri)) {
+      if (await canLaunchUrl(uri))
         await launchUrl(uri);
-      } else {
+      else
         _shareToApp(path, name);
-      }
     } catch (e) {
       _shareToApp(path, name);
     }
@@ -1152,11 +1132,10 @@ class _DecksScreenState extends State<DecksScreen>
   Future<void> _shareToDiscord(String path) async {
     try {
       final uri = Uri.parse('discord://');
-      if (await canLaunchUrl(uri)) {
+      if (await canLaunchUrl(uri))
         await launchUrl(uri, mode: LaunchMode.externalApplication);
-      } else {
+      else
         _shareToApp(path, '');
-      }
     } catch (e) {
       _shareToApp(path, '');
     }
@@ -1180,14 +1159,11 @@ class _DecksScreenState extends State<DecksScreen>
       context: context,
       builder: (context) => AlertDialog(
         title: Text(l.settingsLanguage),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _buildLangOption('en', '🇺🇸', 'English (US)'),
-            _buildLangOption('ru', '🇷🇺', 'Русский'),
-            _buildLangOption('uk', '🇺🇦', 'Українська'),
-          ],
-        ),
+        content: Column(mainAxisSize: MainAxisSize.min, children: [
+          _buildLangOption('en', '🇺🇸', 'English (US)'),
+          _buildLangOption('ru', '🇷🇺', 'Русский'),
+          _buildLangOption('uk', '🇺🇦', 'Українська'),
+        ]),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(context), child: Text(l.close))
@@ -1237,7 +1213,7 @@ class _DecksScreenState extends State<DecksScreen>
           ),
         ),
         actions: [
-          // ✅ ИСПРАВЛЕНО: tooltip из ARB-локализации, не хардкод
+          // ✅ ИСПРАВЛЕНО: tooltip локализован через ARB
           IconButton(
               icon: const Icon(Icons.school, color: Colors.blue),
               onPressed: () => Navigator.push(
@@ -1379,7 +1355,6 @@ class _DecksScreenState extends State<DecksScreen>
   Widget _buildDeckCard(Deck deck, AppLocalizations l) {
     final progress =
         deck.totalCards > 0 ? deck.masteredCards / deck.totalCards : 0.0;
-
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: InkWell(
@@ -1396,95 +1371,87 @@ class _DecksScreenState extends State<DecksScreen>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                children: [
-                  Expanded(
-                      child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                        Text(deck.name,
-                            style: Theme.of(context).textTheme.titleLarge),
-                        if (deck.description != null &&
-                            deck.description!.isNotEmpty)
-                          Text(deck.description!,
-                              style: TextStyle(
-                                  color: Colors.grey[600], fontSize: 13))
-                      ])),
-                  IconButton(
-                      icon: const Icon(Icons.share, color: Colors.blue),
-                      onPressed: () => _exportDeck(deck),
-                      tooltip: l.exportShare),
-                  PopupMenuButton<String>(
-                    icon: const Icon(Icons.more_vert),
-                    onSelected: (val) {
-                      if (val == 'export') _exportDeck(deck);
-                      if (val == 'edit') _showDeckDialog(deckToEdit: deck);
-                      if (val == 'delete') _deleteDeck(deck);
-                    },
-                    itemBuilder: (context) => [
-                      PopupMenuItem(
-                          value: 'export',
-                          child: Row(children: [
-                            const Icon(Icons.ios_share,
-                                color: Colors.blue, size: 18),
-                            const SizedBox(width: 8),
-                            Text(l.exportShare)
-                          ])),
-                      PopupMenuItem(
-                          value: 'edit',
-                          child: Row(children: [
-                            const Icon(Icons.edit,
-                                color: Colors.orange, size: 18),
-                            const SizedBox(width: 8),
-                            Text(l.edit)
-                          ])),
-                      PopupMenuItem(
-                          value: 'delete',
-                          child: Row(children: [
-                            const Icon(Icons.delete,
-                                color: Colors.red, size: 18),
-                            const SizedBox(width: 8),
-                            Text(l.delete,
-                                style: const TextStyle(color: Colors.red))
-                          ])),
-                    ],
-                  ),
-                ],
-              ),
+              Row(children: [
+                Expanded(
+                    child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                      Text(deck.name,
+                          style: Theme.of(context).textTheme.titleLarge),
+                      if (deck.description != null &&
+                          deck.description!.isNotEmpty)
+                        Text(deck.description!,
+                            style: TextStyle(
+                                color: Colors.grey[600], fontSize: 13))
+                    ])),
+                IconButton(
+                    icon: const Icon(Icons.share, color: Colors.blue),
+                    onPressed: () => _exportDeck(deck),
+                    tooltip: l.exportShare),
+                PopupMenuButton<String>(
+                  icon: const Icon(Icons.more_vert),
+                  onSelected: (val) {
+                    if (val == 'export') _exportDeck(deck);
+                    if (val == 'edit') _showDeckDialog(deckToEdit: deck);
+                    if (val == 'delete') _deleteDeck(deck);
+                  },
+                  itemBuilder: (context) => [
+                    PopupMenuItem(
+                        value: 'export',
+                        child: Row(children: [
+                          const Icon(Icons.ios_share,
+                              color: Colors.blue, size: 18),
+                          const SizedBox(width: 8),
+                          Text(l.exportShare)
+                        ])),
+                    PopupMenuItem(
+                        value: 'edit',
+                        child: Row(children: [
+                          const Icon(Icons.edit,
+                              color: Colors.orange, size: 18),
+                          const SizedBox(width: 8),
+                          Text(l.edit)
+                        ])),
+                    PopupMenuItem(
+                        value: 'delete',
+                        child: Row(children: [
+                          const Icon(Icons.delete, color: Colors.red, size: 18),
+                          const SizedBox(width: 8),
+                          Text(l.delete,
+                              style: const TextStyle(color: Colors.red))
+                        ])),
+                  ],
+                ),
+              ]),
               const SizedBox(height: 12),
-              Row(
-                children: [
-                  _buildLangChip(deck.sourceLanguage),
-                  const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 4),
-                      child: Icon(Icons.arrow_forward, size: 16)),
-                  _buildLangChip(deck.targetLanguage),
-                  const Spacer(),
-                  Text('${deck.totalCards} ${l.cards}',
-                      style: const TextStyle(fontSize: 13)),
-                ],
-              ),
+              Row(children: [
+                _buildLangChip(deck.sourceLanguage),
+                const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 4),
+                    child: Icon(Icons.arrow_forward, size: 16)),
+                _buildLangChip(deck.targetLanguage),
+                const Spacer(),
+                Text('${deck.totalCards} ${l.cards}',
+                    style: const TextStyle(fontSize: 13)),
+              ]),
               const SizedBox(height: 12),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(l.progress, style: const TextStyle(fontSize: 12)),
-                        Text(
-                            '${deck.masteredCards}/${deck.totalCards} (${(progress * 100).toStringAsFixed(0)}%)',
-                            style: const TextStyle(
-                                fontSize: 12, fontWeight: FontWeight.bold))
-                      ]),
-                  const SizedBox(height: 4),
-                  LinearProgressIndicator(
-                      value: progress,
-                      backgroundColor: Colors.grey[200],
-                      color: Theme.of(context).colorScheme.primary,
-                      borderRadius: BorderRadius.circular(4)),
-                ],
-              ),
+              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(l.progress, style: const TextStyle(fontSize: 12)),
+                      Text(
+                          '${deck.masteredCards}/${deck.totalCards} (${(progress * 100).toStringAsFixed(0)}%)',
+                          style: const TextStyle(
+                              fontSize: 12, fontWeight: FontWeight.bold))
+                    ]),
+                const SizedBox(height: 4),
+                LinearProgressIndicator(
+                    value: progress,
+                    backgroundColor: Colors.grey[200],
+                    color: Theme.of(context).colorScheme.primary,
+                    borderRadius: BorderRadius.circular(4)),
+              ]),
             ],
           ),
         ),
@@ -1514,7 +1481,10 @@ class _DecksScreenState extends State<DecksScreen>
 }
 
 // ============================================================
-// MicroSessionOverlay — быстрая тренировка со свайпом
+// MicroSessionOverlay — быстрая тренировка
+// Архитектура свайпа такая же как в _SwipeableCard онбординга:
+// position/angle управляются через onPanUpdate, анимация через
+// AnimationController только для улёта и возврата.
 // ============================================================
 class MicroSessionOverlay extends StatefulWidget {
   final List<CardData> initialCards;
@@ -1541,19 +1511,18 @@ class _MicroSessionOverlayState extends State<MicroSessionOverlay>
   bool _isFlipped = false;
   int _correctAnswers = 0;
 
-  // Контроллер для flip-анимации карточки
+  // Flip-анимация карточки
   late AnimationController _flipController;
 
-  // Контроллер для анимации свайпа (улёт карточки)
-  late AnimationController _swipeController;
-  late Animation<Offset> _swipeAnimation;
+  // Свайп-анимация: позиция и угол карточки
+  late AnimationController _swipeAnimController;
+  late Animation<Offset> _swipeAnim;
 
-  // Текущее смещение при перетаскивании
-  double _dragDx = 0.0;
-  // Флаг: сейчас летит карточка
-  bool _isSwiping = false;
-  // Направление свайпа: true = вправо (знаю), false = влево (сложно)
-  bool _swipeRight = false;
+  // Текущее смещение при drag
+  Offset _dragPosition = Offset.zero;
+  double _dragAngle = 0;
+  // true пока карточка летит (заблокировать повторный свайп)
+  bool _isAnimating = false;
 
   @override
   void initState() {
@@ -1563,23 +1532,26 @@ class _MicroSessionOverlayState extends State<MicroSessionOverlay>
     _flipController = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 400));
 
-    _swipeController = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 300));
-    _swipeAnimation = Tween<Offset>(begin: Offset.zero, end: Offset.zero)
-        .animate(
-            CurvedAnimation(parent: _swipeController, curve: Curves.easeOut));
+    _swipeAnimController = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 280));
+    // Слушаем анимацию → обновляем _dragPosition
+    _swipeAnimController.addListener(() {
+      if (mounted) {
+        setState(() => _dragPosition = _swipeAnim.value);
+      }
+    });
   }
 
   @override
   void dispose() {
     _flipController.dispose();
-    _swipeController.dispose();
+    _swipeAnimController.dispose();
     AudioHelper.stopAudio();
     super.dispose();
   }
 
   void _flipCard() {
-    if (_isSwiping) return;
+    if (_isAnimating || _dragPosition.dx.abs() > 5) return;
     HapticFeedback.lightImpact();
     if (_isFlipped) {
       _flipController.reverse();
@@ -1589,26 +1561,23 @@ class _MicroSessionOverlayState extends State<MicroSessionOverlay>
     setState(() => _isFlipped = !_isFlipped);
   }
 
-  /// Запускает анимацию улёта карточки, затем переходит к следующей
-  void _animateSwipeAndNext(bool isKnown) {
-    if (_isSwiping) return;
+  // Свайп вправо = знаю, влево = сложно
+  void _triggerSwipe(bool isKnown) {
+    if (_isAnimating) return;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final targetX = isKnown ? screenWidth + 200.0 : -(screenWidth + 200.0);
+    _animateSwipe(Offset(targetX, _dragPosition.dy), isKnown);
+  }
+
+  void _animateSwipe(Offset target, bool isKnown) {
+    if (_isAnimating) return;
+    _isAnimating = true;
     HapticFeedback.mediumImpact();
 
-    setState(() {
-      _isSwiping = true;
-      _swipeRight = isKnown;
-    });
+    _swipeAnim = Tween<Offset>(begin: _dragPosition, end: target).animate(
+        CurvedAnimation(parent: _swipeAnimController, curve: Curves.easeOut));
 
-    // Конечная точка: улетает за экран
-    final screenWidth = MediaQuery.of(context).size.width;
-    final endX = isKnown ? screenWidth * 1.5 : -screenWidth * 1.5;
-
-    _swipeAnimation = Tween<Offset>(
-      begin: Offset(_dragDx, 0),
-      end: Offset(endX, 0),
-    ).animate(CurvedAnimation(parent: _swipeController, curve: Curves.easeOut));
-
-    _swipeController.forward(from: 0).then((_) {
+    _swipeAnimController.forward(from: 0).then((_) {
       _goToNextCard(isKnown);
     });
   }
@@ -1621,13 +1590,13 @@ class _MicroSessionOverlayState extends State<MicroSessionOverlay>
       setState(() {
         _currentIndex++;
         _isFlipped = false;
-        _dragDx = 0;
-        _isSwiping = false;
+        _dragPosition = Offset.zero;
+        _dragAngle = 0;
+        _isAnimating = false;
         _flipController.reset();
-        _swipeController.reset();
+        _swipeAnimController.reset();
       });
     } else {
-      // Конец сессии
       await widget.db.updateDailyStats(
         cardsStudied: _currentCards.length,
         correct: _correctAnswers,
@@ -1635,7 +1604,7 @@ class _MicroSessionOverlayState extends State<MicroSessionOverlay>
       );
       setState(() {
         _currentIndex++;
-        _isSwiping = false;
+        _isAnimating = false;
       });
       HapticFeedback.heavyImpact();
     }
@@ -1646,10 +1615,11 @@ class _MicroSessionOverlayState extends State<MicroSessionOverlay>
       _currentIndex = 0;
       _correctAnswers = 0;
       _isFlipped = false;
-      _dragDx = 0;
-      _isSwiping = false;
+      _dragPosition = Offset.zero;
+      _dragAngle = 0;
+      _isAnimating = false;
       _flipController.reset();
-      _swipeController.reset();
+      _swipeAnimController.reset();
     });
   }
 
@@ -1669,29 +1639,27 @@ class _MicroSessionOverlayState extends State<MicroSessionOverlay>
     } else if (widget.currentFilter.startsWith('deck_')) {
       final deckId =
           int.tryParse(widget.currentFilter.replaceFirst('deck_', ''));
-      if (deckId != null) {
+      if (deckId != null)
         targetCards = await widget.db.getCardsByDeckId(deckId);
-      }
     }
     targetCards.shuffle();
-    final newCards = targetCards.take(widget.requestedCount).toList();
     setState(() {
-      _currentCards = newCards;
+      _currentCards = targetCards.take(widget.requestedCount).toList();
       _currentIndex = 0;
       _correctAnswers = 0;
       _isFlipped = false;
-      _dragDx = 0;
-      _isSwiping = false;
+      _dragPosition = Offset.zero;
+      _dragAngle = 0;
+      _isAnimating = false;
       _flipController.reset();
-      _swipeController.reset();
+      _swipeAnimController.reset();
     });
   }
 
   void _playCardAudio(CardData card, bool isBack) {
     final audioPath = isBack ? card.backAudioPath : card.frontAudioPath;
-    if (audioPath != null && audioPath.isNotEmpty) {
+    if (audioPath != null && audioPath.isNotEmpty)
       AudioHelper.playAudio(audioPath);
-    }
   }
 
   @override
@@ -1721,11 +1689,9 @@ class _MicroSessionOverlayState extends State<MicroSessionOverlay>
 
   Widget _buildCardView(AppLocalizations l) {
     final currentCard = _currentCards[_currentIndex];
-
-    // Смещение для визуальной обратной связи при drag
-    final double displayDx = _isSwiping ? _swipeAnimation.value.dx : _dragDx;
-    final double swipeOpacity = (displayDx.abs() / 80).clamp(0.0, 1.0);
-    final double swipeAngle = (displayDx / 600) * 0.2;
+    final dx = _dragPosition.dx;
+    final isSwipingRight = dx > 0;
+    final opacity = min(dx.abs() / 100, 1.0);
 
     return Column(
       children: [
@@ -1735,167 +1701,140 @@ class _MicroSessionOverlayState extends State<MicroSessionOverlay>
             backgroundColor: Colors.grey[200],
             color: const Color(0xFF6366F1)),
 
-        // Область карточки — занимает всё свободное пространство
+        // Карточка — растягивается на доступное пространство
         Expanded(
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              return Stack(
-                children: [
-                  // Подсказки свайпа на фоне
-                  Positioned(
-                    top: 0,
-                    bottom: 0,
-                    left: 0,
-                    right: 0,
-                    child: Row(
-                      children: [
-                        // Левый фон — «Сложно»
-                        Expanded(
-                          child: AnimatedOpacity(
-                            opacity: displayDx < -10 ? swipeOpacity * 0.15 : 0,
-                            duration: Duration.zero,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(24, 16, 24, 16),
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: _flipCard,
+              onPanStart: (_) {
+                if (_isAnimating) return;
+                if (_swipeAnimController.isAnimating)
+                  _swipeAnimController.stop();
+              },
+              onPanUpdate: (details) {
+                if (_isAnimating) return;
+                setState(() {
+                  _dragPosition += details.delta;
+                  // Лёгкий наклон как в онбординге
+                  _dragAngle = 45 *
+                      (_dragPosition.dx / MediaQuery.of(context).size.width) *
+                      (pi / 180);
+                });
+              },
+              onPanEnd: (details) {
+                if (_isAnimating) return;
+                final screenWidth = MediaQuery.of(context).size.width;
+                if (_dragPosition.dx > 100) {
+                  _animateSwipe(
+                      Offset(screenWidth + 200, _dragPosition.dy), true);
+                } else if (_dragPosition.dx < -100) {
+                  _animateSwipe(
+                      Offset(-(screenWidth + 200), _dragPosition.dy), false);
+                } else {
+                  // Возврат на место — как в онбординге через анимацию
+                  _swipeAnim =
+                      Tween<Offset>(begin: _dragPosition, end: Offset.zero)
+                          .animate(CurvedAnimation(
+                              parent: _swipeAnimController,
+                              curve: Curves.elasticOut));
+                  _swipeAnimController.forward(from: 0).then((_) {
+                    setState(() {
+                      _dragPosition = Offset.zero;
+                      _dragAngle = 0;
+                    });
+                  });
+                }
+              },
+              child: Transform.translate(
+                offset: _dragPosition,
+                child: Transform.rotate(
+                  angle: _dragAngle,
+                  child: Stack(
+                    children: [
+                      // Сама карточка с flip-анимацией
+                      AnimatedBuilder(
+                        animation: _flipController,
+                        builder: (context, child) {
+                          final angle = _flipController.value * pi;
+                          final transform = Matrix4.identity()
+                            ..setEntry(3, 2, 0.001)
+                            ..rotateY(angle);
+                          return Transform(
+                            transform: transform,
+                            alignment: Alignment.center,
+                            child: angle >= pi / 2
+                                ? Transform(
+                                    transform: Matrix4.identity()..rotateY(pi),
+                                    alignment: Alignment.center,
+                                    child:
+                                        _buildCardContent(currentCard, true, l))
+                                : _buildCardContent(currentCard, false, l),
+                          );
+                        },
+                      ),
+
+                      // Индикатор «ПОМНЮ» при свайпе вправо
+                      if (dx > 20)
+                        Positioned(
+                          top: 40,
+                          left: 40,
+                          child: Transform.rotate(
+                            angle: -0.2,
                             child: Container(
-                                color: Colors.red.withValues(alpha: 0.2)),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 8),
+                              decoration: BoxDecoration(
+                                border: Border.all(
+                                    color:
+                                        Colors.green.withValues(alpha: opacity),
+                                    width: 4),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(l.btnKnow.toUpperCase(),
+                                  style: TextStyle(
+                                      color: Colors.green
+                                          .withValues(alpha: opacity),
+                                      fontSize: 32,
+                                      fontWeight: FontWeight.bold,
+                                      letterSpacing: 2)),
+                            ),
                           ),
                         ),
-                        // Правый фон — «Помню»
-                        Expanded(
-                          child: AnimatedOpacity(
-                            opacity: displayDx > 10 ? swipeOpacity * 0.15 : 0,
-                            duration: Duration.zero,
+
+                      // Индикатор «СЛОЖНО» при свайпе влево
+                      if (dx < -20)
+                        Positioned(
+                          top: 40,
+                          right: 40,
+                          child: Transform.rotate(
+                            angle: 0.2,
                             child: Container(
-                                color: Colors.green.withValues(alpha: 0.2)),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  // Карточка с жестом
-                  AnimatedBuilder(
-                    animation: _swipeController,
-                    builder: (context, child) {
-                      return Transform.translate(
-                        offset: Offset(displayDx, 0),
-                        child: Transform.rotate(
-                          angle: swipeAngle,
-                          child: child,
-                        ),
-                      );
-                    },
-                    child: GestureDetector(
-                      // Тап — переворот (только если не свайп)
-                      onTap: _flipCard,
-                      // Горизонтальный drag
-                      onHorizontalDragStart: (_) {
-                        if (_isSwiping) return;
-                      },
-                      onHorizontalDragUpdate: (details) {
-                        if (_isSwiping) return;
-                        setState(() => _dragDx += details.delta.dx);
-                      },
-                      onHorizontalDragEnd: (details) {
-                        if (_isSwiping) return;
-                        final velocity = details.primaryVelocity ?? 0;
-                        if (_dragDx > 80 || velocity > 400) {
-                          // Свайп вправо → «Помню»
-                          _animateSwipeAndNext(true);
-                        } else if (_dragDx < -80 || velocity < -400) {
-                          // Свайп влево → «Сложно»
-                          _animateSwipeAndNext(false);
-                        } else {
-                          // Недостаточно — плавно возвращаем
-                          setState(() => _dragDx = 0);
-                        }
-                      },
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(24, 16, 24, 16),
-                        child: SizedBox(
-                          width: double.infinity,
-                          height: constraints.maxHeight,
-                          child: AnimatedBuilder(
-                            animation: _flipController,
-                            builder: (context, child) {
-                              final angle = _flipController.value * pi;
-                              final transform = Matrix4.identity()
-                                ..setEntry(3, 2, 0.001)
-                                ..rotateY(angle);
-                              return Transform(
-                                transform: transform,
-                                alignment: Alignment.center,
-                                child: angle >= pi / 2
-                                    ? Transform(
-                                        transform: Matrix4.identity()
-                                          ..rotateY(pi),
-                                        alignment: Alignment.center,
-                                        child: _buildCardContent(
-                                            currentCard, true, l))
-                                    : _buildCardContent(currentCard, false, l),
-                              );
-                            },
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  // Индикатор «ПОМНЮ» при свайпе вправо
-                  if (displayDx > 10)
-                    Positioned(
-                      top: 40,
-                      left: 32,
-                      child: Opacity(
-                        opacity: swipeOpacity,
-                        child: Transform.rotate(
-                          angle: -0.2,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 8),
-                            decoration: BoxDecoration(
-                              border: Border.all(color: Colors.green, width: 3),
-                              borderRadius: BorderRadius.circular(8),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 8),
+                              decoration: BoxDecoration(
+                                border: Border.all(
+                                    color: Colors.redAccent
+                                        .withValues(alpha: opacity),
+                                    width: 4),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(l.btnHard.toUpperCase(),
+                                  style: TextStyle(
+                                      color: Colors.redAccent
+                                          .withValues(alpha: opacity),
+                                      fontSize: 32,
+                                      fontWeight: FontWeight.bold,
+                                      letterSpacing: 2)),
                             ),
-                            child: Text(l.btnKnow.toUpperCase(),
-                                style: const TextStyle(
-                                    color: Colors.green,
-                                    fontSize: 28,
-                                    fontWeight: FontWeight.bold,
-                                    letterSpacing: 2)),
                           ),
                         ),
-                      ),
-                    ),
-
-                  // Индикатор «СЛОЖНО» при свайпе влево
-                  if (displayDx < -10)
-                    Positioned(
-                      top: 40,
-                      right: 32,
-                      child: Opacity(
-                        opacity: swipeOpacity,
-                        child: Transform.rotate(
-                          angle: 0.2,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 8),
-                            decoration: BoxDecoration(
-                              border:
-                                  Border.all(color: Colors.redAccent, width: 3),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Text(l.btnHard.toUpperCase(),
-                                style: const TextStyle(
-                                    color: Colors.redAccent,
-                                    fontSize: 28,
-                                    fontWeight: FontWeight.bold,
-                                    letterSpacing: 2)),
-                          ),
-                        ),
-                      ),
-                    ),
-                ],
-              );
-            },
+                    ],
+                  ),
+                ),
+              ),
+            ),
           ),
         ),
 
@@ -1906,7 +1845,7 @@ class _MicroSessionOverlayState extends State<MicroSessionOverlay>
             children: [
               Expanded(
                   child: FilledButton.tonal(
-                      onPressed: () => _animateSwipeAndNext(false),
+                      onPressed: () => _triggerSwipe(false),
                       style: FilledButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 20),
                           shape: RoundedRectangleBorder(
@@ -1916,7 +1855,7 @@ class _MicroSessionOverlayState extends State<MicroSessionOverlay>
               const SizedBox(width: 16),
               Expanded(
                   child: FilledButton(
-                      onPressed: () => _animateSwipeAndNext(true),
+                      onPressed: () => _triggerSwipe(true),
                       style: FilledButton.styleFrom(
                           backgroundColor: Colors.green,
                           padding: const EdgeInsets.symmetric(vertical: 20),
@@ -1937,6 +1876,7 @@ class _MicroSessionOverlayState extends State<MicroSessionOverlay>
         isBack ? (card.backAudioPath != null) : (card.frontAudioPath != null);
     return Container(
       width: double.infinity,
+      height: double.infinity,
       decoration: BoxDecoration(
           color: isBack
               ? Theme.of(context).colorScheme.primaryContainer
