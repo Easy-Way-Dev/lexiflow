@@ -21,14 +21,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   int _currentPage = 0;
   String? _selectedGoal;
 
-  // FIX: Используем один GlobalKey только для ТЕКУЩЕЙ верхней карточки
-  final GlobalKey<_SwipeableCardState> _topCardKey =
-      GlobalKey<_SwipeableCardState>();
-
   List<Map<String, String>> _swipeWords = [];
-
   int _swipedCardsCount = 0;
   bool _isCreatingDeck = false;
+
+  // Флаги для внешнего триггера свайпа (клавиатура / кнопки)
+  // Используем ValueNotifier чтобы не конфликтовать с GlobalKey
+  final ValueNotifier<int> _swipeTrigger = ValueNotifier(0);
+  // 0 = нет, 1 = влево, 2 = вправо
+  int _pendingSwipeDirection = 0;
 
   @override
   void initState() {
@@ -64,6 +65,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   void dispose() {
     _pageController.dispose();
     _focusNode.dispose();
+    _swipeTrigger.dispose();
     super.dispose();
   }
 
@@ -80,6 +82,20 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         _focusNode.requestFocus();
       }
     }
+  }
+
+  // Вызвать свайп влево у текущей верхней карточки
+  void _triggerSwipeLeft() {
+    if (_swipedCardsCount >= _swipeWords.length) return;
+    _pendingSwipeDirection = 1; // влево
+    _swipeTrigger.value++;
+  }
+
+  // Вызвать свайп вправо у текущей верхней карточки
+  void _triggerSwipeRight() {
+    if (_swipedCardsCount >= _swipeWords.length) return;
+    _pendingSwipeDirection = 2; // вправо
+    _swipeTrigger.value++;
   }
 
   Future<void> _finishOnboarding(AppLocalizations l) async {
@@ -138,19 +154,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       onKeyEvent: (node, event) {
         if (_currentPage != 1) return KeyEventResult.ignored;
         if (event is KeyDownEvent) {
-          if (_swipedCardsCount >= _swipeWords.length) {
-            return KeyEventResult.ignored;
-          }
-
-          // FIX: используем единый _topCardKey
-          if (_topCardKey.currentState != null) {
-            if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
-              _topCardKey.currentState!.triggerSwipeLeft();
-              return KeyEventResult.handled;
-            } else if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
-              _topCardKey.currentState!.triggerSwipeRight();
-              return KeyEventResult.handled;
-            }
+          if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
+            _triggerSwipeLeft();
+            return KeyEventResult.handled;
+          } else if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
+            _triggerSwipeRight();
+            return KeyEventResult.handled;
           }
         }
         return KeyEventResult.ignored;
@@ -159,8 +168,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         backgroundColor: Theme.of(context).colorScheme.surface,
         body: SafeArea(
           child: AdaptiveLayout(
-            maxWidth:
-                AppLayout.contentMaxWidth, // FIX: совпадает с главным экраном
+            maxWidth: AppLayout.contentMaxWidth,
             child: Stack(
               children: [
                 Column(
@@ -410,7 +418,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             child: Stack(
               alignment: Alignment.center,
               children: [
-                // Подложка (видна когда карточки закончились)
+                // Подложка — видна когда карточки закончились
                 Container(
                   width: double.infinity,
                   height: MediaQuery.of(context).size.height * 0.45,
@@ -434,37 +442,27 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   ),
                 ),
 
-                // FIX: Рисуем карточки от дальней к ближней.
-                // Нижние карточки (фон) — без ключа и без интерактивности.
-                // Верхняя карточка — с _topCardKey, она единственная интерактивная.
-                //
-                // Показываем максимум 3 карточки для эффекта стопки:
-                for (int i = min(_swipedCardsCount + 2, _swipeWords.length - 1);
-                    i > _swipedCardsCount;
-                    i--)
-                  _SwipeableCard(
-                    // Нижние карточки — без ключа, статические фоновые
-                    word: _swipeWords[i]['word']!,
-                    translation: _swipeWords[i]['translation']!,
-                    isTopCard: false,
-                    stackOffset: (i - _swipedCardsCount) * 6.0,
-                    onSwipe: (_) {},
-                  ),
+                // Фоновые карточки (стопка) — только визуал, не интерактивны
+                for (int stackPos = min(2, remaining - 1);
+                    stackPos > 0;
+                    stackPos--)
+                  _buildBackgroundCard(stackPos),
 
-                // Верхняя (текущая) карточка — с ключом, интерактивная
+                // Верхняя карточка — интерактивна
+                // ValueKey гарантирует что при смене слова создаётся НОВЫЙ виджет
                 if (remaining > 0)
                   _SwipeableCard(
-                    key:
-                        _topCardKey, // FIX: единый ключ всегда на верхней карточке
+                    key: ValueKey(
+                        _swipedCardsCount), // новый State при каждой карточке
                     word: _swipeWords[_swipedCardsCount]['word']!,
                     translation: _swipeWords[_swipedCardsCount]['translation']!,
-                    isTopCard: true,
-                    stackOffset: 0,
+                    swipeTrigger: _swipeTrigger,
+                    getSwipeDirection: () => _pendingSwipeDirection,
                     onSwipe: (knowIt) {
                       setState(() {
                         _swipedCardsCount++;
                         if (_swipedCardsCount >= _swipeWords.length) {
-                          Future.delayed(const Duration(milliseconds: 500), () {
+                          Future.delayed(const Duration(milliseconds: 400), () {
                             if (mounted) _nextPage();
                           });
                         }
@@ -482,26 +480,43 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 icon: Icons.close,
                 color: Colors.redAccent,
                 label: l.swipeIDontKnow,
-                onTap: () {
-                  if (_swipedCardsCount < _swipeWords.length) {
-                    _topCardKey.currentState?.triggerSwipeLeft();
-                  }
-                },
+                onTap: _triggerSwipeLeft,
               ),
               _buildSwipeButton(
                 icon: Icons.favorite,
                 color: Colors.green,
                 label: l.swipeIKnow,
-                onTap: () {
-                  if (_swipedCardsCount < _swipeWords.length) {
-                    _topCardKey.currentState?.triggerSwipeRight();
-                  }
-                },
+                onTap: _triggerSwipeRight,
               ),
             ],
           ),
           const SizedBox(height: 16),
         ],
+      ),
+    );
+  }
+
+  // Простая статичная карточка-фон для эффекта стопки
+  Widget _buildBackgroundCard(int stackPosition) {
+    return Transform.translate(
+      offset: Offset(0, stackPosition * 8.0),
+      child: Transform.scale(
+        scale: 1.0 - stackPosition * 0.03,
+        child: Container(
+          width: double.infinity,
+          height: MediaQuery.of(context).size.height * 0.45,
+          decoration: BoxDecoration(
+            color: Theme.of(context).cardColor,
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.06),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -550,10 +565,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             duration: const Duration(milliseconds: 800),
             curve: Curves.elasticOut,
             builder: (context, value, child) {
-              return Transform.scale(
-                scale: value,
-                child: child,
-              );
+              return Transform.scale(scale: value, child: child);
             },
             child: Container(
               padding: const EdgeInsets.all(32),
@@ -616,19 +628,24 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 }
 
+// ═══════════════════════════════════════════════════════════
+// _SwipeableCard — карточка с анимацией свайпа
+// Использует ValueKey(index) — при смене карточки создаётся
+// полностью новый State. Нет GlobalKey, нет конфликтов.
+// ═══════════════════════════════════════════════════════════
 class _SwipeableCard extends StatefulWidget {
   final String word;
   final String translation;
-  final bool isTopCard;
-  final double stackOffset; // FIX: смещение для эффекта стопки
+  final ValueNotifier<int> swipeTrigger;
+  final int Function() getSwipeDirection; // 1=влево, 2=вправо
   final Function(bool knowIt) onSwipe;
 
   const _SwipeableCard({
     super.key,
     required this.word,
     required this.translation,
-    required this.isTopCard,
-    required this.stackOffset,
+    required this.swipeTrigger,
+    required this.getSwipeDirection,
     required this.onSwipe,
   });
 
@@ -640,213 +657,220 @@ class _SwipeableCardState extends State<_SwipeableCard>
     with SingleTickerProviderStateMixin {
   Offset _position = Offset.zero;
   double _angle = 0;
-  Size _screenSize = Size.zero;
 
   late AnimationController _animationController;
   late Animation<Offset> _animation;
+
+  bool _swiped = false; // предотвращаем двойной вызов onSwipe
 
   @override
   void initState() {
     super.initState();
     _animationController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 300),
+      duration: const Duration(milliseconds: 350),
     );
     _animationController.addListener(() {
-      setState(() {
-        _position = _animation.value;
-      });
+      if (mounted) {
+        setState(() {
+          _position = _animation.value;
+        });
+      }
     });
+    // Подписываемся на внешние триггеры свайпа
+    widget.swipeTrigger.addListener(_onTrigger);
   }
 
   @override
   void dispose() {
+    widget.swipeTrigger.removeListener(_onTrigger);
     _animationController.dispose();
     super.dispose();
   }
 
-  void triggerSwipeRight() {
-    if (!widget.isTopCard) return;
-    final targetX = _screenSize.width > 0 ? _screenSize.width + 200 : 800.0;
-    _animateSwipe(Offset(targetX, 0), true);
+  void _onTrigger() {
+    if (_swiped) return;
+    final dir = widget.getSwipeDirection();
+    if (dir == 1) {
+      _doSwipeLeft();
+    } else if (dir == 2) {
+      _doSwipeRight();
+    }
   }
 
-  void triggerSwipeLeft() {
-    if (!widget.isTopCard) return;
-    final targetX = _screenSize.width > 0 ? -(_screenSize.width + 200) : -800.0;
-    _animateSwipe(Offset(targetX, 0), false);
+  void _doSwipeRight() {
+    if (_swiped) return;
+    final screenW = MediaQuery.of(context).size.width;
+    _animateSwipe(Offset(screenW + 300, 0), true);
+  }
+
+  void _doSwipeLeft() {
+    if (_swiped) return;
+    final screenW = MediaQuery.of(context).size.width;
+    _animateSwipe(Offset(-(screenW + 300), 0), false);
   }
 
   void _onPanStart(DragStartDetails details) {
-    if (!widget.isTopCard) return;
+    if (_swiped) return;
     if (_animationController.isAnimating) {
       _animationController.stop();
     }
   }
 
   void _onPanUpdate(DragUpdateDetails details) {
-    if (!widget.isTopCard) return;
+    if (_swiped) return;
+    final screenW = MediaQuery.of(context).size.width;
     setState(() {
       _position += details.delta;
-      _angle = 45 * (_position.dx / _screenSize.width) * (pi / 180);
+      _angle = 15 * (_position.dx / screenW) * (pi / 180);
     });
   }
 
   void _onPanEnd(DragEndDetails details) {
-    if (!widget.isTopCard) return;
+    if (_swiped) return;
+    final screenW = MediaQuery.of(context).size.width;
 
     if (_position.dx > 100) {
-      _animateSwipe(Offset(_screenSize.width + 100, _position.dy), true);
+      _animateSwipe(Offset(screenW + 300, _position.dy), true);
     } else if (_position.dx < -100) {
-      _animateSwipe(Offset(-_screenSize.width - 100, _position.dy), false);
+      _animateSwipe(Offset(-(screenW + 300), _position.dy), false);
     } else {
+      // Возврат на место
       _animation = Tween<Offset>(begin: _position, end: Offset.zero)
           .animate(CurvedAnimation(
         parent: _animationController,
         curve: Curves.elasticOut,
       ));
       _animationController.forward(from: 0);
-      setState(() {
-        _angle = 0;
-      });
+      setState(() => _angle = 0);
     }
   }
 
   void _animateSwipe(Offset targetPosition, bool knowIt) {
+    if (_swiped) return;
+    _swiped = true;
+
     _animation = Tween<Offset>(begin: _position, end: targetPosition).animate(
       CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
     );
     _animationController.forward(from: 0).then((_) {
-      widget.onSwipe(knowIt);
+      if (mounted) {
+        widget.onSwipe(knowIt);
+      }
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    // FIX: используем LayoutBuilder чтобы знать РЕАЛЬНУЮ ширину контейнера
-    // (а не весь экран), иначе свайп-анимация не вылетает за границы карточки
     final isSwipingRight = _position.dx > 0;
-    final opacity = min((_position.dx.abs() / 100), 1.0);
+    final opacity = (_position.dx.abs() / 80).clamp(0.0, 1.0);
 
-    // FIX: фоновые карточки сдвинуты вниз для эффекта стопки
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        // Обновляем _screenSize реальной шириной контейнера
-        _screenSize = Size(constraints.maxWidth, constraints.maxHeight);
-        return Transform.translate(
-          offset: Offset(0, widget.stackOffset),
-          child: GestureDetector(
-            behavior: widget.isTopCard
-                ? HitTestBehavior.opaque
-                : HitTestBehavior.deferToChild,
-            onPanStart: widget.isTopCard ? _onPanStart : null,
-            onPanUpdate: widget.isTopCard ? _onPanUpdate : null,
-            onPanEnd: widget.isTopCard ? _onPanEnd : null,
-            child: Transform.translate(
-              offset: _position,
-              child: Transform.rotate(
-                angle: _angle,
-                child: Stack(
-                  children: [
-                    Container(
-                      width: double.infinity,
-                      height: MediaQuery.of(context).size.height * 0.45,
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).cardColor,
-                        borderRadius: BorderRadius.circular(24),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.1),
-                            blurRadius: 10,
-                            spreadRadius: 2,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: widget.isTopCard
-                          ? Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  widget.word,
-                                  textAlign: TextAlign.center,
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .displaySmall
-                                      ?.copyWith(
-                                        fontWeight: FontWeight.bold,
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .primary,
-                                      ),
-                                ),
-                                const SizedBox(height: 16),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 24),
-                                  child: Text(
-                                    widget.translation,
-                                    textAlign: TextAlign.center,
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .titleLarge
-                                        ?.copyWith(
-                                          color: Colors.grey[600],
-                                        ),
-                                  ),
-                                ),
-                              ],
-                            )
-                          : null, // Фоновые карточки пустые (только тень и форма)
+    return GestureDetector(
+      onPanStart: _swiped ? null : _onPanStart,
+      onPanUpdate: _swiped ? null : _onPanUpdate,
+      onPanEnd: _swiped ? null : _onPanEnd,
+      child: Transform.translate(
+        offset: _position,
+        child: Transform.rotate(
+          angle: _angle,
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              return Stack(
+                children: [
+                  Container(
+                    width: double.infinity,
+                    height: MediaQuery.of(context).size.height * 0.45,
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).cardColor,
+                      borderRadius: BorderRadius.circular(24),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.1),
+                          blurRadius: 10,
+                          spreadRadius: 2,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
                     ),
-                    if (widget.isTopCard && _position.dx.abs() > 20)
-                      Positioned(
-                        top: 40,
-                        left: isSwipingRight ? 40 : null,
-                        right: isSwipingRight ? null : 40,
-                        child: Transform.rotate(
-                          angle: isSwipingRight ? -0.2 : 0.2,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 8),
-                            decoration: BoxDecoration(
-                              border: Border.all(
-                                color: (isSwipingRight
-                                        ? Colors.green
-                                        : Colors.redAccent)
-                                    .withValues(alpha: opacity),
-                                width: 4,
-                              ),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Text(
-                              isSwipingRight
-                                  ? AppLocalizations.of(context)
-                                      .swipeIKnow
-                                      .toUpperCase()
-                                  : AppLocalizations.of(context)
-                                      .swipeIDontKnow
-                                      .toUpperCase(),
-                              style: TextStyle(
-                                color: (isSwipingRight
-                                        ? Colors.green
-                                        : Colors.redAccent)
-                                    .withValues(alpha: opacity),
-                                fontSize: 32,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          widget.word,
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context)
+                              .textTheme
+                              .displaySmall
+                              ?.copyWith(
                                 fontWeight: FontWeight.bold,
-                                letterSpacing: 2,
+                                color: Theme.of(context).colorScheme.primary,
                               ),
+                        ),
+                        const SizedBox(height: 16),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 24),
+                          child: Text(
+                            widget.translation,
+                            textAlign: TextAlign.center,
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleLarge
+                                ?.copyWith(
+                                  color: Colors.grey[600],
+                                ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  // Индикатор знаю/не знаю при свайпе
+                  if (_position.dx.abs() > 20)
+                    Positioned(
+                      top: 40,
+                      left: isSwipingRight ? 40 : null,
+                      right: isSwipingRight ? null : 40,
+                      child: Transform.rotate(
+                        angle: isSwipingRight ? -0.2 : 0.2,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 8),
+                          decoration: BoxDecoration(
+                            border: Border.all(
+                              color: (isSwipingRight
+                                      ? Colors.green
+                                      : Colors.redAccent)
+                                  .withValues(alpha: opacity),
+                              width: 4,
+                            ),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            isSwipingRight
+                                ? AppLocalizations.of(context)
+                                    .swipeIKnow
+                                    .toUpperCase()
+                                : AppLocalizations.of(context)
+                                    .swipeIDontKnow
+                                    .toUpperCase(),
+                            style: TextStyle(
+                              color: (isSwipingRight
+                                      ? Colors.green
+                                      : Colors.redAccent)
+                                  .withValues(alpha: opacity),
+                              fontSize: 32,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 2,
                             ),
                           ),
                         ),
                       ),
-                  ],
-                ),
-              ),
-            ),
+                    ),
+                ],
+              );
+            },
           ),
-        );
-      }, // builder
-    ); // LayoutBuilder
+        ),
+      ),
+    );
   }
 }
