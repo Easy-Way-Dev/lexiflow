@@ -632,98 +632,94 @@ class _DecksScreenState extends State<DecksScreen>
 
   Future<void> _exportDeck(Deck deck) async {
     final l = AppLocalizations.of(context);
-    showModalBottomSheet(
+    showDialog(
         context: context,
-        backgroundColor: Theme.of(context).colorScheme.surface,
-        shape: const RoundedRectangleBorder(
-            borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
         builder: (context) {
-          return SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                      width: 40,
-                      height: 4,
-                      decoration: BoxDecoration(
-                          color: Colors.grey[300],
-                          borderRadius: BorderRadius.circular(2))),
-                  const SizedBox(height: 24),
-                  Text(l.exportFormatTitle,
-                      style: Theme.of(context)
-                          .textTheme
-                          .titleLarge
-                          ?.copyWith(fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 24),
-                  ListTile(
-                    contentPadding:
-                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    leading: const Icon(Icons.inventory_2,
-                        color: Colors.blue, size: 32),
-                    title: const Text('.lexiflow',
-                        style: TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 16)),
-                    subtitle: Text(l.exportLexiflowDesc,
-                        style: const TextStyle(color: Colors.grey)),
-                    trailing: const Icon(Icons.download, color: Colors.blue),
-                    onTap: () {
-                      Navigator.pop(context);
-                      _processExportToLexiflow(deck);
-                    },
-                  ),
-                  const Divider(height: 1),
-                  ListTile(
-                    contentPadding:
-                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    leading: const Icon(Icons.table_chart,
-                        color: Colors.green, size: 32),
-                    title: Row(children: [
-                      Text(l.exportCsvTitle,
-                          style: const TextStyle(
+          return Dialog(
+            backgroundColor: Theme.of(context).colorScheme.surface,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 480),
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(l.exportFormatTitle,
+                        style: Theme.of(context)
+                            .textTheme
+                            .titleLarge
+                            ?.copyWith(fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 24),
+                    ListTile(
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 8),
+                      leading: const Icon(Icons.inventory_2,
+                          color: Colors.blue, size: 32),
+                      title: const Text('.lexiflow',
+                          style: TextStyle(
                               fontWeight: FontWeight.bold, fontSize: 16)),
-                      const SizedBox(width: 8),
-                      const Icon(Icons.workspace_premium,
-                          color: Colors.amber, size: 18)
-                    ]),
-                    subtitle: Text(l.exportCsvDesc,
-                        style: const TextStyle(color: Colors.grey)),
-                    trailing: const Icon(Icons.lock, color: Colors.amber),
-                    onTap: () {
-                      Navigator.pop(context);
-                      Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (_) => const PaywallScreen()));
-                    },
-                  ),
-                  const Divider(height: 1),
-                  ListTile(
-                    contentPadding:
-                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    leading: const Icon(Icons.data_object,
-                        color: Colors.purple, size: 32),
-                    title: Row(children: [
-                      Text(l.exportJsonTitle,
-                          style: const TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 16)),
-                      const SizedBox(width: 8),
-                      const Icon(Icons.workspace_premium,
-                          color: Colors.amber, size: 18)
-                    ]),
-                    subtitle: Text(l.exportJsonDesc,
-                        style: const TextStyle(color: Colors.grey)),
-                    trailing: const Icon(Icons.lock, color: Colors.amber),
-                    onTap: () {
-                      Navigator.pop(context);
-                      Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (_) => const PaywallScreen()));
-                    },
-                  ),
-                ],
+                      subtitle: Text(l.exportLexiflowDesc,
+                          style: const TextStyle(color: Colors.grey)),
+                      trailing: const Icon(Icons.download, color: Colors.blue),
+                      onTap: () {
+                        Navigator.pop(context);
+                        _processExportToLexiflow(deck);
+                      },
+                    ),
+                    const Divider(height: 1),
+                    ListTile(
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 8),
+                      leading: const Icon(Icons.table_chart,
+                          color: Colors.green, size: 32),
+                      title: Row(children: [
+                        Text(l.exportCsvTitle,
+                            style: const TextStyle(
+                                fontWeight: FontWeight.bold, fontSize: 16)),
+                        const SizedBox(width: 8),
+                        const Icon(Icons.workspace_premium,
+                            color: Colors.amber, size: 18)
+                      ]),
+                      subtitle: Text(l.exportCsvDesc,
+                          style: const TextStyle(color: Colors.grey)),
+                      trailing: const Icon(Icons.lock, color: Colors.amber),
+                      onTap: () {
+                        Navigator.pop(context);
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (_) => const PaywallScreen()));
+                      },
+                    ),
+                    const Divider(height: 1),
+                    ListTile(
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 8),
+                      leading: const Icon(Icons.data_object,
+                          color: Colors.purple, size: 32),
+                      title: Row(children: [
+                        Text(l.exportJsonTitle,
+                            style: const TextStyle(
+                                fontWeight: FontWeight.bold, fontSize: 16)),
+                        const SizedBox(width: 8),
+                        const Icon(Icons.workspace_premium,
+                            color: Colors.amber, size: 18)
+                      ]),
+                      subtitle: Text(l.exportJsonDesc,
+                          style: const TextStyle(color: Colors.grey)),
+                      trailing: const Icon(Icons.lock, color: Colors.amber),
+                      onTap: () {
+                        Navigator.pop(context);
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (_) => const PaywallScreen()));
+                      },
+                    ),
+                  ],
+                ),
               ),
             ),
           );
@@ -1481,10 +1477,8 @@ class _DecksScreenState extends State<DecksScreen>
 }
 
 // ============================================================
-// MicroSessionOverlay — быстрая тренировка
-// Архитектура: карточка — отдельный StatefulWidget (_MicroCard),
-// точно как _SwipeableCard в онбординге.
-// Когда карточка улетает → родитель убирает её из дерева.
+// MicroSessionOverlay + _MicroCard
+// Архитектура идентична _SwipeableCard в onboarding_screen.dart
 // ============================================================
 
 class MicroSessionOverlay extends StatefulWidget {
@@ -1510,8 +1504,9 @@ class _MicroSessionOverlayState extends State<MicroSessionOverlay> {
   int _currentIndex = 0;
   int _correctAnswers = 0;
 
-  // GlobalKey для доступа к методам текущей карточки (кнопки)
-  final GlobalKey<_MicroCardState> _cardKey = GlobalKey<_MicroCardState>();
+  // Один GlobalKey — пересоздаётся вместе с индексом
+  // Это даёт доступ к triggerSwipe из кнопок
+  GlobalKey<_MicroCardState> _cardKey = GlobalKey<_MicroCardState>();
 
   @override
   void initState() {
@@ -1524,9 +1519,11 @@ class _MicroSessionOverlayState extends State<MicroSessionOverlay> {
     if (isKnown) _correctAnswers++;
 
     if (_currentIndex < _currentCards.length - 1) {
-      setState(() => _currentIndex++);
+      setState(() {
+        _currentIndex++;
+        _cardKey = GlobalKey<_MicroCardState>();
+      });
     } else {
-      // Конец сессии — сохраняем статистику
       await widget.db.updateDailyStats(
         cardsStudied: _currentCards.length,
         correct: _correctAnswers,
@@ -1541,6 +1538,7 @@ class _MicroSessionOverlayState extends State<MicroSessionOverlay> {
     setState(() {
       _currentIndex = 0;
       _correctAnswers = 0;
+      _cardKey = GlobalKey<_MicroCardState>();
     });
   }
 
@@ -1568,6 +1566,7 @@ class _MicroSessionOverlayState extends State<MicroSessionOverlay> {
       _currentCards = targetCards.take(widget.requestedCount).toList();
       _currentIndex = 0;
       _correctAnswers = 0;
+      _cardKey = GlobalKey<_MicroCardState>();
     });
   }
 
@@ -1588,12 +1587,14 @@ class _MicroSessionOverlayState extends State<MicroSessionOverlay> {
         elevation: 0,
         actions: [
           IconButton(
-              icon: const Icon(Icons.close),
-              onPressed: () => Navigator.of(context).pop())
+            icon: const Icon(Icons.close),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
         ],
       ),
       body: SafeArea(
-          child: isFinished ? _buildSuccessView(l) : _buildCardView(l)),
+        child: isFinished ? _buildSuccessView(l) : _buildCardView(l),
+      ),
     );
   }
 
@@ -1602,33 +1603,34 @@ class _MicroSessionOverlayState extends State<MicroSessionOverlay> {
 
     return Column(
       children: [
-        // Прогресс-бар
         LinearProgressIndicator(
-            value: _currentIndex / _currentCards.length,
-            backgroundColor: Colors.grey[200],
-            color: const Color(0xFF6366F1)),
-
-        // Область карточки — центрируем, ограничиваем размер как в онбординге
+          value: _currentIndex / _currentCards.length,
+          backgroundColor: Colors.grey[200],
+          color: const Color(0xFF6366F1),
+        ),
         Expanded(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
             child: Stack(
               alignment: Alignment.center,
               children: [
-                // Подложка — фон когда карточки нет (видна в момент улёта)
+                // Подложка — видна когда карточка улетает
                 Container(
                   width: double.infinity,
-                  height: MediaQuery.of(context).size.height * 0.48,
+                  height: MediaQuery.of(context).size.height * 0.45,
                   decoration: BoxDecoration(
                     color: Theme.of(context)
                         .colorScheme
                         .surfaceContainerHighest
                         .withValues(alpha: 0.3),
                     borderRadius: BorderRadius.circular(24),
+                    border:
+                        Border.all(color: Colors.grey.withValues(alpha: 0.2)),
                   ),
                 ),
 
-                // Карточка — отдельный StatefulWidget, исчезает из дерева после свайпа
+                // Карточка с уникальным GlobalKey
+                // При смене _cardKey Flutter создаёт новый State
                 _MicroCard(
                   key: _cardKey,
                   card: currentCard,
@@ -1638,34 +1640,34 @@ class _MicroSessionOverlayState extends State<MicroSessionOverlay> {
             ),
           ),
         ),
-
-        // Кнопки «Сложно» / «Помню»
         Padding(
           padding: const EdgeInsets.fromLTRB(24, 0, 24, 48),
           child: Row(
             children: [
               Expanded(
-                  child: FilledButton.tonal(
-                      onPressed: () =>
-                          _cardKey.currentState?.triggerSwipeLeft(),
-                      style: FilledButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 20),
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16))),
-                      child: Text(l.btnHard,
-                          style: const TextStyle(fontSize: 18)))),
+                child: FilledButton.tonal(
+                  onPressed: () => _cardKey.currentState?.triggerSwipeLeft(),
+                  style: FilledButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 20),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16)),
+                  ),
+                  child: Text(l.btnHard, style: const TextStyle(fontSize: 18)),
+                ),
+              ),
               const SizedBox(width: 16),
               Expanded(
-                  child: FilledButton(
-                      onPressed: () =>
-                          _cardKey.currentState?.triggerSwipeRight(),
-                      style: FilledButton.styleFrom(
-                          backgroundColor: Colors.green,
-                          padding: const EdgeInsets.symmetric(vertical: 20),
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16))),
-                      child: Text(l.btnKnow,
-                          style: const TextStyle(fontSize: 18)))),
+                child: FilledButton(
+                  onPressed: () => _cardKey.currentState?.triggerSwipeRight(),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: Colors.green,
+                    padding: const EdgeInsets.symmetric(vertical: 20),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16)),
+                  ),
+                  child: Text(l.btnKnow, style: const TextStyle(fontSize: 18)),
+                ),
+              ),
             ],
           ),
         ),
@@ -1680,11 +1682,10 @@ class _MicroSessionOverlayState extends State<MicroSessionOverlay> {
       l.phrasePerfect2,
       l.phrasePerfect3,
       l.phrasePerfect4,
-      l.phrasePerfect5
+      l.phrasePerfect5,
     ];
     final randomPhrase = perfectPhrases[
         DateTime.now().millisecondsSinceEpoch % perfectPhrases.length];
-    final String title = isPerfect ? randomPhrase : l.msgGoodJob;
 
     return Center(
       child: Padding(
@@ -1694,54 +1695,64 @@ class _MicroSessionOverlayState extends State<MicroSessionOverlay> {
           children: [
             Text(isPerfect ? '🌟' : '💪', style: const TextStyle(fontSize: 80)),
             const SizedBox(height: 24),
-            Text(title,
-                style: Theme.of(context)
-                    .textTheme
-                    .titleLarge
-                    ?.copyWith(fontWeight: FontWeight.bold),
-                textAlign: TextAlign.center),
+            Text(
+              isPerfect ? randomPhrase : l.msgGoodJob,
+              style: Theme.of(context)
+                  .textTheme
+                  .titleLarge
+                  ?.copyWith(fontWeight: FontWeight.bold),
+              textAlign: TextAlign.center,
+            ),
             const SizedBox(height: 16),
-            Text(l.msgRemembered(_correctAnswers, _currentCards.length),
-                textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.grey[600], fontSize: 16)),
+            Text(
+              l.msgRemembered(_correctAnswers, _currentCards.length),
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.grey[600], fontSize: 16),
+            ),
             const SizedBox(height: 48),
             SizedBox(
-                width: double.infinity,
-                height: 56,
-                child: FilledButton.tonal(
-                    onPressed: _repeatCurrentCards,
-                    style: FilledButton.styleFrom(
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16))),
-                    child: Text(l.btnRepeat,
-                        style: const TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.bold)))),
+              width: double.infinity,
+              height: 56,
+              child: FilledButton.tonal(
+                onPressed: _repeatCurrentCards,
+                style: FilledButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16))),
+                child: Text(l.btnRepeat,
+                    style: const TextStyle(
+                        fontSize: 16, fontWeight: FontWeight.bold)),
+              ),
+            ),
             const SizedBox(height: 12),
             SizedBox(
-                width: double.infinity,
-                height: 56,
-                child: FilledButton.tonal(
-                    onPressed: _loadNewCards,
-                    style: FilledButton.styleFrom(
-                        backgroundColor:
-                            Theme.of(context).colorScheme.primaryContainer,
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16))),
-                    child: Text(l.btnMoreWords(widget.requestedCount),
-                        style: const TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.bold)))),
+              width: double.infinity,
+              height: 56,
+              child: FilledButton.tonal(
+                onPressed: _loadNewCards,
+                style: FilledButton.styleFrom(
+                    backgroundColor:
+                        Theme.of(context).colorScheme.primaryContainer,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16))),
+                child: Text(l.btnMoreWords(widget.requestedCount),
+                    style: const TextStyle(
+                        fontSize: 16, fontWeight: FontWeight.bold)),
+              ),
+            ),
             const SizedBox(height: 12),
             SizedBox(
-                width: double.infinity,
-                height: 56,
-                child: FilledButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    style: FilledButton.styleFrom(
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16))),
-                    child: Text(l.btnFinish,
-                        style: const TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.bold)))),
+              width: double.infinity,
+              height: 56,
+              child: FilledButton(
+                onPressed: () => Navigator.of(context).pop(),
+                style: FilledButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16))),
+                child: Text(l.btnFinish,
+                    style: const TextStyle(
+                        fontSize: 16, fontWeight: FontWeight.bold)),
+              ),
+            ),
           ],
         ),
       ),
@@ -1750,33 +1761,31 @@ class _MicroSessionOverlayState extends State<MicroSessionOverlay> {
 }
 
 // ============================================================
-// _MicroCard — карточка тренировки (отдельный StatefulWidget)
-// Архитектура 1-в-1 как _SwipeableCard в онбординге:
-// - onPanUpdate двигает карточку
-// - AnimationController анимирует улёт/возврат
-// - После улёта вызывает onSwipe → родитель убирает из дерева
+// _MicroCard — один в один как _SwipeableCard в онбординге
 // ============================================================
 class _MicroCard extends StatefulWidget {
   final CardData card;
   final Function(bool isKnown) onSwipe;
 
-  const _MicroCard({super.key, required this.card, required this.onSwipe});
+  const _MicroCard({
+    super.key,
+    required this.card,
+    required this.onSwipe,
+  });
 
   @override
   State<_MicroCard> createState() => _MicroCardState();
 }
 
 class _MicroCardState extends State<_MicroCard> with TickerProviderStateMixin {
-  // Позиция и угол при drag — как в онбординге
   Offset _position = Offset.zero;
   double _angle = 0;
-  Size _screenSize = Size.zero;
+  // Инициализируем не нулём чтобы не было деления на 0
+  double _containerWidth = 600.0;
 
-  // Контроллер для улёта / упругого возврата
   late AnimationController _animController;
   late Animation<Offset> _animation;
 
-  // Flip
   late AnimationController _flipController;
   bool _isFlipped = false;
 
@@ -1788,7 +1797,6 @@ class _MicroCardState extends State<_MicroCard> with TickerProviderStateMixin {
     _animController.addListener(() {
       if (mounted) setState(() => _position = _animation.value);
     });
-
     _flipController = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 400));
   }
@@ -1800,30 +1808,29 @@ class _MicroCardState extends State<_MicroCard> with TickerProviderStateMixin {
     super.dispose();
   }
 
-  // Публичные методы для кнопок
+  // Вызываются из кнопок родителя через GlobalKey
   void triggerSwipeRight() =>
-      _animateSwipe(Offset(_screenSize.width + 200, 0), true);
+      _animateSwipe(Offset(_containerWidth + 200, 0), true);
   void triggerSwipeLeft() =>
-      _animateSwipe(Offset(-(_screenSize.width + 200), 0), false);
+      _animateSwipe(Offset(-(_containerWidth + 200), 0), false);
 
-  void _onPanStart(DragStartDetails details) {
+  void _onPanStart(DragStartDetails d) {
     if (_animController.isAnimating) _animController.stop();
   }
 
-  void _onPanUpdate(DragUpdateDetails details) {
+  void _onPanUpdate(DragUpdateDetails d) {
     setState(() {
-      _position += details.delta;
-      _angle = 45 * (_position.dx / _screenSize.width) * (pi / 180);
+      _position += d.delta;
+      _angle = 45 * (_position.dx / _containerWidth) * (pi / 180);
     });
   }
 
-  void _onPanEnd(DragEndDetails details) {
+  void _onPanEnd(DragEndDetails d) {
     if (_position.dx > 100) {
-      _animateSwipe(Offset(_screenSize.width + 200, _position.dy), true);
+      _animateSwipe(Offset(_containerWidth + 200, _position.dy), true);
     } else if (_position.dx < -100) {
-      _animateSwipe(Offset(-(_screenSize.width + 200), _position.dy), false);
+      _animateSwipe(Offset(-(_containerWidth + 200), _position.dy), false);
     } else {
-      // Упругий возврат
       _animation = Tween<Offset>(begin: _position, end: Offset.zero).animate(
           CurvedAnimation(parent: _animController, curve: Curves.elasticOut));
       _animController.forward(from: 0).then((_) {
@@ -1864,124 +1871,129 @@ class _MicroCardState extends State<_MicroCard> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    _screenSize = MediaQuery.of(context).size;
     final l = AppLocalizations.of(context);
     final dx = _position.dx;
-    final isSwipingRight = dx > 0;
     final opacity = min(dx.abs() / 100, 1.0);
 
-    return GestureDetector(
-      onTap: _flipCard,
-      onPanStart: _onPanStart,
-      onPanUpdate: _onPanUpdate,
-      onPanEnd: _onPanEnd,
-      child: Transform.translate(
-        offset: _position,
-        child: Transform.rotate(
-          angle: _angle,
-          child: Stack(
-            children: [
-              // Сама карточка
-              AnimatedBuilder(
-                animation: _flipController,
-                builder: (context, child) {
-                  final angle = _flipController.value * pi;
-                  final transform = Matrix4.identity()
-                    ..setEntry(3, 2, 0.001)
-                    ..rotateY(angle);
-                  return Transform(
-                    transform: transform,
-                    alignment: Alignment.center,
-                    child: angle >= pi / 2
-                        ? Transform(
-                            transform: Matrix4.identity()..rotateY(pi),
-                            alignment: Alignment.center,
-                            child: _buildCardFace(true, l))
-                        : _buildCardFace(false, l),
-                  );
-                },
-              ),
+    return LayoutBuilder(builder: (context, constraints) {
+      // Реальная ширина контейнера, не весь экран
+      _containerWidth = constraints.maxWidth > 0 ? constraints.maxWidth : 600.0;
 
-              // Штамп «ПОМНЮ»
-              if (dx > 20)
-                Positioned(
-                  top: 40,
-                  left: 40,
-                  child: Transform.rotate(
-                    angle: -0.2,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 8),
-                      decoration: BoxDecoration(
-                        border: Border.all(
-                            color: Colors.green.withValues(alpha: opacity),
-                            width: 4),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(l.btnKnow.toUpperCase(),
+      return GestureDetector(
+        onTap: _flipCard,
+        onPanStart: _onPanStart,
+        onPanUpdate: _onPanUpdate,
+        onPanEnd: _onPanEnd,
+        child: Transform.translate(
+          offset: _position,
+          child: Transform.rotate(
+            angle: _angle,
+            child: Stack(
+              children: [
+                AnimatedBuilder(
+                  animation: _flipController,
+                  builder: (context, child) {
+                    final a = _flipController.value * pi;
+                    final m = Matrix4.identity()
+                      ..setEntry(3, 2, 0.001)
+                      ..rotateY(a);
+                    return Transform(
+                      transform: m,
+                      alignment: Alignment.center,
+                      child: a >= pi / 2
+                          ? Transform(
+                              transform: Matrix4.identity()..rotateY(pi),
+                              alignment: Alignment.center,
+                              child: _buildFace(true, l))
+                          : _buildFace(false, l),
+                    );
+                  },
+                ),
+                if (dx > 20)
+                  Positioned(
+                    top: 40,
+                    left: 40,
+                    child: Transform.rotate(
+                      angle: -0.2,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 8),
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                              color: Colors.green.withValues(alpha: opacity),
+                              width: 4),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          l.btnKnow.toUpperCase(),
                           style: TextStyle(
                               color: Colors.green.withValues(alpha: opacity),
                               fontSize: 32,
                               fontWeight: FontWeight.bold,
-                              letterSpacing: 2)),
+                              letterSpacing: 2),
+                        ),
+                      ),
                     ),
                   ),
-                ),
-
-              // Штамп «СЛОЖНО»
-              if (dx < -20)
-                Positioned(
-                  top: 40,
-                  right: 40,
-                  child: Transform.rotate(
-                    angle: 0.2,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 8),
-                      decoration: BoxDecoration(
-                        border: Border.all(
-                            color: Colors.redAccent.withValues(alpha: opacity),
-                            width: 4),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(l.btnHard.toUpperCase(),
+                if (dx < -20)
+                  Positioned(
+                    top: 40,
+                    right: 40,
+                    child: Transform.rotate(
+                      angle: 0.2,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 8),
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                              color:
+                                  Colors.redAccent.withValues(alpha: opacity),
+                              width: 4),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          l.btnHard.toUpperCase(),
                           style: TextStyle(
                               color:
                                   Colors.redAccent.withValues(alpha: opacity),
                               fontSize: 32,
                               fontWeight: FontWeight.bold,
-                              letterSpacing: 2)),
+                              letterSpacing: 2),
+                        ),
+                      ),
                     ),
                   ),
-                ),
-            ],
+              ],
+            ),
           ),
         ),
-      ),
-    );
+      );
+    });
   }
 
-  Widget _buildCardFace(bool isBack, AppLocalizations l) {
+  Widget _buildFace(bool isBack, AppLocalizations l) {
     final text = isBack ? widget.card.backText : widget.card.frontText;
     final hasAudio = isBack
-        ? (widget.card.backAudioPath != null)
-        : (widget.card.frontAudioPath != null);
+        ? widget.card.backAudioPath != null
+        : widget.card.frontAudioPath != null;
 
     return Container(
       width: double.infinity,
-      height: MediaQuery.of(context).size.height * 0.48,
+      height: MediaQuery.of(context).size.height * 0.45,
       decoration: BoxDecoration(
-          color: isBack
-              ? Theme.of(context).colorScheme.primaryContainer
-              : Theme.of(context).cardColor,
-          borderRadius: BorderRadius.circular(24),
-          boxShadow: [
-            BoxShadow(
-                color: Colors.black.withValues(alpha: 0.1),
-                blurRadius: 20,
-                spreadRadius: 2,
-                offset: const Offset(0, 10))
-          ]),
+        color: isBack
+            ? Theme.of(context).colorScheme.primaryContainer
+            : Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 20,
+            spreadRadius: 2,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
       child: Stack(
         children: [
           Center(
@@ -1990,31 +2002,38 @@ class _MicroCardState extends State<_MicroCard> with TickerProviderStateMixin {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(text,
-                      textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                  Text(
+                    text,
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.displaySmall?.copyWith(
                           fontWeight: FontWeight.bold,
                           color: isBack
                               ? Theme.of(context).colorScheme.primary
-                              : null)),
+                              : null,
+                        ),
+                  ),
                   if (hasAudio) ...[
                     const SizedBox(height: 24),
                     IconButton.filledTonal(
-                        icon: const Icon(Icons.volume_up, size: 32),
-                        onPressed: () => _playAudio(isBack),
-                        tooltip: l.listenPronunciation)
-                  ]
+                      icon: const Icon(Icons.volume_up, size: 32),
+                      onPressed: () => _playAudio(isBack),
+                      tooltip: l.listenPronunciation,
+                    ),
+                  ],
                 ],
               ),
             ),
           ),
           Positioned(
-              bottom: 24,
-              left: 0,
-              right: 0,
-              child: Text(l.tapToFlip,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.grey[500], fontSize: 14))),
+            bottom: 24,
+            left: 0,
+            right: 0,
+            child: Text(
+              l.tapToFlip,
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.grey[500], fontSize: 14),
+            ),
+          ),
         ],
       ),
     );
