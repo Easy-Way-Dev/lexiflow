@@ -66,7 +66,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   void _showLanguageDialog() async {
-    final l = AppLocalizations.of(context);
+    final l = AppLocalizations.of(context)!;
     await showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -113,7 +113,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context);
+    final l = AppLocalizations.of(context)!;
 
     if (_isLoading) {
       return Scaffold(
@@ -290,3 +290,4 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 }
+

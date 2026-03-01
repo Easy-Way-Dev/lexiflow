@@ -164,7 +164,7 @@ class _DecksScreenState extends State<DecksScreen>
     } catch (e) {
       setState(() => _isLoading = false);
       if (mounted) {
-        final l = AppLocalizations.of(context);
+        final l = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(l.errorGeneric(e.toString()))));
       }
@@ -214,7 +214,7 @@ class _DecksScreenState extends State<DecksScreen>
 
   void _showStoreAndStreaksDialog() {
     HapticFeedback.lightImpact();
-    final l = AppLocalizations.of(context);
+    final l = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (context) {
@@ -321,7 +321,7 @@ class _DecksScreenState extends State<DecksScreen>
     required Color color,
     String? oldPrice,
   }) {
-    final l = AppLocalizations.of(context);
+    final l = AppLocalizations.of(context)!;
     final bool isUnlocked = _currentStreak >= dayRequired;
     final double progress = (_currentStreak / dayRequired).clamp(0.0, 1.0);
     return Container(
@@ -407,7 +407,7 @@ class _DecksScreenState extends State<DecksScreen>
 
   void _showMicroSessionOptions() {
     HapticFeedback.lightImpact();
-    final l = AppLocalizations.of(context);
+    final l = AppLocalizations.of(context)!;
     final currentAppLocale = Localizations.localeOf(context).languageCode;
     final mixPairs = _decks
         .map((d) => '${d.sourceLanguage}||${d.targetLanguage}')
@@ -581,7 +581,7 @@ class _DecksScreenState extends State<DecksScreen>
   }
 
   Future<void> _startMicroSession(int count, {String? filter}) async {
-    final l = AppLocalizations.of(context);
+    final l = AppLocalizations.of(context)!;
     if (filter == null) return;
     List<CardData> targetCards = [];
 
@@ -631,7 +631,7 @@ class _DecksScreenState extends State<DecksScreen>
   }
 
   Future<void> _exportDeck(Deck deck) async {
-    final l = AppLocalizations.of(context);
+    final l = AppLocalizations.of(context)!;
     showDialog(
         context: context,
         builder: (context) {
@@ -727,7 +727,7 @@ class _DecksScreenState extends State<DecksScreen>
   }
 
   Future<void> _processExportToLexiflow(Deck deck) async {
-    final l = AppLocalizations.of(context);
+    final l = AppLocalizations.of(context)!;
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Row(children: [
@@ -759,7 +759,7 @@ class _DecksScreenState extends State<DecksScreen>
   }
 
   Future<void> _showDeckDialog({Deck? deckToEdit}) async {
-    final l = AppLocalizations.of(context);
+    final l = AppLocalizations.of(context)!;
     final isEditing = deckToEdit != null;
     final nameController =
         TextEditingController(text: isEditing ? deckToEdit.name : '');
@@ -860,7 +860,7 @@ class _DecksScreenState extends State<DecksScreen>
   }
 
   Future<void> _deleteDeck(Deck deck) async {
-    final l = AppLocalizations.of(context);
+    final l = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -884,7 +884,7 @@ class _DecksScreenState extends State<DecksScreen>
   }
 
   Future<void> _showExportDialog(Deck deck, String filePath) async {
-    final l = AppLocalizations.of(context);
+    final l = AppLocalizations.of(context)!;
     final pathController = TextEditingController(text: filePath);
     await showDialog(
       context: context,
@@ -1017,7 +1017,7 @@ class _DecksScreenState extends State<DecksScreen>
   }
 
   Future<String?> _pickSaveLocation(String deckName, String currentPath) async {
-    final l = AppLocalizations.of(context);
+    final l = AppLocalizations.of(context)!;
     try {
       final downloadsPath = await _getDownloadsPath();
       final result = await FilePicker.platform.saveFile(
@@ -1142,7 +1142,7 @@ class _DecksScreenState extends State<DecksScreen>
       await ImportExportService.shareToMessengers(filePath, deckName: deckName);
     } catch (e) {
       if (mounted) {
-        final l = AppLocalizations.of(context);
+        final l = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(l.errorGeneric(e.toString()))));
       }
@@ -1150,7 +1150,7 @@ class _DecksScreenState extends State<DecksScreen>
   }
 
   void _showLanguageSettings() async {
-    final l = AppLocalizations.of(context);
+    final l = AppLocalizations.of(context)!;
     await showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -1189,7 +1189,7 @@ class _DecksScreenState extends State<DecksScreen>
 
   @override
   Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context);
+    final l = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
         title: Text(l.setsTitle),
@@ -1216,7 +1216,7 @@ class _DecksScreenState extends State<DecksScreen>
                   context,
                   MaterialPageRoute(
                       builder: (context) => OnboardingScreen(db: widget.db))),
-              tooltip: AppLocalizations.of(context).onboardingWelcomeTitle),
+              tooltip: AppLocalizations.of(context)!.onboardingWelcomeTitle),
           IconButton(
               icon: const Icon(Icons.language),
               onPressed: _showLanguageSettings,
@@ -1578,7 +1578,7 @@ class _MicroSessionOverlayState extends State<MicroSessionOverlay> {
 
   @override
   Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context);
+    final l = AppLocalizations.of(context)!;
     final isFinished = _currentIndex >= _currentCards.length;
 
     return Scaffold(
@@ -1882,7 +1882,7 @@ class _MicroCardState extends State<_MicroCard> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context);
+    final l = AppLocalizations.of(context)!;
     final dx = _position.dx;
     final opacity = min(dx.abs() / 100, 1.0);
 
@@ -2050,3 +2050,4 @@ class _MicroCardState extends State<_MicroCard> with TickerProviderStateMixin {
     );
   }
 }
+

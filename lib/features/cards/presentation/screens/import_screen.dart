@@ -25,7 +25,7 @@ class _ImportScreenState extends State<ImportScreen> {
   }
 
   Future<void> _pickFile() async {
-    final l = AppLocalizations.of(context);
+    final l = AppLocalizations.of(context)!;
     try {
       final filePath = await ImportExportService.pickImportFile();
       if (filePath != null) {
@@ -54,7 +54,7 @@ class _ImportScreenState extends State<ImportScreen> {
   }
 
   Future<void> _import() async {
-    final l = AppLocalizations.of(context);
+    final l = AppLocalizations.of(context)!;
     if (_selectedFilePath == null) {
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text(l.pickFileToImport)));
@@ -110,7 +110,7 @@ class _ImportScreenState extends State<ImportScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context);
+    final l = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(title: Text(l.importTitle)),
       body: AdaptiveLayout(
@@ -298,3 +298,4 @@ class _ImportScreenState extends State<ImportScreen> {
     }
   }
 }
+

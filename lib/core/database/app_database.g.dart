@@ -4187,3 +4187,4 @@ class $AppDatabaseManager {
   $$DailyStatsTableTableManager get dailyStats =>
       $$DailyStatsTableTableManager(_db, _db.dailyStats);
 }
+

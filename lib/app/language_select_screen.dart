@@ -52,7 +52,7 @@ class _LanguageSelectScreenState extends State<LanguageSelectScreen> {
   @override
   Widget build(BuildContext context) {
     // Безопасный вызов локализации без ? и !
-    final l = AppLocalizations.of(context);
+    final l = AppLocalizations.of(context)!;
 
     return Scaffold(
       body: SafeArea(
@@ -227,3 +227,4 @@ class _LangOption {
     required this.subtitle,
   });
 }
+

@@ -78,7 +78,7 @@ class _AddCardScreenState extends State<AddCardScreen> {
   }
 
   Future<void> _pickImage(bool isFront) async {
-    final l = AppLocalizations.of(context);
+    final l = AppLocalizations.of(context)!;
     final choice = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
@@ -159,7 +159,7 @@ class _AddCardScreenState extends State<AddCardScreen> {
   }
 
   void _searchYouGlish(String word, String lang, bool isFront) {
-    final l = AppLocalizations.of(context);
+    final l = AppLocalizations.of(context)!;
     if (word.trim().isEmpty) {
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text(l.wordRequired)));
@@ -181,7 +181,7 @@ class _AddCardScreenState extends State<AddCardScreen> {
   }
 
   Future<void> _searchTranscription() async {
-    final l = AppLocalizations.of(context);
+    final l = AppLocalizations.of(context)!;
     final word = _frontTextController.text.trim();
     if (word.isEmpty) {
       ScaffoldMessenger.of(context)
@@ -195,7 +195,7 @@ class _AddCardScreenState extends State<AddCardScreen> {
       await VideoHelper.launchUrlInBrowser(url);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(AppLocalizations.of(context).openedCambridge),
+          content: Text(AppLocalizations.of(context)!.openedCambridge),
           duration: const Duration(seconds: 3),
         ));
       }
@@ -203,7 +203,7 @@ class _AddCardScreenState extends State<AddCardScreen> {
   }
 
   Future<void> _searchImageOnline() async {
-    final l = AppLocalizations.of(context);
+    final l = AppLocalizations.of(context)!;
     final word = _frontTextController.text.trim();
     if (word.isEmpty) {
       ScaffoldMessenger.of(context)
@@ -216,7 +216,7 @@ class _AddCardScreenState extends State<AddCardScreen> {
       await VideoHelper.launchUrlInBrowser(url);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(AppLocalizations.of(context).openedGoogleImages),
+          content: Text(AppLocalizations.of(context)!.openedGoogleImages),
           duration: const Duration(seconds: 3),
         ));
       }
@@ -338,7 +338,7 @@ class _AddCardScreenState extends State<AddCardScreen> {
       }
 
       if (mounted) {
-        final l = AppLocalizations.of(context);
+        final l = AppLocalizations.of(context)!;
         Navigator.pop(context, true);
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text(isEditing ? l.cardUpdated : l.cardCreated),
@@ -350,7 +350,7 @@ class _AddCardScreenState extends State<AddCardScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content:
-              Text(AppLocalizations.of(context).errorGeneric(e.toString())),
+              Text(AppLocalizations.of(context)!.errorGeneric(e.toString())),
         ));
       }
     }
@@ -358,7 +358,7 @@ class _AddCardScreenState extends State<AddCardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context);
+    final l = AppLocalizations.of(context)!;
     final isEditing = widget.cardToEdit != null;
 
     return Scaffold(
@@ -710,3 +710,4 @@ class _AddCardScreenState extends State<AddCardScreen> {
     );
   }
 }
+

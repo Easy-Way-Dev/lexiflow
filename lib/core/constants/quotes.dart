@@ -159,3 +159,4 @@ class AppQuotes {
     return filtered[random.nextInt(filtered.length)];
   }
 }
+

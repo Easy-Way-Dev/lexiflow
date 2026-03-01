@@ -176,3 +176,4 @@ class VideoHelper {
 }
 
 enum VideoType { youtube, youglish, localFile, other }
+

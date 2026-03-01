@@ -69,7 +69,7 @@ class _AudioRecorderWidgetState extends State<AudioRecorderWidget> {
   }
 
   Future<void> _toggleRecording() async {
-    final l = AppLocalizations.of(context);
+    final l = AppLocalizations.of(context)!;
     if (_isRecording) {
       _stopTimer();
       setState(() => _isRecording = false);
@@ -120,7 +120,7 @@ class _AudioRecorderWidgetState extends State<AudioRecorderWidget> {
   }
 
   Future<void> _pickAudioFromFile() async {
-    final l = AppLocalizations.of(context);
+    final l = AppLocalizations.of(context)!;
     try {
       final result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
@@ -174,7 +174,7 @@ class _AudioRecorderWidgetState extends State<AudioRecorderWidget> {
   }
 
   Future<void> _deleteAudio() async {
-    final l = AppLocalizations.of(context);
+    final l = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -204,7 +204,7 @@ class _AudioRecorderWidgetState extends State<AudioRecorderWidget> {
 
   @override
   Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context);
+    final l = AppLocalizations.of(context)!;
     final hasAudio = _currentAudioPath != null && _currentAudioPath!.isNotEmpty;
 
     return Column(
@@ -369,3 +369,4 @@ class _AudioRecorderWidgetState extends State<AudioRecorderWidget> {
     );
   }
 }
+

@@ -7,7 +7,7 @@ class PaywallScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context);
+    final l = AppLocalizations.of(context)!;
 
     return Scaffold(
       backgroundColor: const Color(0xFF0F172A), // Премиальный темный фон
@@ -255,3 +255,4 @@ class PaywallScreen extends StatelessWidget {
     );
   }
 }
+

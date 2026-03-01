@@ -58,14 +58,14 @@ class _CardsListScreenState extends State<CardsListScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
               content: Text(
-                  AppLocalizations.of(context).errorLoading(e.toString()))),
+                  AppLocalizations.of(context)!.errorLoading(e.toString()))),
         );
       }
     }
   }
 
   Future<void> _deleteCard(CardData card) async {
-    final l = AppLocalizations.of(context);
+    final l = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -91,7 +91,7 @@ class _CardsListScreenState extends State<CardsListScreen> {
         await _loadCards();
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(AppLocalizations.of(context).cardDeleted)),
+            SnackBar(content: Text(AppLocalizations.of(context)!.cardDeleted)),
           );
         }
       } catch (e) {
@@ -99,7 +99,7 @@ class _CardsListScreenState extends State<CardsListScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
                 content: Text(
-                    AppLocalizations.of(context).errorGeneric(e.toString()))),
+                    AppLocalizations.of(context)!.errorGeneric(e.toString()))),
           );
         }
       }
@@ -143,7 +143,7 @@ class _CardsListScreenState extends State<CardsListScreen> {
       await _loadCards();
 
       if (mounted) {
-        final l = AppLocalizations.of(context);
+        final l = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(!card.isMastered ? l.cardMastered : l.cardReturned),
@@ -156,7 +156,7 @@ class _CardsListScreenState extends State<CardsListScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
               content: Text(
-                  AppLocalizations.of(context).errorGeneric(e.toString()))),
+                  AppLocalizations.of(context)!.errorGeneric(e.toString()))),
         );
       }
     }
@@ -177,7 +177,7 @@ class _CardsListScreenState extends State<CardsListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context);
+    final l = AppLocalizations.of(context)!;
     final masteredCount = _cards.where((c) => c.isMastered).length;
 
     return Scaffold(
@@ -284,7 +284,7 @@ class _CardsListScreenState extends State<CardsListScreen> {
   }
 
   Widget _buildEmptyState() {
-    final l = AppLocalizations.of(context);
+    final l = AppLocalizations.of(context)!;
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -349,7 +349,7 @@ class _CardsListScreenState extends State<CardsListScreen> {
   }
 
   Widget _buildCardItem(CardData card) {
-    final l = AppLocalizations.of(context);
+    final l = AppLocalizations.of(context)!;
     final text = _showFront ? card.frontText : card.backText;
 
     return Card(
@@ -566,3 +566,4 @@ class _CardsListScreenState extends State<CardsListScreen> {
     );
   }
 }
+

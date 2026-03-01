@@ -1065,3 +1065,4 @@ class SM2Result {
 }
 
 enum HintType { image, audio, video, firstLetter }
+

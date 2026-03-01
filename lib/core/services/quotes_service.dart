@@ -357,3 +357,4 @@ class QuotesService {
   /// Получить количество цитат
   static int getTotalQuotesCount() => _allQuotes.length;
 }
+

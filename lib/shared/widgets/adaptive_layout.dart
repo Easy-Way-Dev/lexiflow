@@ -102,3 +102,4 @@ class AdaptivePadding extends StatelessWidget {
     );
   }
 }
+

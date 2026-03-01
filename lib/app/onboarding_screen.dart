@@ -41,7 +41,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (_swipeWords.isEmpty) {
-      final l = AppLocalizations.of(context);
+      final l = AppLocalizations.of(context)!;
       _swipeWords = _getSwipeWords(l);
     }
   }
@@ -146,7 +146,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context);
+    final l = AppLocalizations.of(context)!;
 
     return Focus(
       focusNode: _focusNode,
@@ -846,10 +846,10 @@ class _SwipeableCardState extends State<_SwipeableCard>
                           ),
                           child: Text(
                             isSwipingRight
-                                ? AppLocalizations.of(context)
+                                ? AppLocalizations.of(context)!
                                     .swipeIKnow
                                     .toUpperCase()
-                                : AppLocalizations.of(context)
+                                : AppLocalizations.of(context)!
                                     .swipeIDontKnow
                                     .toUpperCase(),
                             style: TextStyle(
@@ -874,3 +874,4 @@ class _SwipeableCardState extends State<_SwipeableCard>
     );
   }
 }
+

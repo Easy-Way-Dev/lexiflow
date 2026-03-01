@@ -136,6 +136,13 @@ lib/
 ✅ Весь хардкод убран — всё через ARB-ключи
 ✅ Убраны все ! у AppLocalizations
 
+✅ Иконки приложения — все платформы
+   — assets/icons/app_icon.png (1024px master)
+   — flutter_launcher_icons ^0.14.1
+   — Android: adaptive icon, фон #EDE8FF
+   — iOS: все размеры без альфа-канала  
+   — Windows: taskbar icon 48px
+
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ВАЖНЫЕ ДЕТАЛИ АРХИТЕКТУРЫ
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
