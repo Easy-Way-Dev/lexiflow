@@ -4,6 +4,7 @@ import 'package:drift/drift.dart' as drift;
 import 'package:lexiflow/core/database/app_database.dart';
 import 'package:lexiflow/features/decks/presentation/screens/add_card_screen.dart';
 import 'package:lexiflow/features/cards/presentation/screens/study_screen.dart';
+import 'package:lexiflow/shared/widgets/adaptive_layout.dart';
 
 class CardsListScreen extends StatefulWidget {
   final AppDatabase db;
@@ -199,50 +200,56 @@ class _CardsListScreenState extends State<CardsListScreen> {
           ),
         ],
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _cards.isEmpty
-              ? _buildEmptyState()
-              : Column(
-                  children: [
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(16),
-                      color: Theme.of(context).colorScheme.primaryContainer,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                        children: [
-                          _buildStatItem(
-                            icon: Icons.style,
-                            label: l.totalCards,
-                            value: '${_cards.length}',
-                            color: Colors.blue,
-                          ),
-                          _buildStatItem(
-                            icon: Icons.school,
-                            label: l.toStudy,
-                            value: '$_cardsToStudy',
-                            color: Colors.orange,
-                          ),
-                          _buildStatItem(
-                            icon: Icons.check_circle,
-                            label: l.mastered,
-                            value: '$masteredCount',
-                            color: Colors.green,
-                          ),
-                        ],
-                      ),
-                    ),
-                    Expanded(
-                      child: ListView.builder(
+      // FIX: ограничение ширины для десктопа — список карточек по центру
+      body: AdaptiveLayout(
+        maxWidth: AppLayout.contentMaxWidth, // FIX: совпадает с главным экраном
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : _cards.isEmpty
+                ? _buildEmptyState()
+                : Column(
+                    children: [
+                      // Статистика вверху
+                      Container(
+                        width: double.infinity,
                         padding: const EdgeInsets.all(16),
-                        itemCount: _cards.length,
-                        itemBuilder: (context, index) =>
-                            _buildCardItem(_cards[index]),
+                        color: Theme.of(context).colorScheme.primaryContainer,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          children: [
+                            _buildStatItem(
+                              icon: Icons.style,
+                              label: l.totalCards,
+                              value: '${_cards.length}',
+                              color: Colors.blue,
+                            ),
+                            _buildStatItem(
+                              icon: Icons.school,
+                              label: l.toStudy,
+                              value: '$_cardsToStudy',
+                              color: Colors.orange,
+                            ),
+                            _buildStatItem(
+                              icon: Icons.check_circle,
+                              label: l.mastered,
+                              value: '$masteredCount',
+                              color: Colors.green,
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
-                ),
+                      // Список карточек
+                      Expanded(
+                        child: ListView.builder(
+                          padding: const EdgeInsets.all(16),
+                          itemCount: _cards.length,
+                          itemBuilder: (context, index) =>
+                              _buildCardItem(_cards[index]),
+                        ),
+                      ),
+                    ],
+                  ),
+      ),
       floatingActionButton: Column(
         mainAxisSize: MainAxisSize.min,
         children: [

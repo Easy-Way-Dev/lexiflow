@@ -15,6 +15,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:lexiflow/app/onboarding_screen.dart';
 import 'package:lexiflow/app/paywall_screen.dart';
+import 'package:lexiflow/shared/widgets/adaptive_layout.dart';
 
 String _transliterate(String text) {
   const map = {
@@ -641,98 +642,95 @@ class _DecksScreenState extends State<DecksScreen>
 
   Future<void> _exportDeck(Deck deck) async {
     final l = AppLocalizations.of(context);
-    showModalBottomSheet(
+    showDialog(
         context: context,
-        backgroundColor: Theme.of(context).colorScheme.surface,
-        shape: const RoundedRectangleBorder(
-            borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
         builder: (context) {
-          return SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                      width: 40,
-                      height: 4,
-                      decoration: BoxDecoration(
-                          color: Colors.grey[300],
-                          borderRadius: BorderRadius.circular(2))),
-                  const SizedBox(height: 24),
-                  Text(l.exportFormatTitle,
-                      style: Theme.of(context)
-                          .textTheme
-                          .titleLarge
-                          ?.copyWith(fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 24),
-                  ListTile(
-                    contentPadding:
-                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    leading: const Icon(Icons.inventory_2,
-                        color: Colors.blue, size: 32),
-                    title: const Text('.lexiflow',
-                        style: TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 16)),
-                    subtitle: Text(l.exportLexiflowDesc,
-                        style: TextStyle(color: Colors.grey)),
-                    trailing: const Icon(Icons.download, color: Colors.blue),
-                    onTap: () {
-                      Navigator.pop(context);
-                      _processExportToLexiflow(deck);
-                    },
-                  ),
-                  const Divider(height: 1),
-                  ListTile(
-                    contentPadding:
-                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    leading: const Icon(Icons.table_chart,
-                        color: Colors.green, size: 32),
-                    title: Row(children: [
-                      Text(l.exportCsvTitle,
-                          style: const TextStyle(
+          return Dialog(
+            backgroundColor: Theme.of(context).colorScheme.surface,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+            insetPadding: const EdgeInsets.all(24),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 480),
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(l.exportFormatTitle,
+                        style: Theme.of(context)
+                            .textTheme
+                            .titleLarge
+                            ?.copyWith(fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 24),
+                    ListTile(
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 8),
+                      leading: const Icon(Icons.inventory_2,
+                          color: Colors.blue, size: 32),
+                      title: const Text('.lexiflow',
+                          style: TextStyle(
                               fontWeight: FontWeight.bold, fontSize: 16)),
-                      const SizedBox(width: 8),
-                      const Icon(Icons.workspace_premium,
-                          color: Colors.amber, size: 18)
-                    ]),
-                    subtitle: Text(l.exportCsvDesc,
-                        style: TextStyle(color: Colors.grey)),
-                    trailing: const Icon(Icons.lock, color: Colors.amber),
-                    onTap: () {
-                      Navigator.pop(context);
-                      Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (_) => const PaywallScreen()));
-                    },
-                  ),
-                  const Divider(height: 1),
-                  ListTile(
-                    contentPadding:
-                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    leading: const Icon(Icons.data_object,
-                        color: Colors.purple, size: 32),
-                    title: Row(children: [
-                      Text(l.exportJsonTitle,
-                          style: const TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 16)),
-                      const SizedBox(width: 8),
-                      const Icon(Icons.workspace_premium,
-                          color: Colors.amber, size: 18)
-                    ]),
-                    subtitle: Text(l.exportJsonDesc,
-                        style: TextStyle(color: Colors.grey)),
-                    trailing: const Icon(Icons.lock, color: Colors.amber),
-                    onTap: () {
-                      Navigator.pop(context);
-                      Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (_) => const PaywallScreen()));
-                    },
-                  ),
-                ],
+                      subtitle: Text(l.exportLexiflowDesc,
+                          style: TextStyle(color: Colors.grey)),
+                      trailing: const Icon(Icons.download, color: Colors.blue),
+                      onTap: () {
+                        Navigator.pop(context);
+                        _processExportToLexiflow(deck);
+                      },
+                    ),
+                    const Divider(height: 1),
+                    ListTile(
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 8),
+                      leading: const Icon(Icons.table_chart,
+                          color: Colors.green, size: 32),
+                      title: Row(children: [
+                        Text(l.exportCsvTitle,
+                            style: const TextStyle(
+                                fontWeight: FontWeight.bold, fontSize: 16)),
+                        const SizedBox(width: 8),
+                        const Icon(Icons.workspace_premium,
+                            color: Colors.amber, size: 18)
+                      ]),
+                      subtitle: Text(l.exportCsvDesc,
+                          style: TextStyle(color: Colors.grey)),
+                      trailing: const Icon(Icons.lock, color: Colors.amber),
+                      onTap: () {
+                        Navigator.pop(context);
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (_) => const PaywallScreen()));
+                      },
+                    ),
+                    const Divider(height: 1),
+                    ListTile(
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 8),
+                      leading: const Icon(Icons.data_object,
+                          color: Colors.purple, size: 32),
+                      title: Row(children: [
+                        Text(l.exportJsonTitle,
+                            style: const TextStyle(
+                                fontWeight: FontWeight.bold, fontSize: 16)),
+                        const SizedBox(width: 8),
+                        const Icon(Icons.workspace_premium,
+                            color: Colors.amber, size: 18)
+                      ]),
+                      subtitle: Text(l.exportJsonDesc,
+                          style: TextStyle(color: Colors.grey)),
+                      trailing: const Icon(Icons.lock, color: Colors.amber),
+                      onTap: () {
+                        Navigator.pop(context);
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (_) => const PaywallScreen()));
+                      },
+                    ),
+                  ],
+                ),
               ),
             ),
           );
@@ -1268,72 +1266,76 @@ class _DecksScreenState extends State<DecksScreen>
               tooltip: l.refresh),
         ],
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                  child: AnimatedBuilder(
-                    animation: Listenable.merge(
-                        [_pulseAnimation, _gradientController]),
-                    builder: (context, child) {
-                      return Transform.scale(
-                        scale: _pulseAnimation.value,
-                        child: InkWell(
-                          onTap: _showMicroSessionOptions,
-                          borderRadius: BorderRadius.circular(16),
-                          child: Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.symmetric(
-                                vertical: 20, horizontal: 16),
-                            decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                    colors: const [
-                                      Color(0xFF6366F1),
-                                      Color(0xFFEC4899),
-                                      Color(0xFF6366F1)
-                                    ],
-                                    begin: _gradientBegin.value,
-                                    end: _gradientEnd.value),
-                                borderRadius: BorderRadius.circular(16),
-                                boxShadow: [
-                                  BoxShadow(
-                                      color: const Color(0xFFEC4899)
-                                          .withValues(alpha: 0.3),
-                                      blurRadius: 15,
-                                      spreadRadius: 2,
-                                      offset: const Offset(0, 5))
-                                ]),
-                            child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  const Icon(Icons.bolt,
-                                      color: Colors.white, size: 28),
-                                  const SizedBox(width: 8),
-                                  Text(l.microSessionTitle,
-                                      style: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 20,
-                                          fontWeight: FontWeight.bold,
-                                          letterSpacing: 0.5))
-                                ]),
+      body: AdaptiveLayout(
+        maxWidth: AppLayout.contentMaxWidth,
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                    child: AnimatedBuilder(
+                      animation: Listenable.merge(
+                          [_pulseAnimation, _gradientController]),
+                      builder: (context, child) {
+                        return Transform.scale(
+                          scale: _pulseAnimation.value,
+                          child: InkWell(
+                            onTap: _showMicroSessionOptions,
+                            borderRadius: BorderRadius.circular(16),
+                            child: Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: 20, horizontal: 16),
+                              decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                      colors: const [
+                                        Color(0xFF6366F1),
+                                        Color(0xFFEC4899),
+                                        Color(0xFF6366F1)
+                                      ],
+                                      begin: _gradientBegin.value,
+                                      end: _gradientEnd.value),
+                                  borderRadius: BorderRadius.circular(16),
+                                  boxShadow: [
+                                    BoxShadow(
+                                        color: const Color(0xFFEC4899)
+                                            .withValues(alpha: 0.3),
+                                        blurRadius: 15,
+                                        spreadRadius: 2,
+                                        offset: const Offset(0, 5))
+                                  ]),
+                              child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    const Icon(Icons.bolt,
+                                        color: Colors.white, size: 28),
+                                    const SizedBox(width: 8),
+                                    Text(l.microSessionTitle,
+                                        style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 20,
+                                            fontWeight: FontWeight.bold,
+                                            letterSpacing: 0.5))
+                                  ]),
+                            ),
                           ),
-                        ),
-                      );
-                    },
+                        );
+                      },
+                    ),
                   ),
-                ),
-                Expanded(
-                    child: _decks.isEmpty
-                        ? _buildEmptyState(l)
-                        : ListView.builder(
-                            padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
-                            itemCount: _decks.length,
-                            itemBuilder: (context, index) =>
-                                _buildDeckCard(_decks[index], l))),
-              ],
-            ),
+                  Expanded(
+                      child: _decks.isEmpty
+                          ? _buildEmptyState(l)
+                          : ListView.builder(
+                              padding:
+                                  const EdgeInsets.fromLTRB(16, 8, 16, 100),
+                              itemCount: _decks.length,
+                              itemBuilder: (context, index) =>
+                                  _buildDeckCard(_decks[index], l))),
+                ],
+              ),
+      ), // AdaptiveLayout
       floatingActionButton: FloatingActionButton.extended(
           onPressed: () => _showDeckDialog(),
           icon: const Icon(Icons.add),
@@ -1548,9 +1550,6 @@ class _MicroSessionOverlayState extends State<MicroSessionOverlay>
   int _correctAnswers = 0;
   late AnimationController _flipController;
 
-  // Свайп-состояние для анимации смещения карточки
-  double _swipeDx = 0.0;
-
   @override
   void initState() {
     super.initState();
@@ -1587,7 +1586,6 @@ class _MicroSessionOverlayState extends State<MicroSessionOverlay>
       setState(() {
         _currentIndex++;
         _isFlipped = false;
-        _swipeDx = 0;
         _flipController.reset();
       });
     } else {
@@ -1606,7 +1604,6 @@ class _MicroSessionOverlayState extends State<MicroSessionOverlay>
       _currentIndex = 0;
       _correctAnswers = 0;
       _isFlipped = false;
-      _swipeDx = 0;
       _flipController.reset();
     });
   }
@@ -1638,7 +1635,6 @@ class _MicroSessionOverlayState extends State<MicroSessionOverlay>
       _currentIndex = 0;
       _correctAnswers = 0;
       _isFlipped = false;
-      _swipeDx = 0;
       _flipController.reset();
     });
   }
@@ -1671,17 +1667,15 @@ class _MicroSessionOverlayState extends State<MicroSessionOverlay>
         ],
       ),
       body: SafeArea(
-          child: isFinished ? _buildSuccessView(l) : _buildCardView(l)),
+          child: AdaptiveLayout(
+        maxWidth: AppLayout.narrowMaxWidth,
+        child: isFinished ? _buildSuccessView(l) : _buildCardView(l),
+      )),
     );
   }
 
   Widget _buildCardView(AppLocalizations l) {
     final currentCard = _currentCards[_currentIndex];
-
-    // Индикаторы свайпа (непрозрачность зависит от расстояния)
-    final swipeOpacity = (_swipeDx.abs() / 80).clamp(0.0, 1.0);
-    final swipeAngle = (_swipeDx / 600) * 0.15; // лёгкий наклон
-
     return Column(
       children: [
         LinearProgressIndicator(
@@ -1692,122 +1686,25 @@ class _MicroSessionOverlayState extends State<MicroSessionOverlay>
           child: Padding(
             padding: const EdgeInsets.all(32.0),
             child: GestureDetector(
-              // Тап — перевернуть карточку (только если не свайпаем)
-              onTap: () {
-                if (_swipeDx.abs() < 5) _flipCard();
-              },
-              // Горизонтальный свайп — следующая карточка
-              onHorizontalDragUpdate: (details) {
-                setState(() {
-                  _swipeDx += details.delta.dx;
-                });
-              },
-              onHorizontalDragEnd: (details) {
-                final velocity = details.primaryVelocity ?? 0;
-                // Порог: смещение > 80px или скорость > 300
-                if (_swipeDx > 80 || velocity > 300) {
-                  // Свайп вправо → "Помню"
-                  setState(() => _swipeDx = 0);
-                  _nextCard(true);
-                } else if (_swipeDx < -80 || velocity < -300) {
-                  // Свайп влево → "Сложно"
-                  setState(() => _swipeDx = 0);
-                  _nextCard(false);
-                } else {
-                  // Недостаточно — вернуть на место
-                  setState(() => _swipeDx = 0);
-                }
-              },
-              child: Transform.translate(
-                offset: Offset(_swipeDx, 0),
-                child: Transform.rotate(
-                  angle: swipeAngle,
-                  child: Stack(
-                    children: [
-                      // Сама карточка с flip-анимацией
-                      AnimatedBuilder(
-                        animation: _flipController,
-                        builder: (context, child) {
-                          final angle = _flipController.value * pi;
-                          final transform = Matrix4.identity()
-                            ..setEntry(3, 2, 0.001)
-                            ..rotateY(angle);
-                          return Transform(
-                            transform: transform,
+              onTap: _flipCard,
+              child: AnimatedBuilder(
+                animation: _flipController,
+                builder: (context, child) {
+                  final angle = _flipController.value * pi;
+                  final transform = Matrix4.identity()
+                    ..setEntry(3, 2, 0.001)
+                    ..rotateY(angle);
+                  return Transform(
+                    transform: transform,
+                    alignment: Alignment.center,
+                    child: angle >= pi / 2
+                        ? Transform(
+                            transform: Matrix4.identity()..rotateY(pi),
                             alignment: Alignment.center,
-                            child: angle >= pi / 2
-                                ? Transform(
-                                    transform: Matrix4.identity()..rotateY(pi),
-                                    alignment: Alignment.center,
-                                    child:
-                                        _buildCardContent(currentCard, true, l))
-                                : _buildCardContent(currentCard, false, l),
-                          );
-                        },
-                      ),
-                      // Индикатор "ПОМНЮ" при свайпе вправо
-                      if (_swipeDx > 10)
-                        Positioned(
-                          top: 40,
-                          left: 32,
-                          child: Opacity(
-                            opacity: swipeOpacity,
-                            child: Transform.rotate(
-                              angle: -0.2,
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 16, vertical: 8),
-                                decoration: BoxDecoration(
-                                  border:
-                                      Border.all(color: Colors.green, width: 3),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Text(
-                                  l.btnKnow.toUpperCase(),
-                                  style: const TextStyle(
-                                    color: Colors.green,
-                                    fontSize: 28,
-                                    fontWeight: FontWeight.bold,
-                                    letterSpacing: 2,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      // Индикатор "СЛОЖНО" при свайпе влево
-                      if (_swipeDx < -10)
-                        Positioned(
-                          top: 40,
-                          right: 32,
-                          child: Opacity(
-                            opacity: swipeOpacity,
-                            child: Transform.rotate(
-                              angle: 0.2,
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 16, vertical: 8),
-                                decoration: BoxDecoration(
-                                  border: Border.all(
-                                      color: Colors.redAccent, width: 3),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Text(
-                                  l.btnHard.toUpperCase(),
-                                  style: const TextStyle(
-                                    color: Colors.redAccent,
-                                    fontSize: 28,
-                                    fontWeight: FontWeight.bold,
-                                    letterSpacing: 2,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
+                            child: _buildCardContent(currentCard, true, l))
+                        : _buildCardContent(currentCard, false, l),
+                  );
+                },
               ),
             ),
           ),

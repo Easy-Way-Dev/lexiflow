@@ -31,6 +31,8 @@ https://raw.githubusercontent.com/Easy-Way-Dev/lexiflow/main/lib/app/onboarding_
 https://raw.githubusercontent.com/Easy-Way-Dev/lexiflow/main/lib/app/paywall_screen.dart
 https://raw.githubusercontent.com/Easy-Way-Dev/lexiflow/main/lib/features/cards/presentation/screens/study_screen.dart
 https://raw.githubusercontent.com/Easy-Way-Dev/lexiflow/main/lib/features/cards/presentation/screens/cards_list_screen.dart
+https://raw.githubusercontent.com/Easy-Way-Dev/lexiflow/main/lib/features/decks/presentation/screens/add_card_screen.dart
+https://raw.githubusercontent.com/Easy-Way-Dev/lexiflow/main/lib/shared/widgets/adaptive_layout.dart
 https://raw.githubusercontent.com/Easy-Way-Dev/lexiflow/main/lib/shared/theme/app_theme.dart
 https://raw.githubusercontent.com/Easy-Way-Dev/lexiflow/main/lib/l10n/app_ru.arb
 https://raw.githubusercontent.com/Easy-Way-Dev/lexiflow/main/lib/l10n/app_en.arb
@@ -90,8 +92,11 @@ lib/
 │   │   ├── quote_screen.dart      ← Цитата после тренировки
 │   │   └── study_screen.dart      ← Полная тренировка (flip + SM2)
 │   └── decks/presentation/screens/
-│       └── decks_screen.dart      ← ГЛАВНЫЙ экран (сеты + MicroSessionOverlay)
-├── shared/theme/app_theme.dart
+│       ├── decks_screen.dart      ← ГЛАВНЫЙ экран (сеты + MicroSessionOverlay)
+│       └── add_card_screen.dart   ← Создание/редактирование карточки
+├── shared/
+│   ├── theme/app_theme.dart
+│   └── widgets/adaptive_layout.dart  ← НОВЫЙ: AdaptiveLayout для Windows
 ├── l10n/  ← app_ru.arb, app_en.arb, app_uk.arb
 └── main.dart
 
@@ -101,15 +106,32 @@ lib/
 ✅ onboarding_screen.dart
    — Единый _topCardKey для верхней карточки (вместо словаря ключей)
    — Фоновые карточки без ключей, stackOffset для эффекта стопки
+   — AdaptiveLayout(maxWidth: 720) — центрирование на Windows
+   — _SwipeableCard использует LayoutBuilder (не MediaQuery!) для ширины
+   — triggerSwipeLeft/Right используют реальную ширину контейнера
 
 ✅ decks_screen.dart — экспорт
-   — showModalBottomSheet заменён на showDialog
+   — showModalBottomSheet заменён на showDialog + ConstrainedBox(maxWidth:480)
    — Корректно отображается по центру на Windows
 
 ✅ decks_screen.dart — MicroSessionOverlay (в конце файла!)
    — Добавлен свайп влево (Сложно) / вправо (Помню)
    — Визуальные индикаторы при свайпе
    — _swipeDx сбрасывается при каждой новой карточке
+   — AdaptiveLayout(maxWidth: 600) для MicroSession
+
+✅ Адаптивный UI — lib/shared/widgets/adaptive_layout.dart (НОВЫЙ ФАЙЛ)
+   — AdaptiveLayout виджет с maxWidth ограничением
+   — AppLayout константы: contentMaxWidth=720, narrowMaxWidth=600, wideMaxWidth=900
+   — Применён во всех основных экранах
+
+✅ Все экраны адаптированы под Windows (maxWidth=720):
+   — decks_screen.dart, study_screen.dart, onboarding_screen.dart
+   — cards_list_screen.dart, import_screen.dart, add_card_screen.dart
+
+✅ main.dart
+   — Использует AppTheme.lightTheme / darkTheme (унифицировано)
+   — _DesktopShell: фоновый цвет за контентом на широких экранах
 
 ✅ Весь хардкод убран — всё через ARB-ключи
 ✅ Убраны все ! у AppLocalizations
@@ -121,12 +143,14 @@ lib/
 - Онбординг показывается 1 раз, статус в settings по ключу 'onboarding_completed'
 - SM-2 алгоритм реализован в study_screen.dart метод _calculateSM2
 - updateDailyStats — метод существует в БД, используется в MicroSessionOverlay
+- AdaptiveLayout НЕ применяется к диалогам (они уже имеют ConstrainedBox)
+- Все экраны используют AppLayout.contentMaxWidth = 720 для единообразия
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ТЕКУЩИЙ ЭТАП — BETA РЕЛИЗ
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🔴 Этап 1А — Критично (делаем сейчас):
-  [ ] Адаптивный UI: MaxWidth ограничения для Windows
+🟡 Этап 1А — В процессе:
+  [x] Адаптивный UI: MaxWidth ограничения для Windows — ГОТОВО
   [ ] Нативные иконки (iOS / Android / Windows)
   [ ] Splash Screen для всех платформ
   [ ] Разрешения: Info.plist, AndroidManifest.xml, Windows manifest
@@ -182,6 +206,10 @@ https://raw.githubusercontent.com/Easy-Way-Dev/lexiflow/main/lib/features/cards/
 https://raw.githubusercontent.com/Easy-Way-Dev/lexiflow/main/lib/features/cards/presentation/screens/cards_list_screen.dart
 https://raw.githubusercontent.com/Easy-Way-Dev/lexiflow/main/lib/features/cards/presentation/screens/import_screen.dart
 https://raw.githubusercontent.com/Easy-Way-Dev/lexiflow/main/lib/features/cards/presentation/screens/quote_screen.dart
+https://raw.githubusercontent.com/Easy-Way-Dev/lexiflow/main/lib/features/decks/presentation/screens/add_card_screen.dart
+
+# Shared
+https://raw.githubusercontent.com/Easy-Way-Dev/lexiflow/main/lib/shared/widgets/adaptive_layout.dart
 
 # Сервисы
 https://raw.githubusercontent.com/Easy-Way-Dev/lexiflow/main/lib/core/services/import_export_service.dart

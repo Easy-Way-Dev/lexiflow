@@ -7,6 +7,7 @@ import 'package:lexiflow/core/utils/audio_helper.dart';
 import 'package:lexiflow/core/utils/video_helper.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:drift/drift.dart' as drift;
+import 'package:lexiflow/shared/widgets/adaptive_layout.dart';
 
 class StudyScreen extends StatefulWidget {
   final AppDatabase db;
@@ -531,11 +532,14 @@ class _StudyScreenState extends State<StudyScreen>
           ],
         ],
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _cards.isEmpty
-              ? _buildEmptyState()
-              : _buildStudyInterface(),
+      body: AdaptiveLayout(
+        maxWidth: AppLayout.narrowMaxWidth,
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : _cards.isEmpty
+                ? _buildEmptyState()
+                : _buildStudyInterface(),
+      ),
     );
   }
 

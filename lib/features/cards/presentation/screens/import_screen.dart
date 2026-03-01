@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:lexiflow/core/database/app_database.dart';
 import 'package:lexiflow/core/services/import_export_service.dart';
+import 'package:lexiflow/shared/widgets/adaptive_layout.dart';
 
 class ImportScreen extends StatefulWidget {
   final AppDatabase db;
@@ -112,151 +113,157 @@ class _ImportScreenState extends State<ImportScreen> {
     final l = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(title: Text(l.importTitle)),
-      body: _isImporting
-          ? Center(
-              child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                  const CircularProgressIndicator(),
-                  const SizedBox(height: 16),
-                  Text(l.importInProgress),
-                ]))
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Card(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(children: [
-                                const Icon(Icons.info_outline,
-                                    color: Colors.blue),
-                                const SizedBox(width: 8),
-                                Text(l.supportedFormats,
-                                    style: const TextStyle(
-                                        fontWeight: FontWeight.bold)),
+      body: AdaptiveLayout(
+        maxWidth: AppLayout.narrowMaxWidth,
+        child: _isImporting
+            ? Center(
+                child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                    const CircularProgressIndicator(),
+                    const SizedBox(height: 16),
+                    Text(l.importInProgress),
+                  ]))
+            : SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Card(
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(children: [
+                                  const Icon(Icons.info_outline,
+                                      color: Colors.blue),
+                                  const SizedBox(width: 8),
+                                  Text(l.supportedFormats,
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.bold)),
+                                ]),
+                                const SizedBox(height: 12),
+                                _buildFormatInfo(
+                                    '📄 CSV', l.formatCsvDesc, Colors.green),
+                                const SizedBox(height: 8),
+                                _buildFormatInfo(
+                                    '📋 JSON', l.formatJsonDesc, Colors.blue),
+                                const SizedBox(height: 8),
+                                _buildFormatInfo('📦 .lexiflow',
+                                    l.formatLexiflowDesc, Colors.purple),
                               ]),
-                              const SizedBox(height: 12),
-                              _buildFormatInfo(
-                                  '📄 CSV', l.formatCsvDesc, Colors.green),
-                              const SizedBox(height: 8),
-                              _buildFormatInfo(
-                                  '📋 JSON', l.formatJsonDesc, Colors.blue),
-                              const SizedBox(height: 8),
-                              _buildFormatInfo('📦 .lexiflow',
-                                  l.formatLexiflowDesc, Colors.purple),
-                            ]),
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    Text(l.stepSelectFile,
-                        style: const TextStyle(fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 12),
-                    SizedBox(
-                      width: double.infinity,
-                      child: OutlinedButton.icon(
-                        onPressed: _pickFile,
-                        icon: const Icon(Icons.folder_open),
-                        label: Text(l.pickFile),
-                        style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 16)),
-                      ),
-                    ),
-                    if (_selectedFilePath != null) ...[
-                      const SizedBox(height: 12),
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                            color: Colors.green[50],
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: Colors.green)),
-                        child: Row(children: [
-                          Icon(_getFormatIcon(_selectedFormat!),
-                              color: Colors.green),
-                          const SizedBox(width: 12),
-                          Expanded(
-                              child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                Text(_selectedFormat!,
-                                    style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.green)),
-                                Text(_selectedFilePath!.split('/').last,
-                                    style: const TextStyle(fontSize: 12),
-                                    overflow: TextOverflow.ellipsis),
-                              ])),
-                          IconButton(
-                              icon: const Icon(Icons.close, size: 20),
-                              onPressed: () => setState(() {
-                                    _selectedFilePath = null;
-                                    _selectedFormat = null;
-                                    _deckNameController.clear();
-                                  })),
-                        ]),
-                      ),
-                    ],
-                    const SizedBox(height: 24),
-                    if (_selectedFormat == 'CSV') ...[
-                      Text(l.stepDeckName,
-                          style: const TextStyle(fontWeight: FontWeight.bold)),
-                      const SizedBox(height: 12),
-                      TextField(
-                        controller: _deckNameController,
-                        decoration: InputDecoration(
-                          labelText: l.setNameLabel,
-                          hintText: l.setNameHint,
-                          border: const OutlineInputBorder(),
-                          helperText: l.csvHelperText,
                         ),
                       ),
                       const SizedBox(height: 24),
-                    ],
-                    if (_selectedFilePath != null)
+                      Text(l.stepSelectFile,
+                          style: const TextStyle(fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 12),
                       SizedBox(
                         width: double.infinity,
-                        child: FilledButton.icon(
-                          onPressed: _import,
-                          icon: const Icon(Icons.download),
-                          label: Text(l.importButton),
-                          style: FilledButton.styleFrom(
+                        child: OutlinedButton.icon(
+                          onPressed: _pickFile,
+                          icon: const Icon(Icons.folder_open),
+                          label: Text(l.pickFile),
+                          style: OutlinedButton.styleFrom(
                               padding:
                                   const EdgeInsets.symmetric(vertical: 16)),
                         ),
                       ),
-                    const SizedBox(height: 32),
-                    Card(
-                      color: Colors.blue[50],
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(children: [
-                                const Icon(Icons.help_outline,
-                                    color: Colors.blue),
-                                const SizedBox(width: 8),
-                                Text(l.howToImport,
+                      if (_selectedFilePath != null) ...[
+                        const SizedBox(height: 12),
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                              color: Colors.green[50],
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: Colors.green)),
+                          child: Row(children: [
+                            Icon(_getFormatIcon(_selectedFormat!),
+                                color: Colors.green),
+                            const SizedBox(width: 12),
+                            Expanded(
+                                child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                  Text(_selectedFormat!,
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.green)),
+                                  Text(_selectedFilePath!.split('/').last,
+                                      style: const TextStyle(fontSize: 12),
+                                      overflow: TextOverflow.ellipsis),
+                                ])),
+                            IconButton(
+                                icon: const Icon(Icons.close, size: 20),
+                                onPressed: () => setState(() {
+                                      _selectedFilePath = null;
+                                      _selectedFormat = null;
+                                      _deckNameController.clear();
+                                    })),
+                          ]),
+                        ),
+                      ],
+                      const SizedBox(height: 24),
+                      if (_selectedFormat == 'CSV') ...[
+                        Text(l.stepDeckName,
+                            style:
+                                const TextStyle(fontWeight: FontWeight.bold)),
+                        const SizedBox(height: 12),
+                        TextField(
+                          controller: _deckNameController,
+                          decoration: InputDecoration(
+                            labelText: l.setNameLabel,
+                            hintText: l.setNameHint,
+                            border: const OutlineInputBorder(),
+                            helperText: l.csvHelperText,
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                      ],
+                      if (_selectedFilePath != null)
+                        SizedBox(
+                          width: double.infinity,
+                          child: FilledButton.icon(
+                            onPressed: _import,
+                            icon: const Icon(Icons.download),
+                            label: Text(l.importButton),
+                            style: FilledButton.styleFrom(
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 16)),
+                          ),
+                        ),
+                      const SizedBox(height: 32),
+                      Card(
+                        color: Colors.blue[50],
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(children: [
+                                  const Icon(Icons.help_outline,
+                                      color: Colors.blue),
+                                  const SizedBox(width: 8),
+                                  Text(l.howToImport,
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.bold)),
+                                ]),
+                                const SizedBox(height: 12),
+                                Text(l.importInstructions,
+                                    style: const TextStyle(fontSize: 14)),
+                                const SizedBox(height: 12),
+                                Text(l.importTip,
                                     style: const TextStyle(
-                                        fontWeight: FontWeight.bold)),
+                                        fontSize: 12,
+                                        fontStyle: FontStyle.italic)),
                               ]),
-                              const SizedBox(height: 12),
-                              Text(l.importInstructions,
-                                  style: const TextStyle(fontSize: 14)),
-                              const SizedBox(height: 12),
-                              Text(l.importTip,
-                                  style: const TextStyle(
-                                      fontSize: 12,
-                                      fontStyle: FontStyle.italic)),
-                            ]),
+                        ),
                       ),
-                    ),
-                  ]),
-            ),
+                    ]),
+              ),
+      ),
     );
   }
 

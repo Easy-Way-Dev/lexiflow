@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:lexiflow/core/database/app_database.dart';
 import 'package:drift/drift.dart' as drift;
+import 'package:lexiflow/shared/widgets/adaptive_layout.dart';
 
 class OnboardingScreen extends StatefulWidget {
   final AppDatabase db;
@@ -157,58 +158,62 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       child: Scaffold(
         backgroundColor: Theme.of(context).colorScheme.surface,
         body: SafeArea(
-          child: Stack(
-            children: [
-              Column(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 48, vertical: 16),
-                    child: Row(
-                      children: List.generate(
-                        3,
-                        (index) => Expanded(
-                          child: Container(
-                            margin: const EdgeInsets.symmetric(horizontal: 4),
-                            height: 8,
-                            decoration: BoxDecoration(
-                              color: index <= _currentPage
-                                  ? Theme.of(context).colorScheme.primary
-                                  : Theme.of(context)
-                                      .colorScheme
-                                      .surfaceContainerHighest,
-                              borderRadius: BorderRadius.circular(4),
+          child: AdaptiveLayout(
+            maxWidth:
+                AppLayout.contentMaxWidth, // FIX: совпадает с главным экраном
+            child: Stack(
+              children: [
+                Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 48, vertical: 16),
+                      child: Row(
+                        children: List.generate(
+                          3,
+                          (index) => Expanded(
+                            child: Container(
+                              margin: const EdgeInsets.symmetric(horizontal: 4),
+                              height: 8,
+                              decoration: BoxDecoration(
+                                color: index <= _currentPage
+                                    ? Theme.of(context).colorScheme.primary
+                                    : Theme.of(context)
+                                        .colorScheme
+                                        .surfaceContainerHighest,
+                                borderRadius: BorderRadius.circular(4),
+                              ),
                             ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                  Expanded(
-                    child: PageView(
-                      controller: _pageController,
-                      physics: const NeverScrollableScrollPhysics(),
-                      children: [
-                        _buildGoalSelection(l),
-                        _buildSwipeTest(l),
-                        _buildFinishScreen(l),
-                      ],
+                    Expanded(
+                      child: PageView(
+                        controller: _pageController,
+                        physics: const NeverScrollableScrollPhysics(),
+                        children: [
+                          _buildGoalSelection(l),
+                          _buildSwipeTest(l),
+                          _buildFinishScreen(l),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
-              ),
-              Positioned(
-                top: 8,
-                right: 8,
-                child: IconButton(
-                  icon: const Icon(Icons.close, color: Colors.grey, size: 28),
-                  onPressed: () {
-                    HapticFeedback.lightImpact();
-                    Navigator.pushReplacementNamed(context, '/home');
-                  },
+                  ],
                 ),
-              ),
-            ],
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: IconButton(
+                    icon: const Icon(Icons.close, color: Colors.grey, size: 28),
+                    onPressed: () {
+                      HapticFeedback.lightImpact();
+                      Navigator.pushReplacementNamed(context, '/home');
+                    },
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -662,12 +667,14 @@ class _SwipeableCardState extends State<_SwipeableCard>
 
   void triggerSwipeRight() {
     if (!widget.isTopCard) return;
-    _animateSwipe(const Offset(500, 0), true);
+    final targetX = _screenSize.width > 0 ? _screenSize.width + 200 : 800.0;
+    _animateSwipe(Offset(targetX, 0), true);
   }
 
   void triggerSwipeLeft() {
     if (!widget.isTopCard) return;
-    _animateSwipe(const Offset(-500, 0), false);
+    final targetX = _screenSize.width > 0 ? -(_screenSize.width + 200) : -800.0;
+    _animateSwipe(Offset(targetX, 0), false);
   }
 
   void _onPanStart(DragStartDetails details) {
@@ -716,123 +723,130 @@ class _SwipeableCardState extends State<_SwipeableCard>
 
   @override
   Widget build(BuildContext context) {
-    _screenSize = MediaQuery.of(context).size;
-
+    // FIX: используем LayoutBuilder чтобы знать РЕАЛЬНУЮ ширину контейнера
+    // (а не весь экран), иначе свайп-анимация не вылетает за границы карточки
     final isSwipingRight = _position.dx > 0;
     final opacity = min((_position.dx.abs() / 100), 1.0);
 
     // FIX: фоновые карточки сдвинуты вниз для эффекта стопки
-    return Transform.translate(
-      offset: Offset(0, widget.stackOffset),
-      child: GestureDetector(
-        behavior: widget.isTopCard
-            ? HitTestBehavior.opaque
-            : HitTestBehavior.deferToChild,
-        onPanStart: widget.isTopCard ? _onPanStart : null,
-        onPanUpdate: widget.isTopCard ? _onPanUpdate : null,
-        onPanEnd: widget.isTopCard ? _onPanEnd : null,
-        child: Transform.translate(
-          offset: _position,
-          child: Transform.rotate(
-            angle: _angle,
-            child: Stack(
-              children: [
-                Container(
-                  width: double.infinity,
-                  height: MediaQuery.of(context).size.height * 0.45,
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).cardColor,
-                    borderRadius: BorderRadius.circular(24),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.1),
-                        blurRadius: 10,
-                        spreadRadius: 2,
-                        offset: const Offset(0, 4),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Обновляем _screenSize реальной шириной контейнера
+        _screenSize = Size(constraints.maxWidth, constraints.maxHeight);
+        return Transform.translate(
+          offset: Offset(0, widget.stackOffset),
+          child: GestureDetector(
+            behavior: widget.isTopCard
+                ? HitTestBehavior.opaque
+                : HitTestBehavior.deferToChild,
+            onPanStart: widget.isTopCard ? _onPanStart : null,
+            onPanUpdate: widget.isTopCard ? _onPanUpdate : null,
+            onPanEnd: widget.isTopCard ? _onPanEnd : null,
+            child: Transform.translate(
+              offset: _position,
+              child: Transform.rotate(
+                angle: _angle,
+                child: Stack(
+                  children: [
+                    Container(
+                      width: double.infinity,
+                      height: MediaQuery.of(context).size.height * 0.45,
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).cardColor,
+                        borderRadius: BorderRadius.circular(24),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.1),
+                            blurRadius: 10,
+                            spreadRadius: 2,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                  child: widget.isTopCard
-                      ? Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              widget.word,
-                              textAlign: TextAlign.center,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .displaySmall
-                                  ?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    color:
-                                        Theme.of(context).colorScheme.primary,
+                      child: widget.isTopCard
+                          ? Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  widget.word,
+                                  textAlign: TextAlign.center,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .displaySmall
+                                      ?.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .primary,
+                                      ),
+                                ),
+                                const SizedBox(height: 16),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 24),
+                                  child: Text(
+                                    widget.translation,
+                                    textAlign: TextAlign.center,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .titleLarge
+                                        ?.copyWith(
+                                          color: Colors.grey[600],
+                                        ),
                                   ),
+                                ),
+                              ],
+                            )
+                          : null, // Фоновые карточки пустые (только тень и форма)
+                    ),
+                    if (widget.isTopCard && _position.dx.abs() > 20)
+                      Positioned(
+                        top: 40,
+                        left: isSwipingRight ? 40 : null,
+                        right: isSwipingRight ? null : 40,
+                        child: Transform.rotate(
+                          angle: isSwipingRight ? -0.2 : 0.2,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 8),
+                            decoration: BoxDecoration(
+                              border: Border.all(
+                                color: (isSwipingRight
+                                        ? Colors.green
+                                        : Colors.redAccent)
+                                    .withValues(alpha: opacity),
+                                width: 4,
+                              ),
+                              borderRadius: BorderRadius.circular(8),
                             ),
-                            const SizedBox(height: 16),
-                            Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 24),
-                              child: Text(
-                                widget.translation,
-                                textAlign: TextAlign.center,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .titleLarge
-                                    ?.copyWith(
-                                      color: Colors.grey[600],
-                                    ),
+                            child: Text(
+                              isSwipingRight
+                                  ? AppLocalizations.of(context)
+                                      .swipeIKnow
+                                      .toUpperCase()
+                                  : AppLocalizations.of(context)
+                                      .swipeIDontKnow
+                                      .toUpperCase(),
+                              style: TextStyle(
+                                color: (isSwipingRight
+                                        ? Colors.green
+                                        : Colors.redAccent)
+                                    .withValues(alpha: opacity),
+                                fontSize: 32,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 2,
                               ),
                             ),
-                          ],
-                        )
-                      : null, // Фоновые карточки пустые (только тень и форма)
-                ),
-                if (widget.isTopCard && _position.dx.abs() > 20)
-                  Positioned(
-                    top: 40,
-                    left: isSwipingRight ? 40 : null,
-                    right: isSwipingRight ? null : 40,
-                    child: Transform.rotate(
-                      angle: isSwipingRight ? -0.2 : 0.2,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 8),
-                        decoration: BoxDecoration(
-                          border: Border.all(
-                            color: (isSwipingRight
-                                    ? Colors.green
-                                    : Colors.redAccent)
-                                .withValues(alpha: opacity),
-                            width: 4,
-                          ),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          isSwipingRight
-                              ? AppLocalizations.of(context)
-                                  .swipeIKnow
-                                  .toUpperCase()
-                              : AppLocalizations.of(context)
-                                  .swipeIDontKnow
-                                  .toUpperCase(),
-                          style: TextStyle(
-                            color: (isSwipingRight
-                                    ? Colors.green
-                                    : Colors.redAccent)
-                                .withValues(alpha: opacity),
-                            fontSize: 32,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 2,
                           ),
                         ),
                       ),
-                    ),
-                  ),
-              ],
+                  ],
+                ),
+              ),
             ),
           ),
-        ),
-      ),
-    );
+        );
+      }, // builder
+    ); // LayoutBuilder
   }
 }

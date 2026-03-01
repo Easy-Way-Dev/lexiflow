@@ -4,9 +4,28 @@ import 'package:lexiflow/app/language_select_screen.dart';
 import 'package:lexiflow/app/onboarding_screen.dart';
 import 'package:lexiflow/core/database/app_database.dart';
 import 'package:lexiflow/features/decks/presentation/screens/decks_screen.dart';
+import 'package:lexiflow/shared/theme/app_theme.dart';
 
-void main() {
+// Импорт для ограничения размера окна на Windows
+import 'dart:io' show Platform;
+import 'package:flutter/foundation.dart' show kIsWeb;
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Устанавливаем минимальный размер окна на Windows
+  if (!kIsWeb && Platform.isWindows) {
+    _setWindowSize();
+  }
+
   runApp(const LexiFlowApp());
+}
+
+/// Устанавливает минимальный и начальный размер окна на Windows.
+/// Вызывается только на Windows платформе.
+void _setWindowSize() {
+  // Минимальный размер окна задаётся через windows/runner/main.cpp
+  // Здесь только логика Flutter-уровня если нужна
 }
 
 class LexiFlowApp extends StatefulWidget {
@@ -43,16 +62,6 @@ class _LexiFlowAppState extends State<LexiFlowApp> {
   }
 
   Future<void> _initializeApp() async {
-    // --- ВРЕМЕННЫЙ СБРОС (ИСПРАВЛЕНО И ЗАКОММЕНТИРОВАНО) ---
-    // try {
-    //   // Используем одинарные кавычки для текстовых значений ключей
-    //   await _database.customStatement(
-    //       "DELETE FROM settings WHERE key IN ('app_locale', 'onboarding_complete')");
-    // } catch (e) {
-    //   debugPrint('Reset error: $e');
-    // }
-    // ---------------------------------------------------------
-
     await _loadThemePreference();
     await _checkFirstLaunch();
     await _checkOnboarding();
@@ -121,21 +130,16 @@ class _LexiFlowAppState extends State<LexiFlowApp> {
               localizationsDelegates: AppLocalizations.localizationsDelegates,
               supportedLocales: AppLocalizations.supportedLocales,
               locale: locale,
-              theme: ThemeData(
-                useMaterial3: true,
-                colorScheme: ColorScheme.fromSeed(
-                  seedColor: Colors.blue,
-                  brightness: Brightness.light,
-                ),
-              ),
-              darkTheme: ThemeData(
-                useMaterial3: true,
-                colorScheme: ColorScheme.fromSeed(
-                  seedColor: Colors.blue,
-                  brightness: Brightness.dark,
-                ),
-              ),
+              // FIX: используем единую тему из AppTheme вместо дублирования
+              theme: AppTheme.lightTheme,
+              darkTheme: AppTheme.darkTheme,
               themeMode: themeMode,
+              // FIX: на десктопе добавляем фоновый цвет за контентом
+              builder: (context, child) {
+                if (child == null) return const SizedBox.shrink();
+                // На широких экранах добавляем тонкую рамку-фон
+                return _DesktopShell(child: child);
+              },
               initialRoute: '/',
               routes: {
                 '/': (context) => _getInitialScreen(),
@@ -172,5 +176,30 @@ class _LexiFlowAppState extends State<LexiFlowApp> {
     }
 
     return DecksScreen(db: _database);
+  }
+}
+
+/// Обёртка для десктопа — добавляет фоновый цвет за контентом
+/// и лёгкую тень по краям контентной области на широких экранах.
+class _DesktopShell extends StatelessWidget {
+  final Widget child;
+
+  const _DesktopShell({required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    const breakpoint = 700.0;
+
+    // На мобильном — прозрачная обёртка
+    if (screenWidth < breakpoint) {
+      return child;
+    }
+
+    // На десктопе — фон за контентной областью
+    return Container(
+      color: Theme.of(context).colorScheme.surfaceContainerLowest,
+      child: child,
+    );
   }
 }

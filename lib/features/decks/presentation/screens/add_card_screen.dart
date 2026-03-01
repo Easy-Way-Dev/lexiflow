@@ -5,6 +5,7 @@ import 'package:lexiflow/core/database/app_database.dart';
 import 'package:lexiflow/core/services/image_service.dart';
 import 'package:lexiflow/core/utils/video_helper.dart';
 import 'package:lexiflow/shared/widgets/audio_recorder_widget.dart';
+import 'package:lexiflow/shared/widgets/adaptive_layout.dart';
 import 'package:drift/drift.dart' as drift;
 
 class AddCardScreen extends StatefulWidget {
@@ -105,9 +106,7 @@ class _AddCardScreenState extends State<AddCardScreen> {
       ),
     );
 
-    if (choice == null) {
-      return;
-    }
+    if (choice == null) return;
 
     if (choice == 'gallery') {
       final imagePath = await ImageService.pickImageFromGallery();
@@ -235,9 +234,7 @@ class _AddCardScreenState extends State<AddCardScreen> {
   }
 
   Future<void> _saveCard() async {
-    if (!_formKey.currentState!.validate()) {
-      return;
-    }
+    if (!_formKey.currentState!.validate()) return;
     setState(() => _isLoading = true);
 
     try {
@@ -387,320 +384,327 @@ class _AddCardScreenState extends State<AddCardScreen> {
             ),
         ],
       ),
-      body: Form(
-        key: _formKey,
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            Text(
-              l.frontSide,
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _frontTextController,
-              decoration: InputDecoration(
-                labelText: l.frontTextLabel,
-                hintText: l.frontTextHint,
-                border: const OutlineInputBorder(),
-                prefixIcon: const Icon(Icons.text_fields),
-              ),
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return l.fieldRequired;
-                }
-                return null;
-              },
-              maxLines: 2,
-              textInputAction: TextInputAction.next,
-            ),
-            const SizedBox(height: 12),
-            if (_frontImagePath != null) ...[
-              Stack(
-                children: [
-                  Container(
-                    height: 200,
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      color: Colors.grey[200],
-                      borderRadius: BorderRadius.circular(12),
+      // FIX: ограничение ширины — редактор карточки по центру на Windows
+      body: AdaptiveLayout(
+        maxWidth: AppLayout.contentMaxWidth,
+        child: Form(
+          key: _formKey,
+          child: ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
+              Text(
+                l.frontSide,
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).colorScheme.primary,
                     ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: Image.file(
-                        File(_frontImagePath!),
-                        fit: BoxFit.contain,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _frontTextController,
+                decoration: InputDecoration(
+                  labelText: l.frontTextLabel,
+                  hintText: l.frontTextHint,
+                  border: const OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.text_fields),
+                ),
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return l.fieldRequired;
+                  }
+                  return null;
+                },
+                maxLines: 2,
+                textInputAction: TextInputAction.next,
+              ),
+              const SizedBox(height: 12),
+              if (_frontImagePath != null) ...[
+                Stack(
+                  children: [
+                    Container(
+                      height: 200,
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[200],
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: Image.file(
+                          File(_frontImagePath!),
+                          fit: BoxFit.contain,
+                        ),
                       ),
                     ),
+                    Positioned(
+                      top: 8,
+                      right: 8,
+                      child: IconButton(
+                        onPressed: () => _removeImage(true),
+                        icon: const Icon(Icons.close, color: Colors.white),
+                        style: IconButton.styleFrom(
+                            backgroundColor: Colors.black54),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+              ] else
+                OutlinedButton.icon(
+                  onPressed: () => _pickImage(true),
+                  icon: const Icon(Icons.image),
+                  label: Text(l.addImage),
+                ),
+              const SizedBox(height: 12),
+              AudioRecorderWidget(
+                audioPath: _frontAudioPath,
+                onAudioChanged: (path) => _onAudioChanged(path, true),
+                label: l.audioFront,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _frontVideoController,
+                decoration: InputDecoration(
+                  labelText: l.videoUrlLabel,
+                  hintText: l.videoUrlHint,
+                  border: const OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.video_library),
+                  suffixIcon: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (_frontVideoController.text.isNotEmpty)
+                        IconButton(
+                          icon:
+                              const Icon(Icons.play_circle, color: Colors.blue),
+                          onPressed: () {
+                            if (_frontVideoController.text.isNotEmpty) {
+                              VideoHelper.openVideo(
+                                  context, _frontVideoController.text);
+                            }
+                          },
+                        ),
+                      IconButton(
+                        icon: const Icon(Icons.attach_file),
+                        onPressed: () => _pickVideo(true),
+                      ),
+                    ],
                   ),
-                  Positioned(
-                    top: 8,
-                    right: 8,
-                    child: IconButton(
-                      onPressed: () => _removeImage(true),
-                      icon: const Icon(Icons.close, color: Colors.white),
-                      style:
-                          IconButton.styleFrom(backgroundColor: Colors.black54),
+                ),
+                maxLines: 1,
+              ),
+              const SizedBox(height: 8),
+              OutlinedButton.icon(
+                onPressed: () =>
+                    _searchYouGlish(_frontTextController.text, 'us', true),
+                icon: const Text('🇺🇸', style: TextStyle(fontSize: 18)),
+                label: Text(l.youglishUs),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.blue,
+                  minimumSize: const Size(double.infinity, 44),
+                ),
+              ),
+              const SizedBox(height: 24),
+              Text(
+                l.backSide,
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).colorScheme.secondary,
+                    ),
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _backTextController,
+                decoration: InputDecoration(
+                  labelText: l.backTextLabel,
+                  hintText: l.backTextHint,
+                  border: const OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.text_fields),
+                ),
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return l.translationRequired;
+                  }
+                  return null;
+                },
+                maxLines: 2,
+                textInputAction: TextInputAction.next,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _pronunciationController,
+                decoration: InputDecoration(
+                  labelText: l.pronunciationLabel,
+                  hintText: l.pronunciationHint,
+                  border: const OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.record_voice_over),
+                  helperText: l.pronunciationHelper,
+                ),
+                maxLines: 1,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _transcriptionController,
+                decoration: InputDecoration(
+                  labelText: l.transcriptionLabel,
+                  hintText: l.transcriptionHint,
+                  border: const OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.translate),
+                  helperText: l.transcriptionHelper,
+                  suffixIcon: IconButton(
+                    icon: const Icon(Icons.search, color: Colors.purple),
+                    onPressed: _searchTranscription,
+                  ),
+                ),
+                style: const TextStyle(fontFamily: 'monospace'),
+                maxLines: 1,
+              ),
+              const SizedBox(height: 12),
+              if (_backImagePath != null) ...[
+                Stack(
+                  children: [
+                    Container(
+                      height: 200,
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[200],
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: Image.file(
+                          File(_backImagePath!),
+                          fit: BoxFit.contain,
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      top: 8,
+                      right: 8,
+                      child: IconButton(
+                        onPressed: () => _removeImage(false),
+                        icon: const Icon(Icons.close, color: Colors.white),
+                        style: IconButton.styleFrom(
+                            backgroundColor: Colors.black54),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+              ] else
+                OutlinedButton.icon(
+                  onPressed: () => _pickImage(false),
+                  icon: const Icon(Icons.image),
+                  label: Text(l.addImage),
+                ),
+              const SizedBox(height: 12),
+              AudioRecorderWidget(
+                audioPath: _backAudioPath,
+                onAudioChanged: (path) => _onAudioChanged(path, false),
+                label: l.audioBack,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _backVideoController,
+                decoration: InputDecoration(
+                  labelText: l.videoUrlLabel,
+                  hintText: l.videoUrlHint,
+                  border: const OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.video_library),
+                  suffixIcon: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (_backVideoController.text.isNotEmpty)
+                        IconButton(
+                          icon:
+                              const Icon(Icons.play_circle, color: Colors.blue),
+                          onPressed: () {
+                            if (_backVideoController.text.isNotEmpty) {
+                              VideoHelper.openVideo(
+                                  context, _backVideoController.text);
+                            }
+                          },
+                        ),
+                      IconButton(
+                        icon: const Icon(Icons.attach_file),
+                        onPressed: () => _pickVideo(false),
+                      ),
+                    ],
+                  ),
+                ),
+                maxLines: 1,
+              ),
+              const SizedBox(height: 8),
+              OutlinedButton.icon(
+                onPressed: () =>
+                    _searchYouGlish(_backTextController.text, 'us', false),
+                icon: const Text('🇺🇸', style: TextStyle(fontSize: 18)),
+                label: Text(l.youglishUs),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.blue,
+                  minimumSize: const Size(double.infinity, 44),
+                ),
+              ),
+              const SizedBox(height: 24),
+              Text(
+                l.additional,
+                style: Theme.of(context)
+                    .textTheme
+                    .titleLarge
+                    ?.copyWith(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _exampleController,
+                decoration: InputDecoration(
+                  labelText: l.exampleLabel,
+                  hintText: l.exampleHint,
+                  border: const OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.lightbulb_outline),
+                ),
+                maxLines: 3,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _notesController,
+                decoration: InputDecoration(
+                  labelText: l.notesLabel,
+                  hintText: l.notesHint,
+                  border: const OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.note),
+                ),
+                maxLines: 3,
+              ),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed:
+                          _isLoading ? null : () => Navigator.pop(context),
+                      child: Text(l.cancel),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    flex: 2,
+                    child: FilledButton.icon(
+                      onPressed: _isLoading ? null : _saveCard,
+                      icon: _isLoading
+                          ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(
+                                  strokeWidth: 2, color: Colors.white),
+                            )
+                          : const Icon(Icons.save),
+                      label: Text(isEditing ? l.save : l.create),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
-            ] else
-              OutlinedButton.icon(
-                onPressed: () => _pickImage(true),
-                icon: const Icon(Icons.image),
-                label: Text(l.addImage),
-              ),
-            const SizedBox(height: 12),
-            AudioRecorderWidget(
-              audioPath: _frontAudioPath,
-              onAudioChanged: (path) => _onAudioChanged(path, true),
-              label: l.audioFront,
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _frontVideoController,
-              decoration: InputDecoration(
-                labelText: l.videoUrlLabel,
-                hintText: l.videoUrlHint,
-                border: const OutlineInputBorder(),
-                prefixIcon: const Icon(Icons.video_library),
-                suffixIcon: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (_frontVideoController.text.isNotEmpty)
-                      IconButton(
-                        icon: const Icon(Icons.play_circle, color: Colors.blue),
-                        onPressed: () {
-                          if (_frontVideoController.text.isNotEmpty) {
-                            VideoHelper.openVideo(
-                                context, _frontVideoController.text);
-                          }
-                        },
-                      ),
-                    IconButton(
-                      icon: const Icon(Icons.attach_file),
-                      onPressed: () => _pickVideo(true),
-                    ),
-                  ],
-                ),
-              ),
-              maxLines: 1,
-            ),
-            const SizedBox(height: 8),
-            OutlinedButton.icon(
-              onPressed: () =>
-                  _searchYouGlish(_frontTextController.text, 'us', true),
-              icon: const Text('🇺🇸', style: TextStyle(fontSize: 18)),
-              label: Text(l.youglishUs),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: Colors.blue,
-                minimumSize: const Size(double.infinity, 44),
-              ),
-            ),
-            const SizedBox(height: 24),
-            Text(
-              l.backSide,
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.secondary,
-                  ),
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _backTextController,
-              decoration: InputDecoration(
-                labelText: l.backTextLabel,
-                hintText: l.backTextHint,
-                border: const OutlineInputBorder(),
-                prefixIcon: const Icon(Icons.text_fields),
-              ),
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return l.translationRequired;
-                }
-                return null;
-              },
-              maxLines: 2,
-              textInputAction: TextInputAction.next,
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _pronunciationController,
-              decoration: InputDecoration(
-                labelText: l.pronunciationLabel,
-                hintText: l.pronunciationHint,
-                border: const OutlineInputBorder(),
-                prefixIcon: const Icon(Icons.record_voice_over),
-                helperText: l.pronunciationHelper,
-              ),
-              maxLines: 1,
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _transcriptionController,
-              decoration: InputDecoration(
-                labelText: l.transcriptionLabel,
-                hintText: l.transcriptionHint,
-                border: const OutlineInputBorder(),
-                prefixIcon: const Icon(Icons.translate),
-                helperText: l.transcriptionHelper,
-                suffixIcon: IconButton(
-                  icon: const Icon(Icons.search, color: Colors.purple),
-                  onPressed: _searchTranscription,
-                ),
-              ),
-              style: const TextStyle(fontFamily: 'monospace'),
-              maxLines: 1,
-            ),
-            const SizedBox(height: 12),
-            if (_backImagePath != null) ...[
-              Stack(
-                children: [
-                  Container(
-                    height: 200,
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      color: Colors.grey[200],
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: Image.file(
-                        File(_backImagePath!),
-                        fit: BoxFit.contain,
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    top: 8,
-                    right: 8,
-                    child: IconButton(
-                      onPressed: () => _removeImage(false),
-                      icon: const Icon(Icons.close, color: Colors.white),
-                      style:
-                          IconButton.styleFrom(backgroundColor: Colors.black54),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-            ] else
-              OutlinedButton.icon(
-                onPressed: () => _pickImage(false),
-                icon: const Icon(Icons.image),
-                label: Text(l.addImage),
-              ),
-            const SizedBox(height: 12),
-            AudioRecorderWidget(
-              audioPath: _backAudioPath,
-              onAudioChanged: (path) => _onAudioChanged(path, false),
-              label: l.audioBack,
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _backVideoController,
-              decoration: InputDecoration(
-                labelText: l.videoUrlLabel,
-                hintText: l.videoUrlHint,
-                border: const OutlineInputBorder(),
-                prefixIcon: const Icon(Icons.video_library),
-                suffixIcon: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (_backVideoController.text.isNotEmpty)
-                      IconButton(
-                        icon: const Icon(Icons.play_circle, color: Colors.blue),
-                        onPressed: () {
-                          if (_backVideoController.text.isNotEmpty) {
-                            VideoHelper.openVideo(
-                                context, _backVideoController.text);
-                          }
-                        },
-                      ),
-                    IconButton(
-                      icon: const Icon(Icons.attach_file),
-                      onPressed: () => _pickVideo(false),
-                    ),
-                  ],
-                ),
-              ),
-              maxLines: 1,
-            ),
-            const SizedBox(height: 8),
-            OutlinedButton.icon(
-              onPressed: () =>
-                  _searchYouGlish(_backTextController.text, 'us', false),
-              icon: const Text('🇺🇸', style: TextStyle(fontSize: 18)),
-              label: Text(l.youglishUs),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: Colors.blue,
-                minimumSize: const Size(double.infinity, 44),
-              ),
-            ),
-            const SizedBox(height: 24),
-            Text(
-              l.additional,
-              style: Theme.of(context)
-                  .textTheme
-                  .titleLarge
-                  ?.copyWith(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _exampleController,
-              decoration: InputDecoration(
-                labelText: l.exampleLabel,
-                hintText: l.exampleHint,
-                border: const OutlineInputBorder(),
-                prefixIcon: const Icon(Icons.lightbulb_outline),
-              ),
-              maxLines: 3,
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _notesController,
-              decoration: InputDecoration(
-                labelText: l.notesLabel,
-                hintText: l.notesHint,
-                border: const OutlineInputBorder(),
-                prefixIcon: const Icon(Icons.note),
-              ),
-              maxLines: 3,
-            ),
-            const SizedBox(height: 24),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: _isLoading ? null : () => Navigator.pop(context),
-                    child: Text(l.cancel),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  flex: 2,
-                  child: FilledButton.icon(
-                    onPressed: _isLoading ? null : _saveCard,
-                    icon: _isLoading
-                        ? const SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(
-                                strokeWidth: 2, color: Colors.white),
-                          )
-                        : const Icon(Icons.save),
-                    label: Text(isEditing ? l.save : l.create),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 40),
-          ],
+              const SizedBox(height: 40),
+            ],
+          ),
         ),
       ),
     );
