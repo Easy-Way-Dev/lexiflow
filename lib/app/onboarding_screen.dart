@@ -20,197 +20,192 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   int _currentPage = 0;
   String? _selectedGoal;
 
-  // Уникальные ключи для каждой карточки, чтобы управлять их анимацией снаружи
-  final Map<String, GlobalKey<_SwipeableCardState>> _cardKeys = {};
+  // FIX: Используем один GlobalKey только для ТЕКУЩЕЙ верхней карточки
+  final GlobalKey<_SwipeableCardState> _topCardKey =
+      GlobalKey<_SwipeableCardState>();
 
-  // Временная тестовая база из 10 слов для отладки логики
-  final List<Map<String, String>> _swipeWords = [
-    {'word': 'Resilient', 'translation': 'Устойчивый, жизнерадостный'},
-    {'word': 'Pragmatic', 'translation': 'Прагматичный, практичный'},
-    {'word': 'Ubiquitous', 'translation': 'Вездесущий, повсеместный'},
-    {'word': 'Eloquent', 'translation': 'Красноречивый'},
-    {'word': 'Paradigm', 'translation': 'Парадигма, система взглядов'},
-    {'word': 'Tenacious', 'translation': 'Цепкий, упорный'},
-    {'word': 'Serendipity', 'translation': 'Счастливая случайность'},
-    {'word': 'Inevitable', 'translation': 'Неизбежный'},
-    {'word': 'Catalyst', 'translation': 'Катализатор, стимул'},
-    {'word': 'Ephemeral', 'translation': 'Эфемерный, недолговечный'},
-  ];
+  List<Map<String, String>> _swipeWords = [];
 
-  final List<Map<String, dynamic>> _swipeResults = [];
+  int _swipedCardsCount = 0;
+  bool _isCreatingDeck = false;
 
   @override
   void initState() {
     super.initState();
-    for (var word in _swipeWords) {
-      _cardKeys[word['word']!] = GlobalKey<_SwipeableCardState>();
-    }
     _focusNode.requestFocus();
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_swipeWords.isEmpty) {
+      final l = AppLocalizations.of(context);
+      _swipeWords = _getSwipeWords(l);
+    }
+  }
+
+  List<Map<String, String>> _getSwipeWords(AppLocalizations l) {
+    return [
+      {'word': l.swipeWord1, 'translation': l.swipeTrans1},
+      {'word': l.swipeWord2, 'translation': l.swipeTrans2},
+      {'word': l.swipeWord3, 'translation': l.swipeTrans3},
+      {'word': l.swipeWord4, 'translation': l.swipeTrans4},
+      {'word': l.swipeWord5, 'translation': l.swipeTrans5},
+      {'word': l.swipeWord6, 'translation': l.swipeTrans6},
+      {'word': l.swipeWord7, 'translation': l.swipeTrans7},
+      {'word': l.swipeWord8, 'translation': l.swipeTrans8},
+      {'word': l.swipeWord9, 'translation': l.swipeTrans9},
+      {'word': l.swipeWord10, 'translation': l.swipeTrans10},
+    ];
+  }
+
+  @override
   void dispose() {
-    _focusNode.dispose();
     _pageController.dispose();
+    _focusNode.dispose();
     super.dispose();
   }
 
-  Future<void> _completeOnboardingAndCreateDeck() async {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => const Center(child: CircularProgressIndicator()),
-    );
-
-    try {
-      final goalName = _selectedGoal ?? 'Общая лексика';
-      final deckId = await widget.db.createDeck(
-        DecksCompanion.insert(
-          name: 'Мой старт: $goalName',
-          description: drift.Value(
-              'Персональная колода, созданная AI на основе вашего теста.'),
-          sourceLanguage: 'en-US',
-          targetLanguage: 'ru',
-        ),
-      );
-
-      for (final result in _swipeResults) {
-        final isKnown = result['known'] as bool;
-
-        await widget.db.createCard(
-          CardsCompanion.insert(
-            deckId: deckId,
-            frontText: result['word'] as String,
-            backText: result['translation'] as String,
-            isMastered: drift.Value(isKnown),
-            repetitions: drift.Value(isKnown ? 1 : 0),
-            easinessFactor: const drift.Value(250),
-            interval: drift.Value(isKnown ? 30 : 0),
-            nextReviewDate: drift.Value(
-              isKnown
-                  ? DateTime.now().add(const Duration(days: 30))
-                  : DateTime.now(),
-            ),
-          ),
-        );
-      }
-
-      await widget.db.setSetting('onboarding_complete', 'true');
-
-      if (mounted) {
-        Navigator.of(context).pop();
-        Navigator.of(context).pushReplacementNamed('/home');
-      }
-    } catch (e) {
-      if (mounted) {
-        Navigator.of(context).pop();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Ошибка создания колоды: $e')),
-        );
-      }
-    }
-  }
-
   void _nextPage() {
-    HapticFeedback.lightImpact();
     if (_currentPage < 2) {
       _pageController.nextPage(
-        duration: const Duration(milliseconds: 400),
-        curve: Curves.easeInOutCubic,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
       );
-    } else {
-      _completeOnboardingAndCreateDeck();
+      setState(() {
+        _currentPage++;
+      });
+      if (_currentPage == 1) {
+        _focusNode.requestFocus();
+      }
     }
   }
 
-  void _onSwipeComplete(bool known, Map<String, String> wordData) {
+  Future<void> _finishOnboarding(AppLocalizations l) async {
     setState(() {
-      _swipeResults.add({
-        'word': wordData['word'],
-        'translation': wordData['translation'],
-        'known': known,
-      });
+      _isCreatingDeck = true;
     });
 
-    if (_swipeResults.length == _swipeWords.length) {
-      _nextPage();
-    }
-  }
+    try {
+      final currentAppLocale = Localizations.localeOf(context).languageCode;
+      String defaultTarget = ['ru', 'uk', 'en'].contains(currentAppLocale)
+          ? currentAppLocale
+          : 'ru';
 
-  void _triggerSwipe(bool isKnown) {
-    if (_currentPage != 1) return;
-    final currentIndex = _swipeResults.length;
-    if (currentIndex < _swipeWords.length) {
-      final wordData = _swipeWords[currentIndex];
-      final key = _cardKeys[wordData['word']];
-      key?.currentState?.animateOut(isRight: isKnown);
+      final String deckGoal = _selectedGoal ?? "Basic";
+      final deckId = await widget.db.into(widget.db.decks).insert(
+            DecksCompanion.insert(
+              name: l.finishDeckName(deckGoal),
+              description: drift.Value(l.finishDeckDesc),
+              sourceLanguage: 'en',
+              targetLanguage: defaultTarget,
+            ),
+          );
+
+      for (int i = 0; i < _swipeWords.length; i++) {
+        await widget.db.into(widget.db.cards).insert(
+              CardsCompanion.insert(
+                deckId: deckId,
+                frontText: _swipeWords[i]['word']!,
+                backText: _swipeWords[i]['translation']!,
+                nextReviewDate: drift.Value(DateTime.now()),
+                createdAt: drift.Value(DateTime.now()),
+              ),
+            );
+      }
+
+      await widget.db.setSetting('onboarding_completed', 'true');
+
+      if (mounted) {
+        Navigator.pushReplacementNamed(context, '/home');
+      }
+    } catch (e) {
+      debugPrint('Error creating initial set: $e');
+      if (mounted) {
+        Navigator.pushReplacementNamed(context, '/home');
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return KeyboardListener(
+    final l = AppLocalizations.of(context);
+
+    return Focus(
       focusNode: _focusNode,
-      onKeyEvent: (KeyEvent event) {
+      autofocus: true,
+      onKeyEvent: (node, event) {
+        if (_currentPage != 1) return KeyEventResult.ignored;
         if (event is KeyDownEvent) {
-          if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
-            _triggerSwipe(false);
-          } else if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
-            _triggerSwipe(true);
+          if (_swipedCardsCount >= _swipeWords.length) {
+            return KeyEventResult.ignored;
+          }
+
+          // FIX: используем единый _topCardKey
+          if (_topCardKey.currentState != null) {
+            if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
+              _topCardKey.currentState!.triggerSwipeLeft();
+              return KeyEventResult.handled;
+            } else if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
+              _topCardKey.currentState!.triggerSwipeRight();
+              return KeyEventResult.handled;
+            }
           }
         }
+        return KeyEventResult.ignored;
       },
       child: Scaffold(
         backgroundColor: Theme.of(context).colorScheme.surface,
         body: SafeArea(
-          child: Column(
+          child: Stack(
             children: [
-              Padding(
-                padding: const EdgeInsets.only(right: 8.0),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 300),
-                        height: 4,
-                        alignment: Alignment.centerLeft,
-                        child: FractionallySizedBox(
-                          widthFactor: (_currentPage + 1) / 3,
+              Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 48, vertical: 16),
+                    child: Row(
+                      children: List.generate(
+                        3,
+                        (index) => Expanded(
                           child: Container(
+                            margin: const EdgeInsets.symmetric(horizontal: 4),
+                            height: 8,
                             decoration: BoxDecoration(
-                              color: Theme.of(context).colorScheme.primary,
-                              borderRadius: const BorderRadius.only(
-                                topRight: Radius.circular(4),
-                                bottomRight: Radius.circular(4),
-                              ),
+                              color: index <= _currentPage
+                                  ? Theme.of(context).colorScheme.primary
+                                  : Theme.of(context)
+                                      .colorScheme
+                                      .surfaceContainerHighest,
+                              borderRadius: BorderRadius.circular(4),
                             ),
                           ),
                         ),
                       ),
                     ),
-                    IconButton(
-                      icon: const Icon(Icons.close, color: Colors.grey),
-                      tooltip: 'Закрыть',
-                      onPressed: () {
-                        HapticFeedback.selectionClick();
-                        Navigator.of(context).pop();
-                      },
+                  ),
+                  Expanded(
+                    child: PageView(
+                      controller: _pageController,
+                      physics: const NeverScrollableScrollPhysics(),
+                      children: [
+                        _buildGoalSelection(l),
+                        _buildSwipeTest(l),
+                        _buildFinishScreen(l),
+                      ],
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-              Expanded(
-                child: PageView(
-                  controller: _pageController,
-                  physics: const NeverScrollableScrollPhysics(),
-                  onPageChanged: (index) {
-                    setState(() => _currentPage = index);
+              Positioned(
+                top: 8,
+                right: 8,
+                child: IconButton(
+                  icon: const Icon(Icons.close, color: Colors.grey, size: 28),
+                  onPressed: () {
+                    HapticFeedback.lightImpact();
+                    Navigator.pushReplacementNamed(context, '/home');
                   },
-                  children: [
-                    _buildGoalSelectionPage(),
-                    _buildSwipeTestPage(),
-                    _buildFinishPage(),
-                  ],
                 ),
               ),
             ],
@@ -220,147 +215,140 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     );
   }
 
-  // ==========================================
-  // ШАГ 1: ВЫБОР ЦЕЛИ
-  // ==========================================
-  Widget _buildGoalSelectionPage() {
+  Widget _buildGoalSelection(AppLocalizations l) {
     final goals = [
       {
-        'icon': '💼',
-        'title': 'Работа и карьера',
-        'desc': 'IT, бизнес, собеседования'
+        'id': 'work',
+        'icon': Icons.work_outline,
+        'title': l.goalWorkTitle,
+        'desc': l.goalWorkDesc
       },
       {
-        'icon': '✈️',
-        'title': 'Путешествия',
-        'desc': 'Аэропорт, отели, выживание'
+        'id': 'travel',
+        'icon': Icons.flight_takeoff,
+        'title': l.goalTravelTitle,
+        'desc': l.goalTravelDesc
       },
       {
-        'icon': '🎬',
-        'title': 'Кино и сериалы',
-        'desc': 'Понимать Netflix в оригинале'
+        'id': 'movies',
+        'icon': Icons.movie_filter_outlined,
+        'title': l.goalMoviesTitle,
+        'desc': l.goalMoviesDesc
       },
       {
-        'icon': '🌍',
-        'title': 'Выжить за границей',
-        'desc': 'Бытовые ситуации и сленг'
+        'id': 'abroad',
+        'icon': Icons.public,
+        'title': l.goalAbroadTitle,
+        'desc': l.goalAbroadDesc
       },
       {
-        'icon': '💰',
-        'title': 'Заработать \$1,000,000',
-        'desc': 'Секретный уровень для амбициозных'
+        'id': 'million',
+        'icon': Icons.attach_money,
+        'title': l.goalMillionTitle,
+        'desc': l.goalMillionDesc
       },
     ];
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(24.0, 16.0, 24.0, 32.0),
+      padding: const EdgeInsets.all(24.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Какая у вас цель?',
+            l.goalQuestion,
             style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                   fontWeight: FontWeight.bold,
-                  letterSpacing: -0.5,
+                  color: Theme.of(context).colorScheme.primary,
                 ),
           ),
           const SizedBox(height: 8),
           Text(
-            'LexiFlow настроит алгоритм и подберет слова специально для вас.',
+            l.goalSubtitle,
             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                   color: Colors.grey[600],
                 ),
           ),
           const SizedBox(height: 32),
           Expanded(
-            child: ListView.builder(
+            child: ListView.separated(
               itemCount: goals.length,
+              separatorBuilder: (context, index) => const SizedBox(height: 12),
               itemBuilder: (context, index) {
                 final goal = goals[index];
                 final isSelected = _selectedGoal == goal['title'];
 
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 16.0),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    curve: Curves.easeInOut,
-                    decoration: BoxDecoration(
+                return Card(
+                  elevation: isSelected ? 4 : 0,
+                  color: isSelected
+                      ? Theme.of(context).colorScheme.primaryContainer
+                      : Theme.of(context)
+                          .colorScheme
+                          .surfaceContainerHighest
+                          .withValues(alpha: 0.3),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    side: BorderSide(
                       color: isSelected
-                          ? Theme.of(context).colorScheme.primaryContainer
-                          : Theme.of(context).cardColor,
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: isSelected
-                            ? Theme.of(context).colorScheme.primary
-                            : Colors.grey.withValues(alpha: 0.2),
-                        width: isSelected ? 2 : 1,
-                      ),
-                      boxShadow: isSelected
-                          ? [
-                              BoxShadow(
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .primary
-                                    .withValues(alpha: 0.2),
-                                blurRadius: 15,
-                                offset: const Offset(0, 5),
-                              )
-                            ]
-                          : [],
+                          ? Theme.of(context).colorScheme.primary
+                          : Colors.transparent,
+                      width: 2,
                     ),
-                    child: Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(20),
-                        onTap: () {
-                          HapticFeedback.selectionClick();
-                          setState(() => _selectedGoal = goal['title']);
-                        },
-                        child: Padding(
-                          padding: const EdgeInsets.all(20.0),
-                          child: Row(
-                            children: [
-                              Text(goal['icon']!,
-                                  style: const TextStyle(fontSize: 32)),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      goal['title']!,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .titleMedium
-                                          ?.copyWith(
-                                            fontWeight: FontWeight.bold,
-                                            color: isSelected
-                                                ? Theme.of(context)
-                                                    .colorScheme
-                                                    .primary
-                                                : null,
-                                          ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      goal['desc']!,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodyMedium
-                                          ?.copyWith(
-                                            color: Colors.grey[600],
-                                          ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              if (isSelected)
-                                Icon(Icons.check_circle,
-                                    color:
-                                        Theme.of(context).colorScheme.primary),
-                            ],
+                  ),
+                  child: InkWell(
+                    onTap: () {
+                      HapticFeedback.selectionClick();
+                      setState(() => _selectedGoal = goal['title'] as String);
+                    },
+                    borderRadius: BorderRadius.circular(16),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 16),
+                      child: Row(
+                        children: [
+                          Icon(
+                            goal['icon'] as IconData,
+                            size: 32,
+                            color: isSelected
+                                ? Theme.of(context).colorScheme.primary
+                                : Colors.grey[600],
                           ),
-                        ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  goal['title'] as String,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .titleMedium
+                                      ?.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                        color: isSelected
+                                            ? Theme.of(context)
+                                                .colorScheme
+                                                .primary
+                                            : null,
+                                      ),
+                                ),
+                                Text(
+                                  goal['desc'] as String,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodySmall
+                                      ?.copyWith(
+                                        color: Colors.grey[600],
+                                      ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          if (isSelected)
+                            Icon(
+                              Icons.check_circle,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                        ],
                       ),
                     ),
                   ),
@@ -370,15 +358,19 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           ),
           SizedBox(
             width: double.infinity,
-            height: 56,
             child: FilledButton(
-              onPressed: _selectedGoal != null ? _nextPage : null,
+              onPressed: _selectedGoal == null ? null : _nextPage,
               style: FilledButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16)),
+                  borderRadius: BorderRadius.circular(16),
+                ),
               ),
-              child: const Text('Продолжить',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              child: Text(
+                l.goalContinue,
+                style:
+                    const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
             ),
           ),
         ],
@@ -386,214 +378,231 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     );
   }
 
-  // ==========================================
-  // ШАГ 2: TINDER-СВАЙП ТЕСТ
-  // ==========================================
-  Widget _buildSwipeTestPage() {
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(24, 16, 24, 16),
-          child: Column(
-            children: [
-              Text(
-                'Проверка уровня',
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: -0.5,
-                    ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Смахните вправо, если знаете слово.\nСмахните влево, если не знаете.',
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: Colors.grey[600],
-                    ),
-              ),
-            ],
+  Widget _buildSwipeTest(AppLocalizations l) {
+    final remaining = _swipeWords.length - _swipedCardsCount;
+
+    return Padding(
+      padding: const EdgeInsets.all(24.0),
+      child: Column(
+        children: [
+          Text(
+            l.swipeTestTitle,
+            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
           ),
-        ),
-        Expanded(
-          child: Center(
-            child: SizedBox(
-              height: 400,
-              width: MediaQuery.of(context).size.width * 0.85,
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  if (_swipeResults.length >= _swipeWords.length)
-                    const Text('Отлично! Идем дальше...',
-                        style: TextStyle(fontSize: 20, color: Colors.grey)),
+          const SizedBox(height: 8),
+          Text(
+            l.swipeTestSubtitle,
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  color: Colors.grey[600],
+                ),
+          ),
+          const SizedBox(height: 32),
+          Expanded(
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                // Подложка (видна когда карточки закончились)
+                Container(
+                  width: double.infinity,
+                  height: MediaQuery.of(context).size.height * 0.45,
+                  decoration: BoxDecoration(
+                    color: Theme.of(context)
+                        .colorScheme
+                        .surfaceContainerHighest
+                        .withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(24),
+                    border:
+                        Border.all(color: Colors.grey.withValues(alpha: 0.2)),
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    l.swipeTopCardGood,
+                    style: TextStyle(
+                      color: Colors.grey[500],
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
 
-                  // ВАЖНО: reversed ставит текущую карточку наверх Stack
-                  ..._swipeWords.asMap().entries.toList().reversed.map((entry) {
-                    final index = entry.key;
-                    final wordData = entry.value;
+                // FIX: Рисуем карточки от дальней к ближней.
+                // Нижние карточки (фон) — без ключа и без интерактивности.
+                // Верхняя карточка — с _topCardKey, она единственная интерактивная.
+                //
+                // Показываем максимум 3 карточки для эффекта стопки:
+                for (int i = min(_swipedCardsCount + 2, _swipeWords.length - 1);
+                    i > _swipedCardsCount;
+                    i--)
+                  _SwipeableCard(
+                    // Нижние карточки — без ключа, статические фоновые
+                    word: _swipeWords[i]['word']!,
+                    translation: _swipeWords[i]['translation']!,
+                    isTopCard: false,
+                    stackOffset: (i - _swipedCardsCount) * 6.0,
+                    onSwipe: (_) {},
+                  ),
 
-                    if (index < _swipeResults.length)
-                      return const SizedBox.shrink();
-
-                    final isTopCard = index == _swipeResults.length;
-
-                    return isTopCard
-                        ? SwipeableCard(
-                            key: _cardKeys[wordData['word']],
-                            wordData: wordData,
-                            onSwipeLeft: () =>
-                                _onSwipeComplete(false, wordData),
-                            onSwipeRight: () =>
-                                _onSwipeComplete(true, wordData),
-                          )
-                        : Transform.scale(
-                            scale: 0.95 - (index - _swipeResults.length) * 0.05,
-                            child: Transform.translate(
-                              offset: Offset(
-                                  0, (index - _swipeResults.length) * 15.0),
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  color: Theme.of(context).cardColor,
-                                  borderRadius: BorderRadius.circular(32),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color:
-                                          Colors.black.withValues(alpha: 0.05),
-                                      blurRadius: 10,
-                                      spreadRadius: 0,
-                                    )
-                                  ],
-                                ),
-                              ),
-                            ),
-                          );
-                  }),
-                ],
-              ),
+                // Верхняя (текущая) карточка — с ключом, интерактивная
+                if (remaining > 0)
+                  _SwipeableCard(
+                    key:
+                        _topCardKey, // FIX: единый ключ всегда на верхней карточке
+                    word: _swipeWords[_swipedCardsCount]['word']!,
+                    translation: _swipeWords[_swipedCardsCount]['translation']!,
+                    isTopCard: true,
+                    stackOffset: 0,
+                    onSwipe: (knowIt) {
+                      setState(() {
+                        _swipedCardsCount++;
+                        if (_swipedCardsCount >= _swipeWords.length) {
+                          Future.delayed(const Duration(milliseconds: 500), () {
+                            if (mounted) _nextPage();
+                          });
+                        }
+                      });
+                    },
+                  ),
+              ],
             ),
           ),
-        ),
-        // Индикаторы управления внизу
-        Padding(
-          padding: const EdgeInsets.only(bottom: 48.0, left: 32, right: 32),
-          child: Row(
+          const SizedBox(height: 24),
+          Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
               _buildSwipeButton(
-                  Icons.close, Colors.redAccent, 'Не знаю', false),
-              const SizedBox(width: 32),
+                icon: Icons.close,
+                color: Colors.redAccent,
+                label: l.swipeIDontKnow,
+                onTap: () {
+                  if (_swipedCardsCount < _swipeWords.length) {
+                    _topCardKey.currentState?.triggerSwipeLeft();
+                  }
+                },
+              ),
               _buildSwipeButton(
-                  Icons.favorite, Colors.greenAccent[700]!, 'Знаю', true),
+                icon: Icons.favorite,
+                color: Colors.green,
+                label: l.swipeIKnow,
+                onTap: () {
+                  if (_swipedCardsCount < _swipeWords.length) {
+                    _topCardKey.currentState?.triggerSwipeRight();
+                  }
+                },
+              ),
             ],
+          ),
+          const SizedBox(height: 16),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSwipeButton({
+    required IconData icon,
+    required Color color,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return Column(
+      children: [
+        ElevatedButton(
+          onPressed: onTap,
+          style: ElevatedButton.styleFrom(
+            shape: const CircleBorder(),
+            padding: const EdgeInsets.all(20),
+            backgroundColor: Theme.of(context).colorScheme.surface,
+            foregroundColor: color,
+            elevation: 4,
+            shadowColor: color.withValues(alpha: 0.4),
+          ),
+          child: Icon(icon, size: 36),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          label,
+          style: TextStyle(
+            color: color,
+            fontWeight: FontWeight.bold,
           ),
         ),
       ],
     );
   }
 
-  Widget _buildSwipeButton(
-      IconData icon, Color color, String label, bool isKnown) {
-    return GestureDetector(
-      onTap: () => _triggerSwipe(isKnown),
-      child: Column(
-        children: [
-          Container(
-            width: 64,
-            height: 64,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: Theme.of(context).colorScheme.surface,
-              boxShadow: [
-                BoxShadow(
-                  color: color.withValues(alpha: 0.2),
-                  blurRadius: 15,
-                  spreadRadius: 2,
-                )
-              ],
-              border: Border.all(color: color.withValues(alpha: 0.3), width: 2),
-            ),
-            child: Icon(icon, color: color, size: 32),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            label,
-            style: TextStyle(color: color, fontWeight: FontWeight.bold),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ==========================================
-  // ШАГ 3: ФИНИШ И ГЕНЕРАЦИЯ БАЗЫ
-  // ==========================================
-  Widget _buildFinishPage() {
+  Widget _buildFinishScreen(AppLocalizations l) {
     return Padding(
-      padding: const EdgeInsets.all(32.0),
+      padding: const EdgeInsets.all(24.0),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          TweenAnimationBuilder(
-            tween: Tween<double>(begin: 0, end: 1),
+          const Spacer(),
+          TweenAnimationBuilder<double>(
+            tween: Tween(begin: 0.0, end: 1.0),
             duration: const Duration(milliseconds: 800),
             curve: Curves.elasticOut,
-            builder: (context, double value, child) {
+            builder: (context, value, child) {
               return Transform.scale(
                 scale: value,
-                child: Container(
-                  width: 140,
-                  height: 140,
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.primaryContainer,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Theme.of(context)
-                            .colorScheme
-                            .primary
-                            .withValues(alpha: 0.3),
-                        blurRadius: 30,
-                        spreadRadius: 5,
-                      )
-                    ],
-                  ),
-                  child: Icon(
-                    Icons.rocket_launch,
-                    size: 70,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                ),
+                child: child,
               );
             },
+            child: Container(
+              padding: const EdgeInsets.all(32),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primaryContainer,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.rocket_launch,
+                size: 80,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+            ),
           ),
-          const SizedBox(height: 48),
+          const SizedBox(height: 40),
           Text(
-            'Все готово!',
+            l.finishTitle,
             style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                   fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.primary,
                 ),
-            textAlign: TextAlign.center,
           ),
           const SizedBox(height: 16),
           Text(
-            'Мы проанализировали ваши ответы и подготовили вашу первую персональную колоду.\n\nПора начинать!',
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+            l.finishSubtitle,
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   color: Colors.grey[600],
                   height: 1.5,
                 ),
-            textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 48),
+          const Spacer(),
           SizedBox(
             width: double.infinity,
-            height: 56,
             child: FilledButton(
-              onPressed: _completeOnboardingAndCreateDeck,
+              onPressed: _isCreatingDeck ? null : () => _finishOnboarding(l),
               style: FilledButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16)),
+                  borderRadius: BorderRadius.circular(16),
+                ),
               ),
-              child: const Text('Погнали!',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              child: _isCreatingDeck
+                  ? const SizedBox(
+                      height: 24,
+                      width: 24,
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2, color: Colors.white),
+                    )
+                  : Text(
+                      l.finishButton,
+                      style: const TextStyle(
+                          fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
             ),
           ),
         ],
@@ -602,40 +611,47 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 }
 
-// ==========================================
-// КАСТОМНЫЙ ВИДЖЕТ: Tinder-Карточка
-// ==========================================
-class SwipeableCard extends StatefulWidget {
-  final Map<String, String> wordData;
-  final VoidCallback onSwipeLeft;
-  final VoidCallback onSwipeRight;
+class _SwipeableCard extends StatefulWidget {
+  final String word;
+  final String translation;
+  final bool isTopCard;
+  final double stackOffset; // FIX: смещение для эффекта стопки
+  final Function(bool knowIt) onSwipe;
 
-  const SwipeableCard({
+  const _SwipeableCard({
     super.key,
-    required this.wordData,
-    required this.onSwipeLeft,
-    required this.onSwipeRight,
+    required this.word,
+    required this.translation,
+    required this.isTopCard,
+    required this.stackOffset,
+    required this.onSwipe,
   });
 
   @override
-  State<SwipeableCard> createState() => _SwipeableCardState();
+  State<_SwipeableCard> createState() => _SwipeableCardState();
 }
 
-class _SwipeableCardState extends State<SwipeableCard>
+class _SwipeableCardState extends State<_SwipeableCard>
     with SingleTickerProviderStateMixin {
-  late AnimationController _animationController;
-  Offset _dragOffset = Offset.zero;
+  Offset _position = Offset.zero;
   double _angle = 0;
-  bool _isDragging = false;
-  bool _isAnimatingOut = false;
+  Size _screenSize = Size.zero;
+
+  late AnimationController _animationController;
+  late Animation<Offset> _animation;
 
   @override
   void initState() {
     super.initState();
     _animationController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 250),
+      duration: const Duration(milliseconds: 300),
     );
+    _animationController.addListener(() {
+      setState(() {
+        _position = _animation.value;
+      });
+    });
   }
 
   @override
@@ -644,167 +660,134 @@ class _SwipeableCardState extends State<SwipeableCard>
     super.dispose();
   }
 
+  void triggerSwipeRight() {
+    if (!widget.isTopCard) return;
+    _animateSwipe(const Offset(500, 0), true);
+  }
+
+  void triggerSwipeLeft() {
+    if (!widget.isTopCard) return;
+    _animateSwipe(const Offset(-500, 0), false);
+  }
+
   void _onPanStart(DragStartDetails details) {
-    if (_isAnimatingOut) return;
-    setState(() {
-      _isDragging = true;
-    });
+    if (!widget.isTopCard) return;
+    if (_animationController.isAnimating) {
+      _animationController.stop();
+    }
   }
 
   void _onPanUpdate(DragUpdateDetails details) {
-    if (_isAnimatingOut) return;
+    if (!widget.isTopCard) return;
     setState(() {
-      _dragOffset += details.delta;
-      _angle = 45 * (_dragOffset.dx / MediaQuery.of(context).size.width);
+      _position += details.delta;
+      _angle = 45 * (_position.dx / _screenSize.width) * (pi / 180);
     });
   }
 
   void _onPanEnd(DragEndDetails details) {
-    if (_isAnimatingOut) return;
-    setState(() {
-      _isDragging = false;
-    });
+    if (!widget.isTopCard) return;
 
-    final threshold = MediaQuery.of(context).size.width * 0.25;
-
-    if (_dragOffset.dx > threshold) {
-      animateOut(isRight: true);
-    } else if (_dragOffset.dx < -threshold) {
-      animateOut(isRight: false);
+    if (_position.dx > 100) {
+      _animateSwipe(Offset(_screenSize.width + 100, _position.dy), true);
+    } else if (_position.dx < -100) {
+      _animateSwipe(Offset(-_screenSize.width - 100, _position.dy), false);
     } else {
-      _resetPosition();
+      _animation = Tween<Offset>(begin: _position, end: Offset.zero)
+          .animate(CurvedAnimation(
+        parent: _animationController,
+        curve: Curves.elasticOut,
+      ));
+      _animationController.forward(from: 0);
+      setState(() {
+        _angle = 0;
+      });
     }
   }
 
-  void animateOut({required bool isRight}) {
-    if (_isAnimatingOut) return;
-    _isAnimatingOut = true;
-
-    HapticFeedback.mediumImpact();
-
-    final screenWidth = MediaQuery.of(context).size.width;
-    final endOffset = Offset(
-      isRight ? screenWidth : -screenWidth,
-      _dragOffset.dy,
-    );
-
-    final animation = Tween<Offset>(begin: _dragOffset, end: endOffset).animate(
+  void _animateSwipe(Offset targetPosition, bool knowIt) {
+    _animation = Tween<Offset>(begin: _position, end: targetPosition).animate(
       CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
     );
-
-    final angleAnimation =
-        Tween<double>(begin: _angle, end: isRight ? 45 : -45).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
-    );
-
     _animationController.forward(from: 0).then((_) {
-      if (isRight) {
-        widget.onSwipeRight();
-      } else {
-        widget.onSwipeLeft();
-      }
-    });
-
-    animation.addListener(() {
-      setState(() {
-        _dragOffset = animation.value;
-        _angle = angleAnimation.value;
-      });
-    });
-  }
-
-  void _resetPosition() {
-    final animation =
-        Tween<Offset>(begin: _dragOffset, end: Offset.zero).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.elasticOut),
-    );
-
-    final angleAnimation = Tween<double>(begin: _angle, end: 0).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.elasticOut),
-    );
-
-    _animationController.forward(from: 0);
-
-    animation.addListener(() {
-      setState(() {
-        _dragOffset = animation.value;
-        _angle = angleAnimation.value;
-      });
+      widget.onSwipe(knowIt);
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    final double opacity = min((_dragOffset.dx.abs() / 150), 1.0);
-    final bool isSwipingRight = _dragOffset.dx > 0;
+    _screenSize = MediaQuery.of(context).size;
 
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onPanStart: _onPanStart,
-      onPanUpdate: _onPanUpdate,
-      onPanEnd: _onPanEnd,
-      child: Transform.translate(
-        offset: _dragOffset,
-        child: Transform.rotate(
-          angle: _angle * (pi / 180),
-          child: Container(
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surface,
-              borderRadius: BorderRadius.circular(32),
-              border: Border.all(
-                  color: Colors.grey.withValues(alpha: 0.1), width: 1),
-              boxShadow: [
-                BoxShadow(
-                  color:
-                      Colors.black.withValues(alpha: _isDragging ? 0.15 : 0.05),
-                  blurRadius: _isDragging ? 20 : 10,
-                  spreadRadius: _isDragging ? 2 : 0,
-                )
-              ],
-            ),
+    final isSwipingRight = _position.dx > 0;
+    final opacity = min((_position.dx.abs() / 100), 1.0);
+
+    // FIX: фоновые карточки сдвинуты вниз для эффекта стопки
+    return Transform.translate(
+      offset: Offset(0, widget.stackOffset),
+      child: GestureDetector(
+        behavior: widget.isTopCard
+            ? HitTestBehavior.opaque
+            : HitTestBehavior.deferToChild,
+        onPanStart: widget.isTopCard ? _onPanStart : null,
+        onPanUpdate: widget.isTopCard ? _onPanUpdate : null,
+        onPanEnd: widget.isTopCard ? _onPanEnd : null,
+        child: Transform.translate(
+          offset: _position,
+          child: Transform.rotate(
+            angle: _angle,
             child: Stack(
               children: [
-                Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(32.0),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          widget.wordData['word']!,
-                          style: Theme.of(context)
-                              .textTheme
-                              .displaySmall
-                              ?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: Theme.of(context).colorScheme.primary,
-                              ),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 24),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 8),
-                          decoration: BoxDecoration(
-                            color: Colors.grey.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Text(
-                            widget.wordData['translation']!,
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleMedium
-                                ?.copyWith(
-                                  color: Colors.grey[700],
-                                ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-                      ],
-                    ),
+                Container(
+                  width: double.infinity,
+                  height: MediaQuery.of(context).size.height * 0.45,
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).cardColor,
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.1),
+                        blurRadius: 10,
+                        spreadRadius: 2,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
                   ),
+                  child: widget.isTopCard
+                      ? Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              widget.word,
+                              textAlign: TextAlign.center,
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .displaySmall
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color:
+                                        Theme.of(context).colorScheme.primary,
+                                  ),
+                            ),
+                            const SizedBox(height: 16),
+                            Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 24),
+                              child: Text(
+                                widget.translation,
+                                textAlign: TextAlign.center,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .titleLarge
+                                    ?.copyWith(
+                                      color: Colors.grey[600],
+                                    ),
+                              ),
+                            ),
+                          ],
+                        )
+                      : null, // Фоновые карточки пустые (только тень и форма)
                 ),
-                if (opacity > 0.1)
+                if (widget.isTopCard && _position.dx.abs() > 20)
                   Positioned(
                     top: 40,
                     left: isSwipingRight ? 40 : null,
@@ -819,18 +802,24 @@ class _SwipeableCardState extends State<SwipeableCard>
                             color: (isSwipingRight
                                     ? Colors.green
                                     : Colors.redAccent)
-                                .withOpacity(opacity),
+                                .withValues(alpha: opacity),
                             width: 4,
                           ),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
-                          isSwipingRight ? 'ЗНАЮ' : 'НЕ ЗНАЮ',
+                          isSwipingRight
+                              ? AppLocalizations.of(context)
+                                  .swipeIKnow
+                                  .toUpperCase()
+                              : AppLocalizations.of(context)
+                                  .swipeIDontKnow
+                                  .toUpperCase(),
                           style: TextStyle(
                             color: (isSwipingRight
                                     ? Colors.green
                                     : Colors.redAccent)
-                                .withOpacity(opacity),
+                                .withValues(alpha: opacity),
                             fontSize: 32,
                             fontWeight: FontWeight.bold,
                             letterSpacing: 2,

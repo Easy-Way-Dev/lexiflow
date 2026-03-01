@@ -208,8 +208,8 @@ class _ImportScreenState extends State<ImportScreen> {
                       TextField(
                         controller: _deckNameController,
                         decoration: InputDecoration(
-                          labelText: l.deckNameLabel,
-                          hintText: l.deckNameHint,
+                          labelText: l.setNameLabel,
+                          hintText: l.setNameHint,
                           border: const OutlineInputBorder(),
                           helperText: l.csvHelperText,
                         ),

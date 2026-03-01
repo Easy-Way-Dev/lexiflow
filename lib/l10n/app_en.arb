@@ -34,27 +34,6 @@
   "settingsVersion": "Version",
   "settingsDeveloper": "Developer",
   
-  "decksTitle": "My Sets",
-  "noDecks": "No sets yet",
-  "noDecksSubtitle": "Create your first set to start learning",
-  "createDeck": "Create Set",
-  "newDeck": "New Set",
-  "createDeckTitle": "Create New Set",
-  "editDeck": "Edit Set",
-  "deleteDeckTitle": "Delete Set?",
-  "deleteDeckContent": "Are you sure you want to delete \"{name}\"? All cards will be deleted.",
-  "@deleteDeckContent": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
-  "deckNameLabel": "Set Name",
-  "deckNameHint": "e.g., Business English",
-  "deckDescriptionLabel": "Description (optional)",
-  "dart": "Dart",
-  
   "setsTitle": "My Sets",
   "noSets": "No sets yet",
   "noSetsSubtitle": "Create your first set to start learning",
@@ -147,18 +126,19 @@
     }
   },
   "selectFileError": "Please select a file",
-  "enterDeckName": "Please enter a deck name",
+  "enterDeckName": "Please enter a set name",
   "pickFileToImport": "Pick a file to import",
   "supportedFormats": "Supported formats: CSV, JSON, .lexiflow",
   "formatCsvDesc": "CSV format",
   "formatJsonDesc": "JSON format",
   "formatLexiflowDesc": ".lexiflow format",
   "stepSelectFile": "Select File",
-  "deckNameLabel": "Deck Name",
-  "deckNameHint": "My vocabulary",
+  "stepDeckName": "Step: Set Name",
   "csvHelperText": "First row: headers (front, back, etc.)",
   "importInProgress": "Importing...",
   "importTip": "Tip: First row should contain column names",
+  "howToImport": "How to Import",
+  "importInstructions": "Import Instructions",
   
   "addCardTitle": "Add Card",
   "editCardTitle": "Edit Card",
@@ -215,7 +195,12 @@
   "recordButton": "Record",
   "stopButton": "Stop",
   "audioLoaded": "Audio loaded",
+  "audioLoadedSuccess": "Audio loaded successfully",
+  "audioDefaultLabel": "Audio",
+  "audioAdded": "Audio added",
   "audioDeleted": "Audio deleted",
+  "micPermissionError": "Microphone permission denied",
+  "listenPronunciation": "Listen to pronunciation",
   
   "errorLoading": "Error loading: {error}",
   "@errorLoading": {
@@ -234,11 +219,181 @@
     }
   },
   "formatLabel": "Format Label",
-  "stepDeckName": "Step: Deck Name",
-  "howToImport": "How to Import",
-  "importInstructions": "Import Instructions",
-  "micPermissionError": "Microphone permission denied",
-  "audioLoadedSuccess": "Audio loaded successfully",
-  "audioDefaultLabel": "Audio",
-  "audioAdded": "Audio added"
+
+  "langSelectSubtitle": "Choose language",
+  "langSelectContinue": "Continue",
+
+  "goalQuestion": "What is your goal?",
+  "goalSubtitle": "LexiFlow will configure the algorithm and pick words specifically for you.",
+  "goalWorkTitle": "Work & Career",
+  "goalWorkDesc": "IT, business, interviews",
+  "goalTravelTitle": "Travel",
+  "goalTravelDesc": "Airport, hotels, survival",
+  "goalMoviesTitle": "Movies & Series",
+  "goalMoviesDesc": "Understand Netflix in original",
+  "goalAbroadTitle": "Survive Abroad",
+  "goalAbroadDesc": "Everyday situations & slang",
+  "goalMillionTitle": "Earn $1,000,000",
+  "goalMillionDesc": "Secret level for the ambitious",
+  "goalContinue": "Continue",
+
+  "swipeTestTitle": "Level Check",
+  "swipeTestSubtitle": "Swipe right if you know the word.\nSwipe left if you don't.",
+  "swipeTopCardGood": "Awesome! Moving on...",
+  "swipeIDontKnow": "Don't know",
+  "swipeIKnow": "Know",
+  
+  "swipeWord1": "Resilient",
+  "swipeTrans1": "Able to withstand or recover from difficult conditions",
+  "swipeWord2": "Pragmatic",
+  "swipeTrans2": "Dealing with things sensibly and realistically",
+  "swipeWord3": "Ubiquitous",
+  "swipeTrans3": "Present, appearing, or found everywhere",
+  "swipeWord4": "Eloquent",
+  "swipeTrans4": "Fluent or persuasive in speaking or writing",
+  "swipeWord5": "Paradigm",
+  "swipeTrans5": "A typical example or pattern of something",
+  "swipeWord6": "Tenacious",
+  "swipeTrans6": "Tending to keep a firm hold of something",
+  "swipeWord7": "Serendipity",
+  "swipeTrans7": "The occurrence of events by chance in a happy way",
+  "swipeWord8": "Inevitable",
+  "swipeTrans8": "Certain to happen; unavoidable",
+  "swipeWord9": "Catalyst",
+  "swipeTrans9": "A person or thing that precipitates an event",
+  "swipeWord10": "Ephemeral",
+  "swipeTrans10": "Lasting for a very short time",
+
+  "finishTitle": "All set!",
+  "finishSubtitle": "We analyzed your answers and prepared your first personal set.\n\nTime to start!",
+  "finishButton": "Let's go!",
+  "finishDeckName": "My Start: {goal}",
+  "@finishDeckName": {
+    "placeholders": {
+      "goal": {
+        "type": "String"
+      }
+    }
+  },
+  "finishDeckDesc": "Personal set created by AI based on your test.",
+
+  "paywallTitle": "LexiFlow PRO",
+  "paywallSubtitle": "Unlock limitless language learning possibilities",
+  "paywallFeature1Title": "Export to CSV & JSON",
+  "paywallFeature1Desc": "Export words for spreadsheet work",
+  "paywallFeature2Title": "Unlimited AI Sets",
+  "paywallFeature2Desc": "Create decks using neural networks",
+  "paywallFeature3Title": "AI Conversation (Soon)",
+  "paywallFeature3Desc": "Real-time dialogue practice",
+  "paywallYear": "Yearly (Best Value)",
+  "paywallYearPrice": "$24.99 / year",
+  "paywallYearSave": "Save 30%",
+  "paywallMonth": "Monthly",
+  "paywallMonthPrice": "$2.99 / month",
+  "paywallButton": "Subscribe Now",
+  "paywallIntegration": "RevenueCat integration coming soon!",
+
+  "quoteShare": "Share",
+  "quoteDone": "Done",
+  "quoteCopied": "Quote copied to clipboard!",
+  "quoteSessionResults": "Session Results",
+  "quoteStudied": "Studied",
+  "quoteCorrect": "Correct",
+  "quoteAccuracy": "Accuracy",
+  "quoteMsgPerfect": "Incredible! 🎉",
+  "quoteMsgExcellent": "Great job! 🌟",
+  "quoteMsgGood": "Good! 👍",
+  "quoteMsgNotBad": "Not bad! 💪",
+  "quoteMsgKeepGoing": "Keep going! 📈",
+  "quoteMsgProgress": "Every day is progress! 🌱",
+  "quoteShareText": "\"{quote}\"\n\n— {author}\n\nLearned in LexiFlow 📚",
+  "@quoteShareText": {
+    "placeholders": {
+      "quote": { "type": "String" },
+      "author": { "type": "String" }
+    }
+  },
+
+  "microSessionTitle": "Quick Training",
+  "microSessionFormat": "Training Format",
+  "microSessionDesc": "Choose which words you want to review.",
+  "microSessionMix": "🌍 Mix: {source} ➔ {target}",
+  "@microSessionMix": {
+    "placeholders": {
+      "source": { "type": "String" },
+      "target": { "type": "String" }
+    }
+  },
+  "microSessionExpress": "Express",
+  "microSessionExpressDesc": "5 words • While waiting for coffee",
+  "microSessionDeep": "Deep Dive",
+  "microSessionDeepDesc": "10 words • Requires focus",
+  "microSessionEmpty": "No words to study in the selected category!",
+  "microSessionEndTitle": "Summary",
+  "microSessionEndWord": "Word {current} of {total}",
+  "@microSessionEndWord": {
+    "placeholders": {
+      "current": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+
+  "tapToFlip": "Tap to flip",
+  "btnHard": "Hard",
+  "btnKnow": "Know",
+  "btnRepeat": "Repeat these words",
+  "btnMoreWords": "{count} more words",
+  "@btnMoreWords": { "placeholders": { "count": { "type": "int" } } },
+  "btnFinish": "Finish",
+  "msgGoodJob": "Good job! 👍\nLet's reinforce the hard words?",
+  "msgRemembered": "You remembered {correct} out of {total}.",
+  "@msgRemembered": {
+    "placeholders": {
+      "correct": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "phrasePerfect1": "Perfect! 🔥\nThe President knows fewer words.",
+  "phrasePerfect2": "God Level 🌟\nThe Queen spent more time on this.",
+  "phrasePerfect3": "Vocab Senior! 💻\nYour brain compiles faster.",
+  "phrasePerfect4": "Genius! 🧠\nOxford dictionary is taking notes.",
+  "phrasePerfect5": "Flawless! 👑\nAre you a cyborg?",
+
+  "streakDays": "{count} Days",
+  "@streakDays": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "streakDesc": "Study every day to unlock premium rewards.",
+  "streakReward1": "Neon Theme",
+  "streakReward2": "Silver Icon",
+  "streakReward3": "Haptic Sounds Pack",
+  "streakReward4": "AI Set 'Interview'",
+  "streakReward5": "Set 'Netflix Slang'",
+  "streakReward6": "Gold VIP Icon",
+  "streakUnlocked": "Unlocked!",
+  "streakAvailableOn": "Available on day {day}",
+  "@streakAvailableOn": {
+    "placeholders": {
+      "day": { "type": "int" }
+    }
+  },
+  "streakGotIt": "Got it",
+
+  "exportFormatTitle": "Export Format",
+  "exportLexiflowDesc": "Full copy. Perfect for friends.",
+  "exportCsvTitle": "CSV Table",
+  "exportCsvDesc": "Text only. For Excel and Anki.",
+  "exportJsonTitle": "JSON File",
+  "exportJsonDesc": "For developers.",
+  "exportPath": "File path:",
+  "exportBrowse": "Browse",
+  "exportSaved": "✅ File saved: {path}",
+  "@exportSaved": {
+    "placeholders": {
+      "path": { "type": "String" }
+    }
+  },
+  "exportSaveTitle": "Save as"
 }

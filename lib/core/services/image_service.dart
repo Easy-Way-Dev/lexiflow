@@ -34,7 +34,7 @@ class ImageService {
 
       return await _saveImage(image.path);
     } catch (e) {
-      print('Ошибка выбора изображения: $e');
+      debugPrint('Ошибка выбора изображения из галереи: $e');
       return null;
     }
   }
@@ -53,21 +53,23 @@ class ImageService {
 
       return await _saveImage(image.path);
     } catch (e) {
-      print('Ошибка съёмки фото: $e');
+      debugPrint('Ошибка создания фото: $e');
       return null;
     }
   }
 
-  /// Сохранить изображение в папку приложения
-  static Future<String> _saveImage(String sourcePath) async {
+  /// Сохранить изображение локально
+  static Future<String> _saveImage(String tempPath) async {
     final imagesDir = await _getImagesDirectory();
-    final fileName = '${DateTime.now().millisecondsSinceEpoch}.jpg';
-    final targetPath = p.join(imagesDir, fileName);
+    final timestamp = DateTime.now().millisecondsSinceEpoch;
+    final extension = p.extension(tempPath);
+    final fileName = 'card_img_$timestamp$extension';
+    final savedPath = p.join(imagesDir, fileName);
 
-    final sourceFile = File(sourcePath);
-    await sourceFile.copy(targetPath);
+    final file = File(tempPath);
+    await file.copy(savedPath);
 
-    return targetPath;
+    return savedPath;
   }
 
   /// Удалить изображение
@@ -80,7 +82,7 @@ class ImageService {
         await file.delete();
       }
     } catch (e) {
-      print('Ошибка удаления изображения: $e');
+      debugPrint('Ошибка удаления изображения: $e');
     }
   }
 
@@ -125,10 +127,10 @@ class ImageService {
 
     if (source == null) return null;
 
-    if (source == ImageSource.gallery) {
-      return await pickImageFromGallery();
-    } else {
+    if (source == ImageSource.camera) {
       return await pickImageFromCamera();
+    } else {
+      return await pickImageFromGallery();
     }
   }
 }

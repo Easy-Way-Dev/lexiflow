@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:lexiflow/core/database/app_database.dart';
 
 class LanguageSelectScreen extends StatefulWidget {
@@ -21,16 +22,16 @@ class _LanguageSelectScreenState extends State<LanguageSelectScreen> {
 
   final List<_LangOption> _languages = const [
     _LangOption(
-      code: 'ru',
-      flag: '🇷🇺',
-      nativeName: 'Русский',
-      subtitle: 'Russian',
-    ),
-    _LangOption(
       code: 'en',
       flag: '🇺🇸',
       nativeName: 'English',
       subtitle: 'English (US)',
+    ),
+    _LangOption(
+      code: 'ru',
+      flag: '🇷🇺',
+      nativeName: 'Русский',
+      subtitle: 'Russian',
     ),
     _LangOption(
       code: 'uk',
@@ -50,6 +51,9 @@ class _LanguageSelectScreenState extends State<LanguageSelectScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Безопасный вызов локализации без ? и !
+    final l = AppLocalizations.of(context);
+
     return Scaffold(
       body: SafeArea(
         child: Padding(
@@ -84,9 +88,8 @@ class _LanguageSelectScreenState extends State<LanguageSelectScreen> {
               ),
               const SizedBox(height: 8),
 
-              // Subtitle shown in all three languages
               Text(
-                'Выберите язык  •  Choose language  •  Оберіть мову',
+                l.langSelectSubtitle,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: Colors.grey[600],
                     ),
@@ -115,9 +118,10 @@ class _LanguageSelectScreenState extends State<LanguageSelectScreen> {
                             color: Colors.white,
                           ),
                         )
-                      : const Text(
-                          'Продолжить  /  Continue  /  Продовжити',
-                          style: TextStyle(fontSize: 15),
+                      : Text(
+                          l.langSelectContinue,
+                          style: const TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.bold),
                         ),
                 ),
               ),
