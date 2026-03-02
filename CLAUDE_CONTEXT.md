@@ -227,6 +227,7 @@ https://raw.githubusercontent.com/Easy-Way-Dev/lexiflow/main/lib/core/utils/vide
 
 # Тема
 https://raw.githubusercontent.com/Easy-Way-Dev/lexiflow/main/lib/shared/theme/app_theme.dart
+https://raw.githubusercontent.com/Easy-Way-Dev/lexiflow/main/assets/icons/app_icon.png
 
 # Локализация
 https://raw.githubusercontent.com/Easy-Way-Dev/lexiflow/main/lib/l10n/app_ru.arb

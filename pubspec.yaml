@@ -40,7 +40,7 @@ dependencies:
 
   # Utils
   uuid: ^4.2.2
-  intl: ^0.19.0
+  intl: ^0.19.0 # Исправлено для совместимости с Flutter 3.27.1
 
   # Import/Export
   archive: ^3.4.10
@@ -62,42 +62,36 @@ dev_dependencies:
   flutter_lints: ^3.0.0
   drift_dev: ^2.14.0
   build_runner: ^2.4.7
+  flutter_native_splash: ^2.4.3
   flutter_launcher_icons: ^0.14.1
-  flutter_native_splash: ^2.4.1
 
-# ── Настройки иконок ──────────────────────────────────────
-flutter_launcher_icons:
-  image_path: "assets/icons/app_icon.png"
-  android: true
-  min_sdk_android: 21
-  adaptive_icon_background: "#EDE8FF"
-  adaptive_icon_foreground: "assets/icons/app_icon.png"
-  ios: true
-  remove_alpha_ios: true
-  windows:
-    generate: true
-    image_path: "assets/icons/app_icon.png"
-    icon_size: 48
-  web:
-    generate: false
-
-# ── Настройки Splash Screen ───────────────────────────────
 flutter_native_splash:
-  color: "#EDE8FF"
+  color: '#EDE8FF'
   image: assets/icons/app_icon.png
+  color_dark: '#1A1030'
+  image_dark: assets/icons/app_icon.png
   android_12:
     image: assets/icons/app_icon.png
-    color: "#EDE8FF"
-    icon_background_color: "#EDE8FF"
-  color_dark: "#1C1147"
-  image_dark: assets/icons/app_icon.png
+    color: '#EDE8FF'
+    image_dark: assets/icons/app_icon.png
+    color_dark: '#1A1030'
+  web: false
+
+flutter_launcher_icons:
   android: true
   ios: true
-  web: false
-  fullscreen: false
+  windows:
+    generate: true
+    image_path: assets/icons/app_icon.png
+    icon_size: 48
+  image_path: assets/icons/app_icon.png
+  adaptive_icon_background: '#EDE8FF'
+  adaptive_icon_foreground: assets/icons/app_icon.png
+  min_sdk_android: 21
+  remove_alpha_ios: true
 
 flutter:
-  generate: true
+  generate: true # Разрешает автоматическую генерацию локализации
   uses-material-design: true
   assets:
     - assets/templates/
