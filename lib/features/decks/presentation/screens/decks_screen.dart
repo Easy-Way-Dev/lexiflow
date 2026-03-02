@@ -1074,77 +1074,74 @@ class _DecksScreenState extends State<DecksScreen>
     );
   }
 
+// ─────────────────────────────────────────────────────────────
+// ШАРИНГ — все методы используют Share.shareXFiles с файлом
+// На мобильных: система показывает sheet выбора приложения
+// На Windows: открывается системный диалог сохранения/шаринга
+// ─────────────────────────────────────────────────────────────
+
   Future<void> _shareToTelegram(String path) async {
-    try {
-      final uri = Uri.parse('tg://msg');
-      if (await canLaunchUrl(uri))
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-      else
-        _shareToApp(path, '');
-    } catch (e) {
-      _shareToApp(path, '');
-    }
+    // На мобильных — системный sheet где пользователь выбирает Telegram
+    // На Windows — Telegram не поддерживает прямой шаринг файлов, используем shareXFiles
+    await _shareFileWithApp(path, '');
   }
 
   Future<void> _shareToWhatsApp(String path) async {
-    try {
-      final uri = Uri.parse('whatsapp://send');
-      if (await canLaunchUrl(uri))
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-      else
-        _shareToApp(path, '');
-    } catch (e) {
-      _shareToApp(path, '');
-    }
+    await _shareFileWithApp(path, '');
   }
 
   Future<void> _shareToFacebook(String path) async {
-    try {
-      final uri = Uri.parse('fb://');
-      if (await canLaunchUrl(uri))
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-      else
-        _shareToApp(path, '');
-    } catch (e) {
-      _shareToApp(path, '');
-    }
+    await _shareFileWithApp(path, '');
   }
 
   Future<void> _shareToEmail(String path, String name) async {
+    // Email — пробуем открыть почтовый клиент с файлом
+    // Если не получается — используем системный шаринг
     try {
-      final uri = Uri(scheme: 'mailto', queryParameters: {
-        'subject': 'LexiFlow: $name',
-        'body': 'File: ${path.split(Platform.pathSeparator).last}'
-      });
-      if (await canLaunchUrl(uri))
+      final uri = Uri(
+        scheme: 'mailto',
+        queryParameters: {
+          'subject': 'LexiFlow: $name',
+          'body':
+              '📚 Делюсь колодой "$name" из приложения LexiFlow!\n\nОткройте вложенный файл в LexiFlow чтобы начать учиться.',
+        },
+      );
+      if (await canLaunchUrl(uri)) {
         await launchUrl(uri);
-      else
-        _shareToApp(path, name);
+      } else {
+        await _shareFileWithApp(path, name);
+      }
     } catch (e) {
-      _shareToApp(path, name);
+      await _shareFileWithApp(path, name);
     }
   }
 
   Future<void> _shareToDiscord(String path) async {
-    try {
-      final uri = Uri.parse('discord://');
-      if (await canLaunchUrl(uri))
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-      else
-        _shareToApp(path, '');
-    } catch (e) {
-      _shareToApp(path, '');
-    }
+    await _shareFileWithApp(path, '');
   }
 
   Future<void> _shareToApp(String filePath, String deckName) async {
+    await _shareFileWithApp(filePath, deckName);
+  }
+
+// Единый метод шаринга файла через системный sheet
+// Share.shareXFiles показывает нативный диалог выбора приложения
+// и передаёт реальный .lexiflow файл выбранному приложению
+  Future<void> _shareFileWithApp(String filePath, String deckName) async {
     try {
-      await ImportExportService.shareToMessengers(filePath, deckName: deckName);
+      await ImportExportService.shareToMessengers(
+        filePath,
+        deckName: deckName.isNotEmpty ? deckName : null,
+      );
     } catch (e) {
       if (mounted) {
         final l = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(l.errorGeneric(e.toString()))));
+          SnackBar(
+            content: Text(l.errorGeneric(e.toString())),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     }
   }
