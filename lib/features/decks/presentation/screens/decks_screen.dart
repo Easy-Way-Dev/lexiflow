@@ -2050,4 +2050,3 @@ class _MicroCardState extends State<_MicroCard> with TickerProviderStateMixin {
     );
   }
 }
-

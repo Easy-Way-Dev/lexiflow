@@ -28,11 +28,17 @@ class StudyScreen extends StatefulWidget {
 class _StudyScreenState extends State<StudyScreen>
     with SingleTickerProviderStateMixin {
   List<CardData> _cards = [];
-  final List<CardData> _incorrectCards = [];
+
+  // Карточки нажатые Forgot — для повторения в конце сессии
+  final List<CardData> _forgotCards = [];
+
   int _currentIndex = 0;
   bool _isFlipped = false;
   bool _isLoading = true;
-  int _correctAnswers = 0;
+
+  // Счётчики итогов сессии
+  int _correctAnswers = 0; // Hard + Good + Easy (quality >= 3)
+  int _masteredInSession = 0; // Easy (quality == 5) — стало Mastered
 
   final Set<HintType> _usedHints = {};
   bool _hintImageVisible = false;
@@ -61,30 +67,54 @@ class _StudyScreenState extends State<StudyScreen>
     );
   }
 
+  // ─────────────────────────────────────────────────────────────
+  // FIX БАГИ 1: загрузка карточек
+  //
+  // Старая логика: getCardsForReview (только просроченные по SM2)
+  //   → если у карточки nextReviewDate в будущем — не попадает
+  //   → показывало 1 из 4 карточек
+  //
+  // Новая логика: берём ВСЕ невыученные карточки (isMastered == false)
+  //   → getCardsForReview используем ТОЛЬКО для сортировки приоритета
+  //   → все невыученные всегда попадают в тренировку
+  // ─────────────────────────────────────────────────────────────
   Future<void> _loadCards() async {
-    setState(() {
-      _isLoading = true;
-    });
+    setState(() => _isLoading = true);
 
     try {
-      final cards = await widget.db.getCardsForReview(widget.deckId);
-      if (cards.isEmpty) {
-        final allCards = await widget.db.getCardsByDeckId(widget.deckId);
+      final allCards = await widget.db.getCardsByDeckId(widget.deckId);
+
+      // Берём только невыученные карточки
+      final notMastered = allCards.where((c) => !c.isMastered).toList();
+
+      if (notMastered.isEmpty) {
+        // Все карточки выучены — показываем пустой экран
         setState(() {
-          _cards = allCards;
+          _cards = [];
           _isLoading = false;
         });
-      } else {
-        setState(() {
-          _cards = cards;
-          _isLoading = false;
-        });
+        return;
       }
-    } catch (e) {
-      setState(() {
-        _isLoading = false;
+
+      // Сортируем: сначала просроченные (nextReviewDate <= now),
+      // потом остальные — так приоритет у давно не повторявшихся
+      final now = DateTime.now();
+      notMastered.sort((a, b) {
+        final aOverdue =
+            a.nextReviewDate != null && a.nextReviewDate!.isBefore(now);
+        final bOverdue =
+            b.nextReviewDate != null && b.nextReviewDate!.isBefore(now);
+        if (aOverdue && !bOverdue) return -1;
+        if (!aOverdue && bOverdue) return 1;
+        return 0;
       });
 
+      setState(() {
+        _cards = notMastered;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() => _isLoading = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error loading: $e')),
@@ -95,10 +125,7 @@ class _StudyScreenState extends State<StudyScreen>
 
   void _flipCard() {
     if (_flipController.isAnimating) return;
-    setState(() {
-      _isFlipped = !_isFlipped;
-    });
-
+    setState(() => _isFlipped = !_isFlipped);
     if (_isFlipped) {
       _flipController.forward();
     } else {
@@ -108,16 +135,11 @@ class _StudyScreenState extends State<StudyScreen>
 
   void _useHint(HintType hint) {
     if (_usedHints.contains(hint)) return;
-
-    setState(() {
-      _usedHints.add(hint);
-    });
+    setState(() => _usedHints.add(hint));
 
     switch (hint) {
       case HintType.image:
-        setState(() {
-          _hintImageVisible = true;
-        });
+        setState(() => _hintImageVisible = true);
         break;
       case HintType.audio:
         final audioPath = _cards[_currentIndex].frontAudioPath;
@@ -132,9 +154,7 @@ class _StudyScreenState extends State<StudyScreen>
         }
         break;
       case HintType.firstLetter:
-        setState(() {
-          _hintFirstLetterVisible = true;
-        });
+        setState(() => _hintFirstLetterVisible = true);
         break;
     }
   }
@@ -145,16 +165,33 @@ class _StudyScreenState extends State<StudyScreen>
     _hintFirstLetterVisible = false;
   }
 
+  // ─────────────────────────────────────────────────────────────
+  // ЛОГИКА ОТВЕТА
+  //
+  // Forgot (1) → добавить в _forgotCards для повторения
+  // Hard   (3) → SM2 короткий интервал, correctAnswers++
+  // Good   (4) → SM2 обычный, correctAnswers++
+  // Easy   (5) → isMastered=true, больше не показывать НИКОГДА
+  //              пока пользователь сам не вернёт через список карточек
+  // ─────────────────────────────────────────────────────────────
   Future<void> _answerCard(int quality) async {
     if (_currentIndex >= _cards.length) return;
 
+    if (quality == 5) {
+      // Easy = Mastered, отдельная ветка
+      await _markAsMastered();
+      return;
+    }
+
     final card = _cards[_currentIndex];
 
-    if (quality == 5) {
+    if (quality >= 3) {
+      // Hard или Good = правильно
       _correctAnswers++;
     } else {
-      if (!_incorrectCards.contains(card)) {
-        _incorrectCards.add(card);
+      // Forgot = добавить в список повторения
+      if (!_forgotCards.contains(card)) {
+        _forgotCards.add(card);
       }
     }
 
@@ -190,7 +227,8 @@ class _StudyScreenState extends State<StudyScreen>
           drift.Value(quality >= 3 ? card.correctCount + 1 : card.correctCount),
       incorrectCount: drift.Value(
           quality < 3 ? card.incorrectCount + 1 : card.incorrectCount),
-      isMastered: drift.Value(result.repetitions >= 5 && result.interval >= 21),
+      // isMastered НЕ трогаем — только через Easy или кнопку в списке
+      isMastered: drift.Value(card.isMastered),
       createdAt: drift.Value(card.createdAt),
       updatedAt: drift.Value(DateTime.now()),
     );
@@ -212,10 +250,12 @@ class _StudyScreenState extends State<StudyScreen>
     }
   }
 
+  // Easy = сразу isMastered=true, interval=9999 → никогда не появится
   Future<void> _markAsMastered() async {
     if (_currentIndex >= _cards.length) return;
 
     final card = _cards[_currentIndex];
+    _masteredInSession++;
     _correctAnswers++;
 
     final updatedCard = CardsCompanion(
@@ -235,8 +275,9 @@ class _StudyScreenState extends State<StudyScreen>
       notes: drift.Value(card.notes),
       easinessFactor: drift.Value(card.easinessFactor),
       repetitions: const drift.Value(999),
-      interval: const drift.Value(30),
-      nextReviewDate: drift.Value(DateTime.now().add(const Duration(days: 30))),
+      interval: const drift.Value(9999),
+      nextReviewDate:
+          drift.Value(DateTime.now().add(const Duration(days: 9999))),
       lastReviewedAt: drift.Value(DateTime.now()),
       correctCount: drift.Value(card.correctCount + 1),
       incorrectCount: drift.Value(card.incorrectCount),
@@ -247,15 +288,11 @@ class _StudyScreenState extends State<StudyScreen>
 
     try {
       await widget.db.into(widget.db.cards).insertOnConflictUpdate(updatedCard);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('✅ Card mastered!'),
-            backgroundColor: Colors.green,
-            duration: Duration(seconds: 2),
-          ),
-        );
-      }
+      await widget.db.addReviewHistory(ReviewHistoryCompanion(
+        cardId: drift.Value(card.id),
+        quality: const drift.Value(5),
+        timeSpentSeconds: const drift.Value(0),
+      ));
       _nextCard();
     } catch (e) {
       if (mounted) {
@@ -281,7 +318,7 @@ class _StudyScreenState extends State<StudyScreen>
 
     if (quality < 3) {
       newRepetitions = 0;
-      newInterval = 0;
+      newInterval = 1;
     } else {
       newRepetitions = repetitions + 1;
       if (newRepetitions == 1) {
@@ -316,10 +353,10 @@ class _StudyScreenState extends State<StudyScreen>
   }
 
   Future<void> _finishSession() async {
-    // Убрали updateDailyStats - таблицы нет в БД
-
     if (mounted) {
-      if (_correctAnswers == _cards.length && _cards.isNotEmpty) {
+      // FIX БАГ 2: конфетти только если НЕТ Forgot карточек
+      // (Hard/Good не считается как "идеально")
+      if (_forgotCards.isEmpty && _masteredInSession > 0) {
         _confettiController.play();
       }
       _showCompletionDialog();
@@ -327,8 +364,11 @@ class _StudyScreenState extends State<StudyScreen>
   }
 
   void _showCompletionDialog() {
-    final accuracy = _cards.isEmpty ? 0.0 : _correctAnswers / _cards.length;
-    final isPerfect = accuracy == 1.0 && _cards.isNotEmpty;
+    final total = _cards.length;
+    final accuracy = total == 0 ? 0.0 : _correctAnswers / total;
+    // FIX БАГ 2: isPerfect = нет Forgot И хотя бы одна карточка в Mastered
+    final isPerfect =
+        _forgotCards.isEmpty && _masteredInSession == total && total > 0;
 
     showDialog(
       context: context,
@@ -400,18 +440,36 @@ class _StudyScreenState extends State<StudyScreen>
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
                         children: [
-                          _buildStatItem('📚', '${_cards.length}', 'Cards'),
-                          _buildStatItem('✅', '$_correctAnswers', 'Perfect'),
+                          _buildStatItem('📚', '$total', 'Cards'),
+                          _buildStatItem('✅', '$_correctAnswers', 'Correct'),
                           _buildStatItem(
                               '🎯',
                               '${(accuracy * 100).toStringAsFixed(0)}%',
                               'Accuracy'),
                         ],
                       ),
-                      if (!isPerfect && _incorrectCards.isNotEmpty) ...[
-                        const SizedBox(height: 12),
+                      if (_masteredInSession > 0) ...[
+                        const SizedBox(height: 8),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.star,
+                                color: Colors.amber[700], size: 16),
+                            const SizedBox(width: 4),
+                            Text(
+                              'Mastered: $_masteredInSession',
+                              style: TextStyle(
+                                color: Colors.amber[700],
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                      if (_forgotCards.isNotEmpty) ...[
+                        const SizedBox(height: 8),
                         Text(
-                          'To review: ${_incorrectCards.length}',
+                          'To review: ${_forgotCards.length}',
                           style: TextStyle(
                             color: Colors.orange[700],
                             fontWeight: FontWeight.w500,
@@ -424,25 +482,26 @@ class _StudyScreenState extends State<StudyScreen>
               ],
             ),
             actions: [
-              if (_incorrectCards.isNotEmpty) ...[
+              if (_forgotCards.isNotEmpty) ...[
                 SizedBox(
                   width: double.infinity,
                   child: FilledButton.icon(
                     onPressed: () {
                       Navigator.pop(context);
                       setState(() {
-                        _cards = List.from(_incorrectCards);
-                        _incorrectCards.clear();
+                        _cards = List.from(_forgotCards);
+                        _forgotCards.clear();
                         _currentIndex = 0;
                         _isFlipped = false;
                         _correctAnswers = 0;
+                        _masteredInSession = 0;
                       });
                       _resetHints();
                       _flipController.reset();
                     },
                     icon: const Icon(Icons.replay),
                     label: Text(
-                        '🔄 Review incorrect cards (${_incorrectCards.length})'),
+                        '🔄 Review forgotten cards (${_forgotCards.length})'),
                     style: FilledButton.styleFrom(
                       backgroundColor: Colors.orange,
                       padding: const EdgeInsets.symmetric(vertical: 12),
@@ -457,13 +516,15 @@ class _StudyScreenState extends State<StudyScreen>
                   onPressed: () {
                     Navigator.pop(context);
                     setState(() {
-                      _incorrectCards.clear();
+                      _forgotCards.clear();
                       _currentIndex = 0;
                       _isFlipped = false;
                       _correctAnswers = 0;
+                      _masteredInSession = 0;
                     });
                     _resetHints();
                     _flipController.reset();
+                    _loadCards();
                   },
                   icon: const Icon(Icons.refresh),
                   label: const Text('📚 Start over'),
@@ -532,8 +593,9 @@ class _StudyScreenState extends State<StudyScreen>
           ],
         ],
       ),
+      // FIX ШИРИНА: AdaptiveLayout центрирует контент на Windows
       body: AdaptiveLayout(
-        maxWidth: AppLayout.narrowMaxWidth,
+        maxWidth: AppLayout.contentMaxWidth,
         child: _isLoading
             ? const Center(child: CircularProgressIndicator())
             : _cards.isEmpty
@@ -553,8 +615,10 @@ class _StudyScreenState extends State<StudyScreen>
           const Text('No cards to study',
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
           const SizedBox(height: 8),
-          const Text('All cards are learned!\nCome back later.',
-              textAlign: TextAlign.center),
+          const Text(
+            'All cards are learned!\nYou can return words to study from the cards list.',
+            textAlign: TextAlign.center,
+          ),
           const SizedBox(height: 24),
           FilledButton.icon(
             onPressed: () => Navigator.pop(context),
@@ -601,17 +665,6 @@ class _StudyScreenState extends State<StudyScreen>
                 ],
                 if (_isFlipped) ...[
                   _buildAnswerButtons(),
-                  const SizedBox(height: 8),
-                  OutlinedButton.icon(
-                    onPressed: _markAsMastered,
-                    icon: const Icon(Icons.check_circle, color: Colors.green),
-                    label: const Text('Mastered! Don\'t show again'),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.green,
-                      side: const BorderSide(color: Colors.green),
-                      minimumSize: const Size(double.infinity, 40),
-                    ),
-                  ),
                 ],
               ],
             ),
@@ -890,7 +943,7 @@ class _StudyScreenState extends State<StudyScreen>
                     card.transcription!.isNotEmpty) ...[
                   const SizedBox(height: 8),
                   Text(
-                    card.transcription!,
+                    '[${card.transcription}]',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                           color: Colors.purple,
                           fontFamily: 'monospace',
@@ -898,20 +951,12 @@ class _StudyScreenState extends State<StudyScreen>
                     textAlign: TextAlign.center,
                   ),
                 ],
-                if (hasAudio && !isFront) ...[
-                  const SizedBox(height: 16),
-                  _AudioPlayButton(audioPath: audioPath),
-                ],
-                if (hasVideo && !isFront) ...[
-                  const SizedBox(height: 12),
-                  _VideoButton(videoUrl: videoUrl),
-                ],
                 if (!isFront &&
                     card.example != null &&
                     card.example!.isNotEmpty) ...[
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 16),
                   Container(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.5),
                       borderRadius: BorderRadius.circular(12),
@@ -920,10 +965,40 @@ class _StudyScreenState extends State<StudyScreen>
                       card.example!,
                       style: Theme.of(context)
                           .textTheme
-                          .bodyLarge
+                          .bodyMedium
                           ?.copyWith(fontStyle: FontStyle.italic),
                       textAlign: TextAlign.center,
                     ),
+                  ),
+                ],
+                if (hasAudio || hasVideo) ...[
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      if (hasAudio) ...[
+                        IconButton(
+                          onPressed: () => AudioHelper.playAudio(audioPath!),
+                          icon: const Icon(Icons.volume_up),
+                          style: IconButton.styleFrom(
+                            backgroundColor:
+                                Colors.white.withValues(alpha: 0.7),
+                          ),
+                        ),
+                      ],
+                      if (hasVideo) ...[
+                        const SizedBox(width: 8),
+                        IconButton(
+                          onPressed: () =>
+                              VideoHelper.openVideo(context, videoUrl!),
+                          icon: const Icon(Icons.play_circle),
+                          style: IconButton.styleFrom(
+                            backgroundColor:
+                                Colors.white.withValues(alpha: 0.7),
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                 ],
               ],
@@ -934,123 +1009,85 @@ class _StudyScreenState extends State<StudyScreen>
     );
   }
 
+  // ─────────────────────────────────────────────────────────────
+  // КНОПКИ ОТВЕТА
+  // [Forgot] [Hard] [Good]  ← три кнопки в ряд
+  // [⭐ Easy — I know this perfectly!]  ← зелёная на всю ширину = Mastered
+  // ─────────────────────────────────────────────────────────────
   Widget _buildAnswerButtons() {
-    return Wrap(
-      spacing: 12,
-      runSpacing: 12,
-      alignment: WrapAlignment.center,
+    return Column(
       children: [
-        _buildAnswerButton(
-            label: 'Forgot', icon: Icons.close, color: Colors.red, quality: 0),
-        _buildAnswerButton(
-            label: 'Hard',
-            icon: Icons.sentiment_dissatisfied,
-            color: Colors.orange,
-            quality: 3),
-        _buildAnswerButton(
-            label: 'Good',
-            icon: Icons.sentiment_satisfied,
-            color: Colors.blue,
-            quality: 4),
-        _buildAnswerButton(
-            label: 'Easy',
-            icon: Icons.sentiment_very_satisfied,
-            color: Colors.green,
-            quality: 5),
+        Row(
+          children: [
+            Expanded(
+              child: _buildAnswerButton(
+                label: 'Forgot',
+                quality: 1,
+                color: Colors.red,
+                icon: Icons.close,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: _buildAnswerButton(
+                label: 'Hard',
+                quality: 3,
+                color: Colors.orange,
+                icon: Icons.sentiment_dissatisfied,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: _buildAnswerButton(
+                label: 'Good',
+                quality: 4,
+                color: Colors.blue,
+                icon: Icons.sentiment_satisfied,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        // Easy = Mastered, зелёная кнопка на всю ширину
+        SizedBox(
+          width: double.infinity,
+          child: FilledButton.icon(
+            onPressed: () => _answerCard(5),
+            icon: const Icon(Icons.star, size: 20),
+            label: const Text(
+              'Easy — I know this perfectly! ✓',
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+            ),
+            style: FilledButton.styleFrom(
+              backgroundColor: Colors.green,
+              padding: const EdgeInsets.symmetric(vertical: 14),
+            ),
+          ),
+        ),
       ],
     );
   }
 
   Widget _buildAnswerButton({
     required String label,
-    required IconData icon,
-    required Color color,
     required int quality,
+    required Color color,
+    required IconData icon,
   }) {
     return FilledButton.icon(
       onPressed: () => _answerCard(quality),
-      icon: Icon(icon),
-      label: Text(label),
+      icon: Icon(icon, size: 18),
+      label: Text(label, style: const TextStyle(fontSize: 13)),
       style: FilledButton.styleFrom(
         backgroundColor: color,
-        foregroundColor: Colors.white,
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        padding: const EdgeInsets.symmetric(vertical: 12),
       ),
     );
   }
 }
 
-class _AudioPlayButton extends StatefulWidget {
-  final String audioPath;
-  const _AudioPlayButton({required this.audioPath});
-
-  @override
-  State<_AudioPlayButton> createState() => _AudioPlayButtonState();
-}
-
-class _AudioPlayButtonState extends State<_AudioPlayButton> {
-  bool _isPlaying = false;
-
-  @override
-  void initState() {
-    super.initState();
-    AudioHelper.playerStateStream.listen((state) {
-      if (mounted) {
-        setState(() {
-          _isPlaying = state == PlayerState.playing;
-        });
-      }
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return OutlinedButton.icon(
-      onPressed: () async {
-        if (_isPlaying) {
-          await AudioHelper.stopAudio();
-        } else {
-          await AudioHelper.playAudio(widget.audioPath);
-        }
-      },
-      icon: Icon(_isPlaying ? Icons.stop_circle : Icons.volume_up, size: 22),
-      label: Text(_isPlaying ? 'Stop' : 'Listen'),
-      style: OutlinedButton.styleFrom(
-        foregroundColor: Colors.white,
-        side: const BorderSide(color: Colors.white54),
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-      ),
-    );
-  }
-}
-
-class _VideoButton extends StatelessWidget {
-  final String videoUrl;
-  const _VideoButton({required this.videoUrl});
-
-  @override
-  Widget build(BuildContext context) {
-    final isYouTube = VideoHelper.isYouTubeUrl(videoUrl);
-    final isYouGlish = VideoHelper.isYouGlishUrl(videoUrl);
-
-    return OutlinedButton.icon(
-      onPressed: () => VideoHelper.openVideo(context, videoUrl),
-      icon: Icon(
-        isYouTube
-            ? Icons.smart_display
-            : (isYouGlish ? Icons.record_voice_over : Icons.play_circle),
-        size: 22,
-        color: isYouTube ? Colors.red : Colors.white,
-      ),
-      label: Text(isYouTube ? 'YouTube' : (isYouGlish ? 'YouGlish' : 'Watch')),
-      style: OutlinedButton.styleFrom(
-        foregroundColor: Colors.white,
-        side: BorderSide(color: isYouTube ? Colors.red : Colors.white54),
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-      ),
-    );
-  }
-}
+// ─────────────────────────────────────────────────────────────
+enum HintType { image, audio, video, firstLetter }
 
 class SM2Result {
   final double easinessFactor;
@@ -1063,6 +1100,3 @@ class SM2Result {
     required this.interval,
   });
 }
-
-enum HintType { image, audio, video, firstLetter }
-
