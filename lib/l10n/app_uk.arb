@@ -43,6 +43,11 @@
   "editSet": "Редагувати сет",
   "deleteSetTitle": "Видалити сет?",
   "deleteSetContent": "Ви впевнені, що хочете видалити \"{name}\"? Усі картки будуть видалені.",
+  "@deleteSetContent": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
   "setNameLabel": "Назва сета",
   "setNameHint": "наприклад, Ділова англійська",
   "setDescriptionLabel": "Опис (необов'язково)",
@@ -51,7 +56,17 @@
   "exportShare": "Експорт та публікація",
   "exportReady": "Експорт готовий!",
   "exportCreating": "Створення експорту для {name}...",
+  "@exportCreating": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
   "exportError": "Помилка експорту: {error}",
+  "@exportError": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
   "shareWith": "Поділитися:",
   "share": "Поділитися",
   
@@ -64,6 +79,11 @@
   "createCard": "Додати картку",
   "deleteCardTitle": "Видалити картку?",
   "deleteCardContent": "Видалити \"{text}\"?",
+  "@deleteCardContent": {
+    "placeholders": {
+      "text": { "type": "String" }
+    }
+  },
   "cardDeleted": "Картку видалено",
   "cardMastered": "Картку вивчено!",
   "cardReturned": "Картку повернуто до вивчення",
@@ -76,6 +96,11 @@
   "progress": "Прогрес",
   
   "startStudy": "Почати навчання ({count})",
+  "@startStudy": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
   "showFront": "Показати лицьову",
   "showBack": "Показати зворотну",
   
@@ -83,6 +108,11 @@
   "importTitle": "Імпорт карток",
   "importFromFile": "Імпорт з файлу",
   "importSuccess": "Імпортовано карток: {count}",
+  "@importSuccess": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
   "selectFileError": "Будь ласка, виберіть файл",
   "enterDeckName": "Будь ласка, введіть назву сета",
   "pickFileToImport": "Виберіть файл для імпорту",
@@ -134,6 +164,11 @@
   "audioBack": "Аудіо зворотної сторони",
   "wordRequired": "Будь ласка, спочатку введіть слово",
   "youglishAdded": "Посилання YouGlish додано ({lang})",
+  "@youglishAdded": {
+    "placeholders": {
+      "lang": { "type": "String" }
+    }
+  },
   "openedCambridge": "Відкрито Cambridge Dictionary",
   "openedGoogleImages": "Відкрито Google Images",
   
@@ -154,7 +189,17 @@
   "listenPronunciation": "Прослухати вимову",
   
   "errorLoading": "Помилка завантаження: {error}",
+  "@errorLoading": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
   "errorGeneric": "Помилка: {error}",
+  "@errorGeneric": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
   "formatLabel": "Мітка формату",
 
   "langSelectSubtitle": "Оберіть мову",
@@ -205,6 +250,11 @@
   "finishSubtitle": "Ми проаналізували ваші відповіді і підготували ваш перший персональний сет.\n\nЧас починати!",
   "finishButton": "Поїхали!",
   "finishDeckName": "Мій старт: {goal}",
+  "@finishDeckName": {
+    "placeholders": {
+      "goal": { "type": "String" }
+    }
+  },
   "finishDeckDesc": "Персональний сет, створений AI на основі вашого тесту.",
 
   "paywallTitle": "LexiFlow PRO",
@@ -237,11 +287,23 @@
   "quoteMsgKeepGoing": "Продовжуйте! 📈",
   "quoteMsgProgress": "Кожен день - прогрес! 🌱",
   "quoteShareText": "\"{quote}\"\n\n— {author}\n\nВивчено в LexiFlow 📚",
+  "@quoteShareText": {
+    "placeholders": {
+      "quote": { "type": "String" },
+      "author": { "type": "String" }
+    }
+  },
 
   "microSessionTitle": "Швидке тренування",
   "microSessionFormat": "Формат тренування",
   "microSessionDesc": "Виберіть, які слова ви хочете повторити.",
   "microSessionMix": "🌍 Мікс: {source} ➔ {target}",
+  "@microSessionMix": {
+    "placeholders": {
+      "source": { "type": "String" },
+      "target": { "type": "String" }
+    }
+  },
   "microSessionExpress": "Експрес",
   "microSessionExpressDesc": "5 слів • В черзі за кавою",
   "microSessionDeep": "Занурення",
@@ -249,15 +311,28 @@
   "microSessionEmpty": "У вибраній категорії поки немає слів для вивчення!",
   "microSessionEndTitle": "Підсумки розминки",
   "microSessionEndWord": "Слово {current} з {total}",
+  "@microSessionEndWord": {
+    "placeholders": {
+      "current": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
 
   "tapToFlip": "Натисніть, щоб перевернути",
   "btnHard": "Складно",
   "btnKnow": "Пам'ятаю",
   "btnRepeat": "Повторити ці ж слова",
   "btnMoreWords": "Ще {count} нових слів",
+  "@btnMoreWords": { "placeholders": { "count": { "type": "int" } } },
   "btnFinish": "Завершити",
   "msgGoodJob": "Гарна робота! 👍\nДавайте закріпимо складні слова?",
   "msgRemembered": "Ви згадали {correct} із {total}.",
+  "@msgRemembered": {
+    "placeholders": {
+      "correct": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
   "phrasePerfect1": "Ідеально! 🔥\nПрезидент знає менше слів.",
   "phrasePerfect2": "Рівень: БОГ 🌟\nКоролева вчила це довше.",
   "phrasePerfect3": "Сеньйор лексики! 💻\nВаш мозок працює швидше за компілятор.",
@@ -265,6 +340,11 @@
   "phrasePerfect5": "Бездоганно! 👑\nВи точно не кіборг?",
 
   "streakDays": "{count} Днів",
+  "@streakDays": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
   "streakDesc": "Займайтеся щодня, щоб відкривати преміум-нагороди.",
   "streakReward1": "Кольорова тема \"Неон\"",
   "streakReward2": "Срібна іконка",
@@ -274,6 +354,11 @@
   "streakReward6": "Золота іконка VIP",
   "streakUnlocked": "Відкрито!",
   "streakAvailableOn": "Доступно на {day} день",
+  "@streakAvailableOn": {
+    "placeholders": {
+      "day": { "type": "int" }
+    }
+  },
   "streakGotIt": "Зрозуміло",
 
   "exportFormatTitle": "Формат експорту",
@@ -285,5 +370,47 @@
   "exportPath": "Шлях до файлу:",
   "exportBrowse": "Огляд",
   "exportSaved": "✅ Файл збережено: {path}",
-  "exportSaveTitle": "Зберегти як"
+  "@exportSaved": {
+    "placeholders": {
+      "path": { "type": "String" }
+    }
+  },
+  "exportSaveTitle": "Зберегти як",
+
+  "studyTapToReveal": "Натисніть, щоб побачити відповідь",
+  "studyForgot": "Забув",
+  "studyHard": "Складно",
+  "studyGood": "Добре",
+  "studyEasy": "Легко — знаю ідеально! ✓",
+  "studyMasteredButton": "Вивчено! Більше не показувати",
+  "studySessionComplete": "Сесію завершено!",
+  "studyCongratulations": "ВІТАЄМО!",
+  "studyAllMastered": "✨ Всі картки вивчені! ✨",
+  "studyPerfectScore": "Ідеальний результат!",
+  "studyStatistics": "Статистика:",
+  "studyCards": "Карток",
+  "studyPerfect": "Вірно",
+  "studyAccuracy": "Точність",
+  "studyToReview": "До повторення: {count}",
+  "@studyToReview": { "placeholders": { "count": { "type": "int" } } },
+  "studyReviewIncorrect": "🔄 Повторити забуті ({count})",
+  "@studyReviewIncorrect": { "placeholders": { "count": { "type": "int" } } },
+  "studyStartOver": "📚 Почати заново",
+  "studyBackToDecks": "🏠 До наборів",
+  "studyNoCards": "Немає карток для вивчення",
+  "studyAllLearned": "Всі картки вивчені!\nПоверніться пізніше.",
+  "studyBack": "Назад",
+  "studyHints": "Підказки",
+  "studyHintsUsed": "Підказки (використано: {count})",
+  "@studyHintsUsed": { "placeholders": { "count": { "type": "int" } } },
+  "studyHintPicture": "Картинка",
+  "studyHintAudio": "Аудіо",
+  "studyHintVideo": "Відео",
+  "studyHintFirstLetter": "Перша літера",
+  "studyListen": "Слухати",
+  "studyStop": "Стоп",
+  "studyYouTube": "YouTube",
+  "studyYouGlish": "YouGlish",
+  "studyWatch": "Дивитися",
+  "studyMasteredSnack": "✅ Картку вивчено!"
 }

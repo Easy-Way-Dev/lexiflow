@@ -43,6 +43,13 @@
   "editSet": "Редактировать сет",
   "deleteSetTitle": "Удалить сет?",
   "deleteSetContent": "Вы уверены, что хотите удалить \"{name}\"? Все карточки будут удалены.",
+  "@deleteSetContent": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "setNameLabel": "Название сета",
   "setNameHint": "например, Деловой английский",
   "setDescriptionLabel": "Описание (необязательно)",
@@ -51,7 +58,21 @@
   "exportShare": "Экспорт и публикация",
   "exportReady": "Экспорт готов!",
   "exportCreating": "Создание экспорта для {name}...",
+  "@exportCreating": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "exportError": "Ошибка экспорта: {error}",
+  "@exportError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "shareWith": "Поделиться:",
   "share": "Поделиться",
   
@@ -64,6 +85,13 @@
   "createCard": "Добавить карточку",
   "deleteCardTitle": "Удалить карточку?",
   "deleteCardContent": "Удалить \"{text}\"?",
+  "@deleteCardContent": {
+    "placeholders": {
+      "text": {
+        "type": "String"
+      }
+    }
+  },
   "cardDeleted": "Карточка удалена",
   "cardMastered": "Карточка выучена!",
   "cardReturned": "Карточка возвращена к изучению",
@@ -76,6 +104,13 @@
   "progress": "Прогресс",
   
   "startStudy": "Начать обучение ({count})",
+  "@startStudy": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "showFront": "Показать лицевую",
   "showBack": "Показать обратную",
   
@@ -83,6 +118,13 @@
   "importTitle": "Импорт карточек",
   "importFromFile": "Импорт из файла",
   "importSuccess": "Импортировано карточек: {count}",
+  "@importSuccess": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "selectFileError": "Пожалуйста, выберите файл",
   "enterDeckName": "Пожалуйста, введите название сета",
   "pickFileToImport": "Выберите файл для импорта",
@@ -134,6 +176,13 @@
   "audioBack": "Аудио обратной стороны",
   "wordRequired": "Пожалуйста, сначала введите слово",
   "youglishAdded": "Ссылка YouGlish добавлена ({lang})",
+  "@youglishAdded": {
+    "placeholders": {
+      "lang": {
+        "type": "String"
+      }
+    }
+  },
   "openedCambridge": "Открыт Cambridge Dictionary",
   "openedGoogleImages": "Открыты Google Images",
   
@@ -154,7 +203,21 @@
   "listenPronunciation": "Прослушать произношение",
   
   "errorLoading": "Ошибка загрузки: {error}",
+  "@errorLoading": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "errorGeneric": "Ошибка: {error}",
+  "@errorGeneric": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "formatLabel": "Метка формата",
 
   "langSelectSubtitle": "Выберите язык",
@@ -205,6 +268,13 @@
   "finishSubtitle": "Мы проанализировали ваши ответы и подготовили вашу первую персональную колоду.\n\nПора начинать!",
   "finishButton": "Погнали!",
   "finishDeckName": "Мой старт: {goal}",
+  "@finishDeckName": {
+    "placeholders": {
+      "goal": {
+        "type": "String"
+      }
+    }
+  },
   "finishDeckDesc": "Персональный сет, созданный AI на основе вашего теста.",
 
   "paywallTitle": "LexiFlow PRO",
@@ -237,11 +307,23 @@
   "quoteMsgKeepGoing": "Продолжайте! 📈",
   "quoteMsgProgress": "Каждый день - прогресс! 🌱",
   "quoteShareText": "\"{quote}\"\n\n— {author}\n\nИзучено в LexiFlow 📚",
+  "@quoteShareText": {
+    "placeholders": {
+      "quote": { "type": "String" },
+      "author": { "type": "String" }
+    }
+  },
 
   "microSessionTitle": "Быстрая тренировка",
   "microSessionFormat": "Формат тренировки",
   "microSessionDesc": "Выберите, какие слова вы хотите повторить.",
   "microSessionMix": "🌍 Микс: {source} ➔ {target}",
+  "@microSessionMix": {
+    "placeholders": {
+      "source": { "type": "String" },
+      "target": { "type": "String" }
+    }
+  },
   "microSessionExpress": "Экспресс",
   "microSessionExpressDesc": "5 слов • В очереди за кофе",
   "microSessionDeep": "Погружение",
@@ -249,15 +331,28 @@
   "microSessionEmpty": "В выбранной категории пока нет слов для изучения!",
   "microSessionEndTitle": "Итоги разминки",
   "microSessionEndWord": "Слово {current} из {total}",
+  "@microSessionEndWord": {
+    "placeholders": {
+      "current": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
 
   "tapToFlip": "Нажмите, чтобы перевернуть",
   "btnHard": "Сложно",
   "btnKnow": "Помню",
   "btnRepeat": "Повторить эти же слова",
   "btnMoreWords": "Ещё {count} новых слов",
+  "@btnMoreWords": { "placeholders": { "count": { "type": "int" } } },
   "btnFinish": "Завершить",
   "msgGoodJob": "Хорошая работа! 👍\nДавайте закрепим сложные слова?",
   "msgRemembered": "Вы вспомнили {correct} из {total}.",
+  "@msgRemembered": {
+    "placeholders": {
+      "correct": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
   "phrasePerfect1": "Идеально! 🔥\nПрезидент США знает меньше слов.",
   "phrasePerfect2": "Уровень: БОГ 🌟\nКоролева Англии учила это дольше.",
   "phrasePerfect3": "Сеньор лексики! 💻\nВаш мозг работает быстрее компилятора.",
@@ -265,6 +360,11 @@
   "phrasePerfect5": "Безупречно! 👑\nВы точно не киборг?",
 
   "streakDays": "{count} Дней",
+  "@streakDays": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
   "streakDesc": "Занимайтесь каждый день, чтобы открывать премиум-награды.",
   "streakReward1": "Цветовая тема \"Неон\"",
   "streakReward2": "Серебряная иконка",
@@ -274,6 +374,11 @@
   "streakReward6": "Золотая иконка VIP",
   "streakUnlocked": "Открыто!",
   "streakAvailableOn": "Доступно на {day} день",
+  "@streakAvailableOn": {
+    "placeholders": {
+      "day": { "type": "int" }
+    }
+  },
   "streakGotIt": "Понятно",
 
   "exportFormatTitle": "Формат экспорта",
@@ -285,5 +390,47 @@
   "exportPath": "Путь к файлу:",
   "exportBrowse": "Обзор",
   "exportSaved": "✅ Файл сохранён: {path}",
-  "exportSaveTitle": "Сохранить как"
+  "@exportSaved": {
+    "placeholders": {
+      "path": { "type": "String" }
+    }
+  },
+  "exportSaveTitle": "Сохранить как",
+
+  "studyTapToReveal": "Нажмите, чтобы увидеть ответ",
+  "studyForgot": "Забыл",
+  "studyHard": "Сложно",
+  "studyGood": "Хорошо",
+  "studyEasy": "Легко — знаю идеально! ✓",
+  "studyMasteredButton": "Выучено! Больше не показывать",
+  "studySessionComplete": "Сессия завершена!",
+  "studyCongratulations": "ПОЗДРАВЛЯЕМ!",
+  "studyAllMastered": "✨ Все карточки выучены! ✨",
+  "studyPerfectScore": "Идеальный результат!",
+  "studyStatistics": "Статистика:",
+  "studyCards": "Карточек",
+  "studyPerfect": "Верно",
+  "studyAccuracy": "Точность",
+  "studyToReview": "К повторению: {count}",
+  "@studyToReview": { "placeholders": { "count": { "type": "int" } } },
+  "studyReviewIncorrect": "🔄 Повторить забытые ({count})",
+  "@studyReviewIncorrect": { "placeholders": { "count": { "type": "int" } } },
+  "studyStartOver": "📚 Начать заново",
+  "studyBackToDecks": "🏠 К сетам",
+  "studyNoCards": "Нет карточек для изучения",
+  "studyAllLearned": "Все карточки изучены!\nВозвращайтесь позже.",
+  "studyBack": "Назад",
+  "studyHints": "Подсказки",
+  "studyHintsUsed": "Подсказки (использовано: {count})",
+  "@studyHintsUsed": { "placeholders": { "count": { "type": "int" } } },
+  "studyHintPicture": "Картинка",
+  "studyHintAudio": "Аудио",
+  "studyHintVideo": "Видео",
+  "studyHintFirstLetter": "Первая буква",
+  "studyListen": "Слушать",
+  "studyStop": "Стоп",
+  "studyYouTube": "YouTube",
+  "studyYouGlish": "YouGlish",
+  "studyWatch": "Смотреть",
+  "studyMasteredSnack": "✅ Карточка выучена!"
 }
