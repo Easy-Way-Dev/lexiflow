@@ -96,52 +96,53 @@ lib/
 │       └── add_card_screen.dart   ← Создание/редактирование карточки
 ├── shared/
 │   ├── theme/app_theme.dart
-│   └── widgets/adaptive_layout.dart  ← НОВЫЙ: AdaptiveLayout для Windows
+│   └── widgets/adaptive_layout.dart
 ├── l10n/  ← app_ru.arb, app_en.arb, app_uk.arb
 └── main.dart
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ЧТО УЖЕ СДЕЛАНО — НЕ ЛОМАТЬ!
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-✅ onboarding_screen.dart
-   — Единый _topCardKey для верхней карточки (вместо словаря ключей)
-   — Фоновые карточки без ключей, stackOffset для эффекта стопки
-   — AdaptiveLayout(maxWidth: 720) — центрирование на Windows
-   — _SwipeableCard использует LayoutBuilder (не MediaQuery!) для ширины
-   — triggerSwipeLeft/Right используют реальную ширину контейнера
-
-✅ decks_screen.dart — экспорт
-   — showModalBottomSheet заменён на showDialog + ConstrainedBox(maxWidth:480)
-   — Корректно отображается по центру на Windows
-
-✅ decks_screen.dart — MicroSessionOverlay (в конце файла!)
-   — Добавлен свайп влево (Сложно) / вправо (Помню)
-   — Визуальные индикаторы при свайпе
-   — _swipeDx сбрасывается при каждой новой карточке
-   — AdaptiveLayout(maxWidth: 600) для MicroSession
-
-✅ Адаптивный UI — lib/shared/widgets/adaptive_layout.dart (НОВЫЙ ФАЙЛ)
-   — AdaptiveLayout виджет с maxWidth ограничением
-   — AppLayout константы: contentMaxWidth=720, narrowMaxWidth=600, wideMaxWidth=900
-   — Применён во всех основных экранах
-
-✅ Все экраны адаптированы под Windows (maxWidth=720):
-   — decks_screen.dart, study_screen.dart, onboarding_screen.dart
-   — cards_list_screen.dart, import_screen.dart, add_card_screen.dart
-
-✅ main.dart
-   — Использует AppTheme.lightTheme / darkTheme (унифицировано)
-   — _DesktopShell: фоновый цвет за контентом на широких экранах
-
-✅ Весь хардкод убран — всё через ARB-ключи
-✅ Убраны все ! у AppLocalizations
+✅ Адаптивный UI — AdaptiveLayout для Windows (maxWidth=720)
+   — Применён во всех экранах
 
 ✅ Иконки приложения — все платформы
    — assets/icons/app_icon.png (1024px master)
-   — flutter_launcher_icons ^0.14.1
    — Android: adaptive icon, фон #EDE8FF
-   — iOS: все размеры без альфа-канала  
+   — iOS: все размеры без альфа-канала
    — Windows: taskbar icon 48px
+
+✅ Splash Screen
+   — flutter_native_splash настроен
+   — Цвет #EDE8FF (светлый) / #1A1030 (тёмный)
+   — На Windows нативного splash нет (ограничение платформы)
+
+✅ Разрешения — все платформы
+   — Android: INTERNET, CAMERA, READ_MEDIA_IMAGES, RECORD_AUDIO,
+              VIBRATE, ACCESS_NETWORK_STATE
+   — iOS Info.plist: NSCameraUsageDescription, NSPhotoLibraryUsageDescription,
+              NSMicrophoneUsageDescription, NSPhotoLibraryAddUsageDescription
+   — Windows Runner.rc: CompanyName="Easy Way Dev", ProductName="LexiFlow"
+
+✅ Study Screen — логика тренировки
+   — Загружает ВСЕ невыученные карточки (isMastered==false)
+   — Forgot(1) / Hard(3) / Good(4) / Easy(5=Mastered)
+   — Easy → isMastered=true, interval=9999, больше не показывается
+   — Статистика: correct=Hard+Good+Easy, mastered=Easy only
+   — Конфетти только если ВСЕ карточки нажаты Easy
+
+✅ Cards List Screen — счётчик
+   — "К изучению" = cards.where((c) => !c.isMastered).length
+   — Кнопка "Вернуть к изучению" сбрасывает SM2 и nextReviewDate=now()
+
+✅ Локализация
+   — flutter gen-l10n работает через l10n.yaml
+   — build_runner генерирует всё корректно
+   — AppLocalizations без ! оператора везде
+
+✅ onboarding_screen.dart — свайп карточек
+✅ decks_screen.dart — MicroSessionOverlay, экспорт через диалог
+✅ Весь хардкод убран — всё через ARB-ключи
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ВАЖНЫЕ ДЕТАЛИ АРХИТЕКТУРЫ
@@ -152,18 +153,20 @@ lib/
 - updateDailyStats — метод существует в БД, используется в MicroSessionOverlay
 - AdaptiveLayout НЕ применяется к диалогам (они уже имеют ConstrainedBox)
 - Все экраны используют AppLayout.contentMaxWidth = 720 для единообразия
+- isMastered меняется ТОЛЬКО через Easy кнопку или кнопку в cards_list_screen
+  (НЕ через автоматический SM2)
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ТЕКУЩИЙ ЭТАП — BETA РЕЛИЗ
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🟡 Этап 1А — В процессе:
-  [x] Адаптивный UI: MaxWidth ограничения для Windows — ГОТОВО
-  [ ] Нативные иконки (iOS / Android / Windows)
-  [ ] Splash Screen для всех платформ
-  [ ] Разрешения: Info.plist, AndroidManifest.xml, Windows manifest
+🟢 Этап 1А — ГОТОВО:
+  [x] Адаптивный UI: MaxWidth ограничения для Windows
+  [x] Нативные иконки (iOS / Android / Windows)
+  [x] Splash Screen
+  [x] Разрешения: Info.plist, AndroidManifest.xml, Windows manifest
 
-🟡 Этап 1Б — Качество:
-  [ ] Обработка ошибок с UI-фидбеком (сейчас catch(e) без Snackbar)
+🟡 Этап 1Б — Качество (ТЕКУЩИЙ):
+  [ ] Обработка ошибок с UI-фидбеком
   [ ] Тестирование полного флоу на всех платформах
 
 🟢 Этап 2 — Монетизация (после Beta):
@@ -176,10 +179,6 @@ lib/
 ЗАДАЧА НА СЕГОДНЯ
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 [НАПИШИ ЗДЕСЬ ЧТО ХОЧЕШЬ СДЕЛАТЬ]
-Например:
-  "Начинаем адаптивный UI для Windows"
-  "Настраиваем иконки приложения"
-  "Исправляем баг в ..."
 
 === КОНЕЦ ПРОМТА ===
 ```
@@ -227,13 +226,13 @@ https://raw.githubusercontent.com/Easy-Way-Dev/lexiflow/main/lib/core/utils/vide
 
 # Тема
 https://raw.githubusercontent.com/Easy-Way-Dev/lexiflow/main/lib/shared/theme/app_theme.dart
-https://raw.githubusercontent.com/Easy-Way-Dev/lexiflow/main/assets/icons/app_icon.png
 
 # Локализация
 https://raw.githubusercontent.com/Easy-Way-Dev/lexiflow/main/lib/l10n/app_ru.arb
 https://raw.githubusercontent.com/Easy-Way-Dev/lexiflow/main/lib/l10n/app_en.arb
 https://raw.githubusercontent.com/Easy-Way-Dev/lexiflow/main/lib/l10n/app_uk.arb
 
+# Платформы
 https://raw.githubusercontent.com/Easy-Way-Dev/lexiflow/main/android/app/src/main/AndroidManifest.xml
 https://raw.githubusercontent.com/Easy-Way-Dev/lexiflow/main/ios/Runner/Info.plist
 https://raw.githubusercontent.com/Easy-Way-Dev/lexiflow/main/windows/runner/Runner.rc
