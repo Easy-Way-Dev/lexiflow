@@ -4,6 +4,7 @@ import 'package:drift/drift.dart' as drift;
 import 'package:lexiflow/core/database/app_database.dart';
 import 'package:lexiflow/features/decks/presentation/screens/add_card_screen.dart';
 import 'package:lexiflow/features/cards/presentation/screens/study_screen.dart';
+import 'package:lexiflow/shared/widgets/adaptive_layout.dart';
 
 class CardsListScreen extends StatefulWidget {
   final AppDatabase db;
@@ -34,45 +35,50 @@ class _CardsListScreenState extends State<CardsListScreen> {
   }
 
   Future<void> _loadCards() async {
-    setState(() => _isLoading = true);
+    setState(() {
+      _isLoading = true;
+    });
 
     try {
       final cards = await widget.db.getCardsByDeckId(widget.deckId);
+
       setState(() {
         _cards = cards;
-        // FIX: "К изучению" = только невыученные (isMastered == false)
+        // К изучению = только невыученные
         _cardsToStudy = cards.where((c) => !c.isMastered).length;
         _isLoading = false;
       });
     } catch (e) {
-      setState(() => _isLoading = false);
+      setState(() {
+        _isLoading = false;
+      });
+
       if (mounted) {
-        final l = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(l?.errorLoading(e.toString()) ?? e.toString()),
-          ),
+              content: Text(
+                  AppLocalizations.of(context)!.errorLoading(e.toString()))),
         );
       }
     }
   }
 
   Future<void> _deleteCard(CardData card) async {
-    final l = AppLocalizations.of(context);
+    final l = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l?.deleteCardTitle ?? ''),
-        content: Text(l?.deleteCardContent(card.frontText) ?? card.frontText),
+      builder: (context) => AlertDialog(
+        title: Text(l.deleteCardTitle),
+        content: Text(l.deleteCardContent(card.frontText)),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(l?.cancel ?? 'Cancel'),
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(l.cancel),
           ),
           FilledButton(
-            onPressed: () => Navigator.pop(ctx, true),
+            onPressed: () => Navigator.pop(context, true),
             style: FilledButton.styleFrom(backgroundColor: Colors.red),
-            child: Text(l?.delete ?? 'Delete'),
+            child: Text(l.delete),
           ),
         ],
       ),
@@ -83,26 +89,22 @@ class _CardsListScreenState extends State<CardsListScreen> {
         await widget.db.deleteCard(card.id);
         await _loadCards();
         if (mounted) {
-          final l2 = AppLocalizations.of(context);
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(l2?.cardDeleted ?? '')),
+            SnackBar(content: Text(AppLocalizations.of(context)!.cardDeleted)),
           );
         }
       } catch (e) {
         if (mounted) {
-          final l2 = AppLocalizations.of(context);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(l2?.errorGeneric(e.toString()) ?? e.toString()),
-            ),
+                content: Text(
+                    AppLocalizations.of(context)!.errorGeneric(e.toString()))),
           );
         }
       }
     }
   }
 
-  // Переключение isMastered вручную из списка карточек
-  // Пользователь может вернуть выученное слово в обучение
   Future<void> _toggleMastered(CardData card) async {
     try {
       final updatedCard = CardsCompanion(
@@ -121,12 +123,11 @@ class _CardsListScreenState extends State<CardsListScreen> {
         example: drift.Value(card.example),
         notes: drift.Value(card.notes),
         easinessFactor: drift.Value(card.easinessFactor),
-        // Возврат в обучение: сброс SM2 на начало
         repetitions: drift.Value(card.isMastered ? 0 : 999),
         interval: drift.Value(card.isMastered ? 0 : 9999),
         nextReviewDate: drift.Value<DateTime?>(
           card.isMastered
-              ? DateTime.now() // сразу попадёт в следующую тренировку
+              ? DateTime.now()
               : DateTime.now().add(const Duration(days: 9999)),
         ),
         lastReviewedAt: drift.Value<DateTime?>(card.lastReviewedAt),
@@ -141,25 +142,20 @@ class _CardsListScreenState extends State<CardsListScreen> {
       await _loadCards();
 
       if (mounted) {
-        final l = AppLocalizations.of(context);
+        final l = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              !card.isMastered
-                  ? (l?.cardMastered ?? '')
-                  : (l?.cardReturned ?? ''),
-            ),
+            content: Text(!card.isMastered ? l.cardMastered : l.cardReturned),
             backgroundColor: !card.isMastered ? Colors.green : Colors.blue,
           ),
         );
       }
     } catch (e) {
       if (mounted) {
-        final l = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(l?.errorGeneric(e.toString()) ?? e.toString()),
-          ),
+              content: Text(
+                  AppLocalizations.of(context)!.errorGeneric(e.toString()))),
         );
       }
     }
@@ -180,7 +176,7 @@ class _CardsListScreenState extends State<CardsListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context);
+    final l = AppLocalizations.of(context)!;
     final masteredCount = _cards.where((c) => c.isMastered).length;
 
     return Scaffold(
@@ -189,60 +185,67 @@ class _CardsListScreenState extends State<CardsListScreen> {
         actions: [
           IconButton(
             icon: Icon(_showFront ? Icons.flip_to_back : Icons.flip_to_front),
-            onPressed: () => setState(() => _showFront = !_showFront),
-            tooltip: _showFront ? (l?.showBack ?? '') : (l?.showFront ?? ''),
+            onPressed: () {
+              setState(() {
+                _showFront = !_showFront;
+              });
+            },
+            tooltip: _showFront ? l.showBack : l.showFront,
           ),
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: _loadCards,
-            tooltip: l?.refresh ?? '',
+            tooltip: l.refresh,
           ),
         ],
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _cards.isEmpty
-              ? _buildEmptyState(l)
-              : Column(
-                  children: [
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(16),
-                      color: Theme.of(context).colorScheme.primaryContainer,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                        children: [
-                          _buildStatItem(
-                            icon: Icons.style,
-                            label: l?.totalCards ?? '',
-                            value: '${_cards.length}',
-                            color: Colors.blue,
-                          ),
-                          _buildStatItem(
-                            icon: Icons.school,
-                            label: l?.toStudy ?? '',
-                            value: '$_cardsToStudy',
-                            color: Colors.orange,
-                          ),
-                          _buildStatItem(
-                            icon: Icons.check_circle,
-                            label: l?.mastered ?? '',
-                            value: '$masteredCount',
-                            color: Colors.green,
-                          ),
-                        ],
-                      ),
-                    ),
-                    Expanded(
-                      child: ListView.builder(
+      body: AdaptiveLayout(
+        maxWidth: AppLayout.contentMaxWidth,
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : _cards.isEmpty
+                ? _buildEmptyState()
+                : Column(
+                    children: [
+                      Container(
+                        width: double.infinity,
                         padding: const EdgeInsets.all(16),
-                        itemCount: _cards.length,
-                        itemBuilder: (context, index) =>
-                            _buildCardItem(_cards[index], l),
+                        color: Theme.of(context).colorScheme.primaryContainer,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          children: [
+                            _buildStatItem(
+                              icon: Icons.style,
+                              label: l.totalCards,
+                              value: '${_cards.length}',
+                              color: Colors.blue,
+                            ),
+                            _buildStatItem(
+                              icon: Icons.school,
+                              label: l.toStudy,
+                              value: '$_cardsToStudy',
+                              color: Colors.orange,
+                            ),
+                            _buildStatItem(
+                              icon: Icons.check_circle,
+                              label: l.mastered,
+                              value: '$masteredCount',
+                              color: Colors.green,
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
-                ),
+                      Expanded(
+                        child: ListView.builder(
+                          padding: const EdgeInsets.all(16),
+                          itemCount: _cards.length,
+                          itemBuilder: (context, index) =>
+                              _buildCardItem(_cards[index]),
+                        ),
+                      ),
+                    ],
+                  ),
+      ),
       floatingActionButton: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -250,7 +253,7 @@ class _CardsListScreenState extends State<CardsListScreen> {
             FloatingActionButton.extended(
               onPressed: _startStudy,
               icon: const Icon(Icons.school),
-              label: Text(l?.startStudy(_cardsToStudy) ?? '$_cardsToStudy'),
+              label: Text(l.startStudy(_cardsToStudy)),
               heroTag: 'study',
             ),
             const SizedBox(height: 12),
@@ -276,7 +279,8 @@ class _CardsListScreenState extends State<CardsListScreen> {
     );
   }
 
-  Widget _buildEmptyState(AppLocalizations? l) {
+  Widget _buildEmptyState() {
+    final l = AppLocalizations.of(context)!;
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -284,7 +288,7 @@ class _CardsListScreenState extends State<CardsListScreen> {
           Icon(Icons.style_outlined, size: 80, color: Colors.grey[400]),
           const SizedBox(height: 16),
           Text(
-            l?.noCards ?? '',
+            l.noCards,
             style: Theme.of(context)
                 .textTheme
                 .headlineSmall
@@ -292,7 +296,7 @@ class _CardsListScreenState extends State<CardsListScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            l?.noCardsSubtitle ?? '',
+            l.noCardsSubtitle,
             style: Theme.of(context)
                 .textTheme
                 .bodyMedium
@@ -313,7 +317,7 @@ class _CardsListScreenState extends State<CardsListScreen> {
               _loadCards();
             },
             icon: const Icon(Icons.add),
-            label: Text(l?.createCard ?? ''),
+            label: Text(l.createCard),
           ),
         ],
       ),
@@ -333,17 +337,15 @@ class _CardsListScreenState extends State<CardsListScreen> {
         Text(
           value,
           style: TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-            color: color,
-          ),
+              fontSize: 24, fontWeight: FontWeight.bold, color: color),
         ),
         Text(label, style: TextStyle(fontSize: 12, color: Colors.grey[600])),
       ],
     );
   }
 
-  Widget _buildCardItem(CardData card, AppLocalizations? l) {
+  Widget _buildCardItem(CardData card) {
+    final l = AppLocalizations.of(context)!;
     final text = _showFront ? card.frontText : card.backText;
 
     return Card(
@@ -390,7 +392,7 @@ class _CardsListScreenState extends State<CardsListScreen> {
                               size: 16, color: Colors.green[700]),
                           const SizedBox(width: 4),
                           Text(
-                            l?.masteredBadge ?? '',
+                            l.masteredBadge,
                             style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.bold,
@@ -447,13 +449,13 @@ class _CardsListScreenState extends State<CardsListScreen> {
                 children: [
                   _buildCardStat(
                     icon: Icons.repeat,
-                    label: l?.repetitions ?? '',
+                    label: l.repetitions,
                     value: '${card.repetitions}',
                   ),
                   const SizedBox(width: 16),
                   _buildCardStat(
                     icon: Icons.check_circle_outline,
-                    label: l?.correct ?? '',
+                    label: l.correct,
                     value: '${card.correctCount}',
                     color: Colors.green,
                   ),
@@ -487,9 +489,7 @@ class _CardsListScreenState extends State<CardsListScreen> {
                         size: 18,
                       ),
                       label: Text(
-                        card.isMastered
-                            ? (l?.returnToStudy ?? '')
-                            : (l?.markAsMastered ?? ''),
+                        card.isMastered ? l.returnToStudy : l.markAsMastered,
                         style: const TextStyle(fontSize: 13),
                       ),
                       style: OutlinedButton.styleFrom(
@@ -518,15 +518,14 @@ class _CardsListScreenState extends State<CardsListScreen> {
                         _loadCards();
                       },
                       icon: const Icon(Icons.edit, size: 18),
-                      label: Text(l?.edit ?? '',
-                          style: const TextStyle(fontSize: 13)),
+                      label: Text(l.edit, style: const TextStyle(fontSize: 13)),
                     ),
                   ),
                   const SizedBox(width: 8),
                   IconButton(
                     onPressed: () => _deleteCard(card),
                     icon: const Icon(Icons.delete, color: Colors.red),
-                    tooltip: l?.delete ?? '',
+                    tooltip: l.delete,
                   ),
                 ],
               ),
@@ -554,15 +553,9 @@ class _CardsListScreenState extends State<CardsListScreen> {
             Text(
               value,
               style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.bold,
-                color: color,
-              ),
+                  fontSize: 13, fontWeight: FontWeight.bold, color: color),
             ),
-            Text(
-              label,
-              style: TextStyle(fontSize: 9, color: Colors.grey[600]),
-            ),
+            Text(label, style: TextStyle(fontSize: 9, color: Colors.grey[600])),
           ],
         ),
       ],
