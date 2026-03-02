@@ -907,57 +907,97 @@ class _DecksScreenState extends State<DecksScreen>
                 Text('${l.totalCards}: ${deck.totalCards}',
                     style: TextStyle(color: Colors.grey[600], fontSize: 13)),
                 const SizedBox(height: 20),
-                Text(l.shareWith,
-                    style: const TextStyle(
-                        fontWeight: FontWeight.w600, fontSize: 15)),
-                const SizedBox(height: 16),
-                Column(children: [
-                  Row(children: [
-                    Expanded(
-                        child: _buildBigShareButton(
-                            emoji: '✈️',
-                            label: 'Telegram',
-                            color: const Color(0xFF0088CC),
-                            onTap: () => _shareToTelegram(filePath))),
-                    const SizedBox(width: 12),
-                    Expanded(
-                        child: _buildBigShareButton(
-                            emoji: '💬',
-                            label: 'WhatsApp',
-                            color: const Color(0xFF25D366),
-                            onTap: () => _shareToWhatsApp(filePath))),
-                    const SizedBox(width: 12),
-                    Expanded(
-                        child: _buildBigShareButton(
-                            emoji: '📘',
-                            label: 'Facebook',
-                            color: const Color(0xFF1877F2),
-                            onTap: () => _shareToFacebook(filePath))),
+                // На Windows — показываем кнопки для работы с файлом
+                // На мобильных — кнопки мессенджеров через системный шаринг
+                if (Platform.isWindows) ...[
+                  Text(l.shareWith,
+                      style: const TextStyle(
+                          fontWeight: FontWeight.w600, fontSize: 15)),
+                  const SizedBox(height: 16),
+                  Column(children: [
+                    Row(children: [
+                      Expanded(
+                          child: _buildBigShareButton(
+                              emoji: '📂',
+                              label: 'Открыть папку',
+                              color: const Color(0xFF0088CC),
+                              onTap: () => _openFileFolder(filePath))),
+                      const SizedBox(width: 12),
+                      Expanded(
+                          child: _buildBigShareButton(
+                              emoji: '📋',
+                              label: 'Скопировать путь',
+                              color: const Color(0xFF757575),
+                              onTap: () {
+                                Clipboard.setData(
+                                    ClipboardData(text: filePath));
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                      content: Text('Путь скопирован!')),
+                                );
+                              })),
+                      const SizedBox(width: 12),
+                      Expanded(
+                          child: _buildBigShareButton(
+                              emoji: '📤',
+                              label: 'Поделиться',
+                              color: const Color(0xFF5865F2),
+                              onTap: () => _shareToApp(filePath, deck.name))),
+                    ]),
                   ]),
-                  const SizedBox(height: 12),
-                  Row(children: [
-                    Expanded(
-                        child: _buildBigShareButton(
-                            emoji: '📧',
-                            label: 'Email',
-                            color: const Color(0xFFEA4335),
-                            onTap: () => _shareToEmail(filePath, deck.name))),
-                    const SizedBox(width: 12),
-                    Expanded(
-                        child: _buildBigShareButton(
-                            emoji: '💾',
-                            label: 'Discord',
-                            color: const Color(0xFF5865F2),
-                            onTap: () => _shareToDiscord(filePath))),
-                    const SizedBox(width: 12),
-                    Expanded(
-                        child: _buildBigShareButton(
-                            emoji: '📤',
-                            label: l.share,
-                            color: const Color(0xFF757575),
-                            onTap: () => _shareToApp(filePath, deck.name))),
+                ] else ...[
+                  Text(l.shareWith,
+                      style: const TextStyle(
+                          fontWeight: FontWeight.w600, fontSize: 15)),
+                  const SizedBox(height: 16),
+                  Column(children: [
+                    Row(children: [
+                      Expanded(
+                          child: _buildBigShareButton(
+                              emoji: '✈️',
+                              label: 'Telegram',
+                              color: const Color(0xFF0088CC),
+                              onTap: () => _shareToApp(filePath, deck.name))),
+                      const SizedBox(width: 12),
+                      Expanded(
+                          child: _buildBigShareButton(
+                              emoji: '💬',
+                              label: 'WhatsApp',
+                              color: const Color(0xFF25D366),
+                              onTap: () => _shareToApp(filePath, deck.name))),
+                      const SizedBox(width: 12),
+                      Expanded(
+                          child: _buildBigShareButton(
+                              emoji: '📘',
+                              label: 'Facebook',
+                              color: const Color(0xFF1877F2),
+                              onTap: () => _shareToApp(filePath, deck.name))),
+                    ]),
+                    const SizedBox(height: 12),
+                    Row(children: [
+                      Expanded(
+                          child: _buildBigShareButton(
+                              emoji: '📧',
+                              label: 'Email',
+                              color: const Color(0xFFEA4335),
+                              onTap: () => _shareToEmail(filePath, deck.name))),
+                      const SizedBox(width: 12),
+                      Expanded(
+                          child: _buildBigShareButton(
+                              emoji: '💾',
+                              label: 'Discord',
+                              color: const Color(0xFF5865F2),
+                              onTap: () => _shareToApp(filePath, deck.name))),
+                      const SizedBox(width: 12),
+                      Expanded(
+                          child: _buildBigShareButton(
+                              emoji: '📤',
+                              label: l.share,
+                              color: const Color(0xFF757575),
+                              onTap: () => _shareToApp(filePath, deck.name))),
+                    ]),
                   ]),
-                ]),
+                ],
                 const SizedBox(height: 20),
                 Text(l.exportPath,
                     style: TextStyle(
@@ -1074,60 +1114,47 @@ class _DecksScreenState extends State<DecksScreen>
     );
   }
 
-// ─────────────────────────────────────────────────────────────
-// ШАРИНГ — все методы используют Share.shareXFiles с файлом
-// На мобильных: система показывает sheet выбора приложения
-// На Windows: открывается системный диалог сохранения/шаринга
-// ─────────────────────────────────────────────────────────────
-
-  Future<void> _shareToTelegram(String path) async {
-    // На мобильных — системный sheet где пользователь выбирает Telegram
-    // На Windows — Telegram не поддерживает прямой шаринг файлов, используем shareXFiles
-    await _shareFileWithApp(path, '');
-  }
-
-  Future<void> _shareToWhatsApp(String path) async {
-    await _shareFileWithApp(path, '');
-  }
-
-  Future<void> _shareToFacebook(String path) async {
-    await _shareFileWithApp(path, '');
-  }
-
-  Future<void> _shareToEmail(String path, String name) async {
-    // Email — пробуем открыть почтовый клиент с файлом
-    // Если не получается — используем системный шаринг
+  // Открыть папку с файлом в Проводнике Windows
+  Future<void> _openFileFolder(String filePath) async {
     try {
-      final uri = Uri(
-        scheme: 'mailto',
-        queryParameters: {
-          'subject': 'LexiFlow: $name',
-          'body':
-              '📚 Делюсь колодой "$name" из приложения LexiFlow!\n\nОткройте вложенный файл в LexiFlow чтобы начать учиться.',
-        },
-      );
+      final folder =
+          filePath.substring(0, filePath.lastIndexOf(Platform.pathSeparator));
+      final uri = Uri.file(folder);
       if (await canLaunchUrl(uri)) {
         await launchUrl(uri);
       } else {
-        await _shareFileWithApp(path, name);
+        // Fallback: открыть через explorer.exe напрямую
+        await Process.run('explorer.exe', [folder]);
       }
     } catch (e) {
-      await _shareFileWithApp(path, name);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Не удалось открыть папку: $e')),
+        );
+      }
     }
   }
 
-  Future<void> _shareToDiscord(String path) async {
-    await _shareFileWithApp(path, '');
+  // Email с вложением через системный почтовый клиент
+  Future<void> _shareToEmail(String path, String name) async {
+    try {
+      final uri = Uri(scheme: 'mailto', queryParameters: {
+        'subject': 'LexiFlow: $name',
+        'body':
+            '📚 Делюсь колодой "$name" из приложения LexiFlow!\n\nОткройте вложенный файл в LexiFlow чтобы начать учиться.',
+      });
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri);
+      } else {
+        await _shareToApp(path, name);
+      }
+    } catch (e) {
+      await _shareToApp(path, name);
+    }
   }
 
+  // Системный шаринг — на мобильных показывает sheet с приложениями
   Future<void> _shareToApp(String filePath, String deckName) async {
-    await _shareFileWithApp(filePath, deckName);
-  }
-
-// Единый метод шаринга файла через системный sheet
-// Share.shareXFiles показывает нативный диалог выбора приложения
-// и передаёт реальный .lexiflow файл выбранному приложению
-  Future<void> _shareFileWithApp(String filePath, String deckName) async {
     try {
       await ImportExportService.shareToMessengers(
         filePath,
