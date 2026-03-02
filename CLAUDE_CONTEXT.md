@@ -233,4 +233,8 @@ https://raw.githubusercontent.com/Easy-Way-Dev/lexiflow/main/assets/icons/app_ic
 https://raw.githubusercontent.com/Easy-Way-Dev/lexiflow/main/lib/l10n/app_ru.arb
 https://raw.githubusercontent.com/Easy-Way-Dev/lexiflow/main/lib/l10n/app_en.arb
 https://raw.githubusercontent.com/Easy-Way-Dev/lexiflow/main/lib/l10n/app_uk.arb
+
+https://raw.githubusercontent.com/Easy-Way-Dev/lexiflow/main/android/app/src/main/AndroidManifest.xml
+https://raw.githubusercontent.com/Easy-Way-Dev/lexiflow/main/ios/Runner/Info.plist
+https://raw.githubusercontent.com/Easy-Way-Dev/lexiflow/main/windows/runner/Runner.rc
 ```
