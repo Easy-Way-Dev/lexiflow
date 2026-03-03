@@ -75,6 +75,9 @@
   },
   "shareWith": "Share with:",
   "share": "Share",
+  "openFolder": "Open folder",
+  "copyPath": "Path copied!",
+  "shareFile": "Share",
   
   "cards": "cards",
   "totalCards": "Total",

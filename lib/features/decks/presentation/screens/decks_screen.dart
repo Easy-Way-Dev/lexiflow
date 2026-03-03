@@ -919,7 +919,7 @@ class _DecksScreenState extends State<DecksScreen>
                       Expanded(
                           child: _buildBigShareButton(
                               emoji: '📂',
-                              label: 'Открыть папку',
+                              label: l.openFolder,
                               color: const Color(0xFF0088CC),
                               onTap: () => _openFileFolder(filePath))),
                       const SizedBox(width: 12),
@@ -932,15 +932,14 @@ class _DecksScreenState extends State<DecksScreen>
                                 Clipboard.setData(
                                     ClipboardData(text: filePath));
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                      content: Text('Путь скопирован!')),
+                                  const SnackBar(content: Text(l.copyPath)),
                                 );
                               })),
                       const SizedBox(width: 12),
                       Expanded(
                           child: _buildBigShareButton(
                               emoji: '📤',
-                              label: 'Поделиться',
+                              label: l.shareFile,
                               color: const Color(0xFF5865F2),
                               onTap: () => _shareToApp(filePath, deck.name))),
                     ]),

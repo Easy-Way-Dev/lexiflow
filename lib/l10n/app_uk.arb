@@ -40,7 +40,7 @@
   "createSet": "Створити сет",
   "newSet": "Новий сет",
   "createSetTitle": "Створення сета",
-  "editSet": "Редагувати сет",
+  "editSet": "Редактировать сет",
   "deleteSetTitle": "Видалити сет?",
   "deleteSetContent": "Ви впевнені, що хочете видалити \"{name}\"? Усі картки будуть видалені.",
   "@deleteSetContent": {
@@ -69,6 +69,9 @@
   },
   "shareWith": "Поділитися:",
   "share": "Поділитися",
+  "openFolder": "Відкрити папку",
+  "copyPath": "Шлях скопійовано!",
+  "shareFile": "Поділитися",
   
   "cards": "карток",
   "totalCards": "Всього",
@@ -270,7 +273,7 @@
   "paywallYearSave": "Економія 30%",
   "paywallMonth": "Місяць",
   "paywallMonthPrice": "$2.99 / міс",
-  "paywallButton": "Оформити підписку",
+  "paywallButton": "Оформить підписку",
   "paywallIntegration": "Інтеграцію RevenueCat буде додано пізніше!",
 
   "quoteShare": "Поділитися",
