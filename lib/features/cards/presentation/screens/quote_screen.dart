@@ -19,7 +19,7 @@ class QuoteScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context)!!;
+    final l = AppLocalizations.of(context)!;
     final accuracy =
         studiedCards > 0 ? (correctAnswers / studiedCards * 100).round() : 0;
 
@@ -256,4 +256,3 @@ class _StatItem extends StatelessWidget {
     );
   }
 }
-
