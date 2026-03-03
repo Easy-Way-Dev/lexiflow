@@ -597,8 +597,9 @@ class _DecksScreenState extends State<DecksScreen>
           allCards.where((c) => matchingDeckIds.contains(c.deckId)).toList();
     } else if (filter.startsWith('deck_')) {
       final deckId = int.tryParse(filter.replaceFirst('deck_', ''));
-      if (deckId != null)
+      if (deckId != null) {
         targetCards = await widget.db.getCardsByDeckId(deckId);
+      }
     }
 
     if (targetCards.isEmpty) {
@@ -1022,8 +1023,9 @@ class _DecksScreenState extends State<DecksScreen>
                     onPressed: () async {
                       final newPath =
                           await _pickSaveLocation(deck.name, filePath);
-                      if (newPath != null)
+                      if (newPath != null) {
                         setDialogState(() => pathController.text = newPath);
+                      }
                     },
                     icon: const Icon(Icons.folder_open, size: 18),
                     label: Text(l.exportBrowse),
@@ -1045,13 +1047,14 @@ class _DecksScreenState extends State<DecksScreen>
   }
 
   Future<String> _getDownloadsPath() async {
-    if (Platform.isWindows)
+    if (Platform.isWindows) {
       return '${Platform.environment['USERPROFILE']}\\Downloads';
-    else if (Platform.isAndroid)
+    } else if (Platform.isAndroid) {
       return (await getExternalStorageDirectory())?.path ??
           '/storage/emulated/0/Download';
-    else if (Platform.isIOS || Platform.isMacOS)
+    } else if (Platform.isIOS || Platform.isMacOS) {
       return (await getApplicationDocumentsDirectory()).path;
+    }
     return Platform.environment['HOME'] ?? '/tmp';
   }
 
@@ -1587,8 +1590,9 @@ class _MicroSessionOverlayState extends State<MicroSessionOverlay> {
     } else if (widget.currentFilter.startsWith('deck_')) {
       final deckId =
           int.tryParse(widget.currentFilter.replaceFirst('deck_', ''));
-      if (deckId != null)
+      if (deckId != null) {
         targetCards = await widget.db.getCardsByDeckId(deckId);
+      }
     }
     targetCards.shuffle();
     setState(() {
@@ -1663,7 +1667,7 @@ class _MicroSessionOverlayState extends State<MicroSessionOverlay> {
                   ),
                 ),
 
-                // Карточка с уникальным GlobalKey
+                // Карточка с унікальним GlobalKey
                 // При смене _cardKey Flutter создаёт новый State
                 _MicroCard(
                   key: _cardKey,
@@ -1868,11 +1872,12 @@ class _MicroCardState extends State<_MicroCard> with TickerProviderStateMixin {
       _animation = Tween<Offset>(begin: _position, end: Offset.zero).animate(
           CurvedAnimation(parent: _animController, curve: Curves.elasticOut));
       _animController.forward(from: 0).then((_) {
-        if (mounted)
+        if (mounted) {
           setState(() {
             _position = Offset.zero;
             _angle = 0;
           });
+        }
       });
     }
   }
