@@ -932,7 +932,7 @@ class _DecksScreenState extends State<DecksScreen>
                                 Clipboard.setData(
                                     ClipboardData(text: filePath));
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text(l.copyPath)),
+                                  SnackBar(content: Text(l.copyPath)),
                                 );
                               })),
                       const SizedBox(width: 12),
