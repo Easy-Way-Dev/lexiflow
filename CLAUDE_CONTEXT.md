@@ -37,12 +37,15 @@ https://raw.githubusercontent.com/Easy-Way-Dev/lexiflow/main/lib/shared/theme/ap
 https://raw.githubusercontent.com/Easy-Way-Dev/lexiflow/main/lib/l10n/app_ru.arb
 https://raw.githubusercontent.com/Easy-Way-Dev/lexiflow/main/lib/l10n/app_en.arb
 https://raw.githubusercontent.com/Easy-Way-Dev/lexiflow/main/lib/l10n/app_uk.arb
+https://raw.githubusercontent.com/Easy-Way-Dev/lexiflow/main/lib/app/settings_screen.dart
+https://raw.githubusercontent.com/Easy-Way-Dev/lexiflow/main/lib/core/data/built_in_sets_data.dart
+https://raw.githubusercontent.com/Easy-Way-Dev/lexiflow/main/lib/core/services/built_in_sets_service.dart
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ТЕХНИЧЕСКИЙ СТЕК
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 - Flutter / Dart
-- Drift (SQLite), Schema Version: 7
+- Drift (SQLite), Schema Version: 8  ← (было 7, обновлено в Stage 1C)
 - Локализация: ARB (ru / en / uk), strict mode
 - Платформы: Windows, Android, iOS
 - Алгоритм повторений: SM-2
@@ -68,6 +71,7 @@ https://raw.githubusercontent.com/Easy-Way-Dev/lexiflow/main/lib/l10n/app_uk.arb
 - В UI пользователь видит: "Сеты" (Sets)
 - В коде и БД: таблица decks, класс Deck
   (сделано намеренно для обратной совместимости)
+- Встроенные наборы: builtInSets / BuiltInSet / isBuiltIn=true
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 СТРУКТУРА ПРОЕКТА
@@ -76,13 +80,17 @@ lib/
 ├── app/
 │   ├── onboarding_screen.dart      ← Онбординг (свайп при первом запуске)
 │   ├── paywall_screen.dart         ← Экран подписки (ЗАГЛУШКА — не активен)
+│   ├── settings_screen.dart        ← Настройки (тема, язык)
 │   └── language_select_screen.dart
 ├── core/
 │   ├── database/
-│   │   └── app_database.dart       ← Drift БД, schema v7
+│   │   └── app_database.dart       ← Drift БД, schema v8
+│   ├── data/
+│   │   └── built_in_sets_data.dart ← 800 карточек, 20 тем × RU+UK (Stage 1C)
 │   ├── services/
 │   │   ├── import_export_service.dart
-│   │   └── quotes_service.dart
+│   │   ├── quotes_service.dart
+│   │   └── built_in_sets_service.dart ← Сидинг встроенных наборов (Stage 1C)
 │   └── utils/
 │       ├── audio_helper.dart
 │       ├── image_helper.dart
@@ -91,15 +99,15 @@ lib/
 │   ├── cards/presentation/screens/
 │   │   ├── cards_list_screen.dart
 │   │   ├── import_screen.dart
-│   │   ├── quote_screen.dart       ← Цитата после тренировки
+│   │   ├── quote_screen.dart
 │   │   ├── settings_screen.dart
-│   │   └── study_screen.dart       ← Полная тренировка (flip + SM2)
+│   │   └── study_screen.dart
 │   └── decks/presentation/screens/
-│       ├── decks_screen.dart       ← ГЛАВНЫЙ экран (сеты + MicroSessionOverlay)
-│       └── add_card_screen.dart    ← Создание/редактирование карточки
+│       ├── decks_screen.dart       ← ГЛАВНЫЙ экран (Library + My Decks + MicroSession)
+│       └── add_card_screen.dart
 ├── shared/
 │   ├── theme/app_theme.dart
-│   └── widgets/adaptive_layout.dart ← AdaptiveLayout + AppLayout константы
+│   └── widgets/adaptive_layout.dart
 ├── l10n/  ← app_ru.arb, app_en.arb, app_uk.arb
 └── main.dart
 
@@ -108,62 +116,33 @@ lib/
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 ✅ Адаптивный UI — AdaptiveLayout для Windows (maxWidth=720)
-   — Применён во всех основных экранах
-   — AppLayout.contentMaxWidth=720, narrowMaxWidth=600, wideMaxWidth=900
-   — НЕ применяется к диалогам (у них свой ConstrainedBox)
-
 ✅ Иконки приложения — все платформы
-   — assets/icons/app_icon.png (1024px master)
-   — Android: adaptive icon, фон #EDE8FF
-   — iOS: все размеры без альфа-канала
-   — Windows: taskbar icon 48px
-
 ✅ Splash Screen
-   — flutter_native_splash ^2.4.3 настроен в pubspec.yaml
-   — Цвет #EDE8FF (светлый) / #1A1030 (тёмный)
-   — На Windows нативного splash нет (ограничение платформы)
-
 ✅ Разрешения — все платформы
-   — Android: INTERNET, ACCESS_NETWORK_STATE, CAMERA,
-     READ_EXTERNAL_STORAGE (maxSdkVersion=32), READ_MEDIA_IMAGES,
-     RECORD_AUDIO, MODIFY_AUDIO_SETTINGS, VIBRATE
-   — iOS Info.plist: NSCameraUsageDescription, NSPhotoLibraryUsageDescription,
-     NSMicrophoneUsageDescription, NSPhotoLibraryAddUsageDescription
-   — Windows Runner.rc: CompanyName="Easy Way Dev", ProductName="LexiFlow"
-
 ✅ Локализация (ru / en / uk)
-   — Генерируется через l10n.yaml + flutter gen-l10n
-   — build_runner для Drift: dart run build_runner build --delete-conflicting-outputs
-   — AppLocalizations без ! везде
-   — Все тексты в ARB файлах, хардкод убран
-
 ✅ Study Screen — логика тренировки (SM-2)
-   — Загружает ВСЕ невыученные карточки (isMastered==false), overdue первые
-   — Кнопки: Forgot(q=1) / Hard(q=3) / Good(q=4) / Easy(q=5)
-   — Easy → isMastered=true, interval=9999, nextReviewDate=+9999дней
-   — isMastered меняется ТОЛЬКО через Easy или кнопку в cards_list_screen
-   — Конфетти только если ВСЕ карточки нажаты Easy
-
 ✅ Cards List Screen
-   — Счётчик "К изучению" = cards.where((c) => !c.isMastered).length
-   — Кнопка "Вернуть к изучению" → isMastered=false, nextReviewDate=now()
-
 ✅ Export / Share — платформенный шаринг
-   — На Windows: "Открыть папку" / "Скопировать путь" / "Поделиться"
-   — _openFileFolder открывает Проводник через launchUrl + fallback Process.run
-   — На мобильных: Share.shareXFiles (системный sheet с мессенджерами)
-   — Email: открывает почтовый клиент через mailto://
-   — Все тексты локализованы (openFolder, copyPath, shareFile в ARB)
+✅ Rewards Screen (код есть, скрыт до релиза)
+✅ MicroSessionOverlay со свайпами в decks_screen.dart
 
-✅ Rewards Screen (экран наград за streak)
-   — КОД СОХРАНЁН но экран скрыт до бета-релиза
-   — Будет активирован после запуска в сторах
-   — Содержит: темы, иконки, звуки, AI-сеты за milestone дней
-
-✅ quote_screen.dart — исправлен двойной !! → !
-✅ decks_screen.dart — lint warnings исправлены (if без скобок)
-✅ onboarding_screen.dart — свайп карточек, AdaptiveLayout
-✅ decks_screen.dart — MicroSessionOverlay со свайпами
+✅ Stage 1C — Встроенная библиотека (800 карточек)
+   — lib/core/data/built_in_sets_data.dart — 20 тем × 2 языка (RU+UK) × 20 карточек
+   — Темы: About Myself, Daily Routine, Home & Lifestyle, Food & Eating Out,
+     Shopping, Travel & Transport, Weather, Cities & Countries,
+     Holidays & Traditions, Hobbies & Interests, Movies & Music,
+     Books & Education, Sport & Healthy Living, Work & Career,
+     Technology & The Internet (B1), Business English (B2),
+     Environment (B2), Health & Medicine (A2),
+     Future Plans & Dreams (B1), Character & Emotions (B1)
+   — Классы: BuiltInCard, BuiltInSet, builtInSets (const List<BuiltInSet>)
+   — lib/core/services/built_in_sets_service.dart — сидинг в БД
+   — Сидинг: при первом запуске + при смене языка (только новые наборы)
+   — Флаги: built_in_seeded_ru / built_in_seeded_uk в Settings таблице
+   — isBuiltIn=true → нет кнопок удаления/редактирования в UI
+   — Секция "Library" над пользовательскими сетами в decks_screen
+   — schema version: 7 → 8 (addColumn isBuiltIn в Decks)
+   — ARB: librarySection, newSetsAdded (ru/en/uk)
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ВАЖНЫЕ ДЕТАЛИ АРХИТЕКТУРЫ
@@ -175,59 +154,43 @@ lib/
 - Streak хранится в БД, отображается в главном экране (🔥N)
 - paywall_screen.dart — заглушка, показывается при попытке использовать Premium
 - Экспортированные файлы: Documents/exported_files/*.lexiflow
+- BuiltInSetsService.seedForLanguage() — вызывается в main.dart и settings_screen.dart
+- isBuiltIn колонка добавлена в таблицу Decks (BoolColumn, default false)
+- Локаль хранится в Settings: ключ 'app_locale', значения: 'ru' / 'uk' / 'en'
+- LexiFlowApp.setLocale(Locale locale) — статический метод смены языка
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-ROADMAP — BETA РЕЛИЗ
+ROADMAP
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-🟢 Этап 1А — ГОТОВО:
-  [x] Адаптивный UI для Windows
-  [x] Нативные иконки (iOS / Android / Windows)
-  [x] Splash Screen
-  [x] Разрешения: Info.plist, AndroidManifest.xml, Windows manifest
+🟢 Этап 1А — ГОТОВО
+🟢 Этап 1Б — Качество — ГОТОВО
 
-🟢 Этап 1Б — Качество — ГОТОВО:
-  [x] Обработка ошибок с UI-фидбеком (SnackBar везде)
-  [x] Экспорт/шаринг работает корректно на всех платформах
-  [x] Локализация всех строк (ru/en/uk)
-  [x] Lint warnings исправлены (0 ошибок)
+🟡 Этап 1В — Встроенная библиотека (Stage 1C) — В ПРОЦЕССЕ:
+  [x] built_in_sets_data.dart — 800 карточек (20 тем × RU+UK)
+  [ ] built_in_sets_service.dart — написать сервис сидинга
+  [ ] app_database.dart — миграция 7→8, колонка isBuiltIn
+  [ ] main.dart — вызов сидинга при первом запуске
+  [ ] settings_screen.dart — вызов сидинга при смене языка + SnackBar
+  [ ] decks_screen.dart — секция Library + защита от удаления
+  [ ] ARB файлы — librarySection, newSetsAdded (ru/en/uk)
+  [ ] flutter gen-l10n после ARB
 
-🟡 Этап 1В — Публикация (ТЕКУЩИЙ):
-  [ ] Тестирование полного флоу на реальных Android + iOS устройствах
+🟡 Этап 1Г — Публикация:
+  [ ] Тестирование на реальных устройствах Android + iOS
   [ ] Bundle ID настройка для сторов
-  [ ] Google Play Console — создать приложение, загрузить AAB
-  [ ] App Store Connect — создать приложение, загрузить IPA
-  [ ] Скриншоты для сторов (6.5" iPhone, iPad, Android)
+  [ ] Google Play Console — AAB
+  [ ] App Store Connect — IPA
+  [ ] Скриншоты для сторов
   [ ] Описание приложения (ru/en/uk)
   [ ] Privacy Policy страница
 
 🟢 Этап 2 — Монетизация (после Beta):
   [ ] Rewards Screen — активировать (код уже есть!)
-  [ ] Firebase Cloud Sync (бэкап карточек)
-  [ ] RevenueCat (App Store / Google Play покупки)
+  [ ] Firebase Cloud Sync
+  [ ] RevenueCat
   [ ] AI генерация сетов (Gemini / OpenAI)
-  [ ] Геймификация: Lexi-Coins, звуки, разблокировка тем
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-ЧЕК-ЛИСТ ТЕСТИРОВАНИЯ ПЕРЕД РЕЛИЗОМ
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Каждый пункт должен работать на Android И iOS:
-
-[ ] Онбординг с нуля (первый запуск, выбор языка, свайп карточек)
-[ ] Создание сета (название, описание, языки)
-[ ] Создание карточек вручную (слово, перевод, фото, аудио)
-[ ] Тренировка — все кнопки: Forgot / Hard / Good / Easy
-[ ] Easy → карточка уходит в Mastered, больше не показывается
-[ ] Конфетти при 100% Easy на все карточки
-[ ] Статистика после тренировки (точность, количество)
-[ ] MicroSession (быстрая тренировка с главного экрана, свайпы)
-[ ] Импорт .lexiflow файла
-[ ] Экспорт сета → шаринг через мессенджер
-[ ] Смена языка интерфейса (ru / en / uk) — все строки переключаются
-[ ] Тёмная / светлая тема
-[ ] Streak счётчик (🔥) увеличивается каждый день
-[ ] Работа на маленьком экране (телефон) и большом (планшет)
-[ ] Приложение не падает при сворачивании и возврате
+  [ ] Геймификация
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ЗАДАЧА НА СЕГОДНЯ
@@ -264,6 +227,7 @@ https://raw.githubusercontent.com/Easy-Way-Dev/lexiflow/main/lib/core/database/a
 https://raw.githubusercontent.com/Easy-Way-Dev/lexiflow/main/lib/app/onboarding_screen.dart
 https://raw.githubusercontent.com/Easy-Way-Dev/lexiflow/main/lib/app/paywall_screen.dart
 https://raw.githubusercontent.com/Easy-Way-Dev/lexiflow/main/lib/app/language_select_screen.dart
+https://raw.githubusercontent.com/Easy-Way-Dev/lexiflow/main/lib/app/settings_screen.dart
 
 # Cards
 https://raw.githubusercontent.com/Easy-Way-Dev/lexiflow/main/lib/features/cards/presentation/screens/study_screen.dart
@@ -283,9 +247,13 @@ https://raw.githubusercontent.com/Easy-Way-Dev/lexiflow/main/lib/shared/theme/ap
 # Сервисы
 https://raw.githubusercontent.com/Easy-Way-Dev/lexiflow/main/lib/core/services/import_export_service.dart
 https://raw.githubusercontent.com/Easy-Way-Dev/lexiflow/main/lib/core/services/quotes_service.dart
+https://raw.githubusercontent.com/Easy-Way-Dev/lexiflow/main/lib/core/services/built_in_sets_service.dart
 https://raw.githubusercontent.com/Easy-Way-Dev/lexiflow/main/lib/core/utils/audio_helper.dart
 https://raw.githubusercontent.com/Easy-Way-Dev/lexiflow/main/lib/core/utils/image_helper.dart
 https://raw.githubusercontent.com/Easy-Way-Dev/lexiflow/main/lib/core/utils/video_helper.dart
+
+# Stage 1C — Встроенная библиотека
+https://raw.githubusercontent.com/Easy-Way-Dev/lexiflow/main/lib/core/data/built_in_sets_data.dart
 
 # Локализация
 https://raw.githubusercontent.com/Easy-Way-Dev/lexiflow/main/lib/l10n/app_ru.arb
