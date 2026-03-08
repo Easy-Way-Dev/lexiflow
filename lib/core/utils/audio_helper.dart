@@ -7,7 +7,7 @@ import 'package:path/path.dart' as p;
 
 class AudioHelper {
   static final AudioPlayer _player = AudioPlayer();
-  static final Record _recorder = Record();
+  static final AudioRecorder _recorder = AudioRecorder();
   static bool _isRecording = false;
 
   // ========== ЗАПИСЬ ==========
@@ -24,14 +24,15 @@ class AudioHelper {
       }
 
       final timestamp = DateTime.now().millisecondsSinceEpoch;
-      // WAV формат - работает на Windows!
       final recordPath = p.join(audioDir.path, 'audio_$timestamp.wav');
 
       await _recorder.start(
+        const RecordConfig(
+          encoder: AudioEncoder.wav,
+          bitRate: 128000,
+          sampleRate: 44100,
+        ),
         path: recordPath,
-        encoder: AudioEncoder.wav, // WAV вместо aacLc!
-        bitRate: 128000,
-        samplingRate: 44100,
       );
 
       _isRecording = true;
@@ -113,4 +114,3 @@ class AudioHelper {
     await _recorder.dispose();
   }
 }
-
