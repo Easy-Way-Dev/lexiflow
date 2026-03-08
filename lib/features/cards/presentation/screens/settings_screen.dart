@@ -103,10 +103,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
           : null,
       selected: isSelected,
       onTap: () async {
+        // Захватываем локализации до асинхронного вызова (твое исправление!)
+        final l = AppLocalizations.of(context)!;
+
         await widget.db.setSetting('app_locale', code);
         LexiFlowApp.setLocale(Locale(code));
 
-        final l = AppLocalizations.of(context)!;
         final count = await BuiltInSetsService.seedForLanguage(code, widget.db);
         if (count > 0 && mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
