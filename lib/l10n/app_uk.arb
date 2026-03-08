@@ -10,7 +10,7 @@
   "close": "Закрити",
   "refresh": "Оновити",
   "next": "Далі",
-  "skip": "Пропустити",
+  "skip": "Пропустить",
   "getStarted": "Почати!",
   "settings": "Налаштування",
   
@@ -42,7 +42,7 @@
   "createSetTitle": "Створення сета",
   "editSet": "Редактировать сет",
   "deleteSetTitle": "Видалити сет?",
-  "deleteSetContent": "Ви впевнені, що хочете видалити \"{name}\"? Усі картки будуть видалені.",
+  "deleteSetContent": "Ви впевнені, що хочете видалити \"{name}\"?\nУсі картки будуть видалені.",
   "@deleteSetContent": {
     "placeholders": {
       "name": { "type": "String" }
@@ -96,7 +96,7 @@
   "repetitions": "Повторень",
   "correct": "Правильно",
   "errors": "Помилок",
-  "progress": "Прогрес",
+  "progress": "Прогресс",
   
   "startStudy": "Почати навчання ({count})",
   "@startStudy": {
@@ -365,9 +365,9 @@
   "streakGotIt": "Зрозуміло",
 
   "exportFormatTitle": "Формат експорту",
-  "exportLexiflowDesc": "Повна копія. Ідеально для друзів.",
+  "exportLexiflowDesc": "Повна копія.\nІдеально для друзів.",
   "exportCsvTitle": "CSV Таблиця",
-  "exportCsvDesc": "Тільки текст. Для Excel та Anki.",
+  "exportCsvDesc": "Тільки текст.\nДля Excel та Anki.",
   "exportJsonTitle": "JSON Файл",
   "exportJsonDesc": "Для розробників.",
   "exportPath": "Шлях до файлу:",
@@ -415,5 +415,15 @@
   "studyYouTube": "YouTube",
   "studyYouGlish": "YouGlish",
   "studyWatch": "Дивитися",
-  "studyMasteredSnack": "✅ Картку вивчено!"
+  "studyMasteredSnack": "✅ Картку вивчено!",
+  "librarySection": "Бібліотека",
+  "myDecks": "Мої сети",
+  "newSetsAdded": "Додано нові набори для {language}",
+  "@newSetsAdded": {
+    "placeholders": {
+      "language": {
+        "type": "String"
+      }
+    }
+  }
 }

@@ -42,7 +42,7 @@
   "createSetTitle": "Создание сета",
   "editSet": "Редактировать сет",
   "deleteSetTitle": "Удалить сет?",
-  "deleteSetContent": "Вы уверены, что хотите удалить \"{name}\"? Все карточки будут удалены.",
+  "deleteSetContent": "Вы уверены, что хотите удалить \"{name}\"?\nВсе карточки будут удалены.",
   "@deleteSetContent": {
     "placeholders": {
       "name": {
@@ -242,7 +242,7 @@
 
   "swipeTestTitle": "Проверка уровня",
   "swipeTestSubtitle": "Смахните вправо, если знаете слово.\nСмахните влево, если не знаете.",
-  "swipeTopCardGood": "Отлично! Идем дальше...",
+  "swipeTopCardGood": "Отлично!\nИдем дальше...",
   "swipeIDontKnow": "Не знаю",
   "swipeIKnow": "Знаю",
   
@@ -385,9 +385,9 @@
   "streakGotIt": "Понятно",
 
   "exportFormatTitle": "Формат экспорта",
-  "exportLexiflowDesc": "Полная копия. Идеально для друзей.",
+  "exportLexiflowDesc": "Полная копия.\nИдеально для друзей.",
   "exportCsvTitle": "CSV Таблица",
-  "exportCsvDesc": "Только текст. Для Excel и Anki.",
+  "exportCsvDesc": "Только текст.\nДля Excel и Anki.",
   "exportJsonTitle": "JSON Файл",
   "exportJsonDesc": "Для разработчиков.",
   "exportPath": "Путь к файлу:",
@@ -435,5 +435,15 @@
   "studyYouTube": "YouTube",
   "studyYouGlish": "YouGlish",
   "studyWatch": "Смотреть",
-  "studyMasteredSnack": "✅ Карточка выучена!"
+  "studyMasteredSnack": "✅ Карточка выучена!",
+  "librarySection": "Библиотека",
+  "myDecks": "Мои сеты",
+  "newSetsAdded": "Добавлены новые наборы для {language}",
+  "@newSetsAdded": {
+    "placeholders": {
+      "language": {
+        "type": "String"
+      }
+    }
+  }
 }

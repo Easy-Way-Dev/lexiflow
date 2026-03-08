@@ -22,7 +22,7 @@
   "onboardingStudyDescription": "Cards appear when you need to review them",
   "onboardingMultimediaTitle": "Add Multimedia",
   "onboardingMultimediaDescription": "Make learning visual and interactive",
-  
+ 
   "settingsAppearance": "Appearance",
   "settingsTheme": "Theme",
   "settingsThemeLight": "Light",
@@ -42,7 +42,7 @@
   "createSetTitle": "Create New Set",
   "editSet": "Edit Set",
   "deleteSetTitle": "Delete Set?",
-  "deleteSetContent": "Are you sure you want to delete \"{name}\"? All cards will be deleted.",
+  "deleteSetContent": "Are you sure you want to delete \"{name}\"?\nAll cards will be deleted.",
   "@deleteSetContent": {
     "placeholders": {
       "name": {
@@ -242,7 +242,7 @@
 
   "swipeTestTitle": "Level Check",
   "swipeTestSubtitle": "Swipe right if you know the word.\nSwipe left if you don't.",
-  "swipeTopCardGood": "Awesome! Moving on...",
+  "swipeTopCardGood": "Awesome!\nMoving on...",
   "swipeIDontKnow": "Don't know",
   "swipeIKnow": "Know",
   
@@ -385,9 +385,9 @@
   "streakGotIt": "Got it",
 
   "exportFormatTitle": "Export Format",
-  "exportLexiflowDesc": "Full copy. Perfect for friends.",
+  "exportLexiflowDesc": "Full copy.\nPerfect for friends.",
   "exportCsvTitle": "CSV Table",
-  "exportCsvDesc": "Text only. For Excel and Anki.",
+  "exportCsvDesc": "Text only.\nFor Excel and Anki.",
   "exportJsonTitle": "JSON File",
   "exportJsonDesc": "For developers.",
   "exportPath": "File path:",
@@ -435,5 +435,15 @@
   "studyYouTube": "YouTube",
   "studyYouGlish": "YouGlish",
   "studyWatch": "Watch",
-  "studyMasteredSnack": "✅ Card mastered!"
+  "studyMasteredSnack": "✅ Card mastered!",
+  "librarySection": "Library",
+  "myDecks": "My Decks",
+  "newSetsAdded": "New sets added for {language}",
+  "@newSetsAdded": {
+    "placeholders": {
+      "language": {
+        "type": "String"
+      }
+    }
+  }
 }

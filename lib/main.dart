@@ -5,6 +5,7 @@ import 'package:lexiflow/app/onboarding_screen.dart';
 import 'package:lexiflow/core/database/app_database.dart';
 import 'package:lexiflow/features/decks/presentation/screens/decks_screen.dart';
 import 'package:lexiflow/shared/theme/app_theme.dart';
+import 'package:lexiflow/core/services/built_in_sets_service.dart';
 
 // Импорт для ограничения размера окна на Windows
 import 'dart:io' show Platform;
@@ -93,6 +94,7 @@ class _LexiFlowAppState extends State<LexiFlowApp> {
       });
     } else {
       LexiFlowApp.setLocale(Locale(setting.value));
+      await BuiltInSetsService.seedForLanguage(setting.value, _database);
     }
   }
 
@@ -203,4 +205,3 @@ class _DesktopShell extends StatelessWidget {
     );
   }
 }
-

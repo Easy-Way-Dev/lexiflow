@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:lexiflow/core/database/app_database.dart';
 import 'package:lexiflow/main.dart';
+import 'package:lexiflow/core/services/built_in_sets_service.dart';
 
 class SettingsScreen extends StatefulWidget {
   final AppDatabase db;
@@ -104,6 +105,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
       onTap: () async {
         await widget.db.setSetting('app_locale', code);
         LexiFlowApp.setLocale(Locale(code));
+
+        final l = AppLocalizations.of(context)!;
+        final count = await BuiltInSetsService.seedForLanguage(code, widget.db);
+        if (count > 0 && mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(l.newSetsAdded(name))),
+          );
+        }
+
         if (mounted) {
           Navigator.pop(context);
         }
@@ -290,4 +300,3 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 }
-

@@ -20,6 +20,8 @@ class Decks extends Table {
   IntColumn get masteredCards => integer().withDefault(const Constant(0))();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get lastStudiedAt => dateTime().nullable()();
+  // Новая колонка: флаг встроенной колоды
+  BoolColumn get isBuiltIn => boolean().withDefault(const Constant(false))();
 }
 
 @DataClassName('CardData')
@@ -86,9 +88,9 @@ class DailyStats extends Table {
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
-  // Подняли версию до 7, чтобы форсировать миграцию
+  // Подняли версию до 8 для добавления isBuiltIn в таблицу Decks
   @override
-  int get schemaVersion => 7;
+  int get schemaVersion => 8;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -106,13 +108,16 @@ class AppDatabase extends _$AppDatabase {
           if (from < 6) {
             await m.addColumn(cards, cards.transcription);
           }
-          // Новая миграция для фикса пропущенных таблиц
           if (from < 7) {
             try {
               await m.createTable(dailyStats);
             } catch (_) {
               // Если таблица уже есть, просто идем дальше
             }
+          }
+          // Миграция 8: добавляем флаг isBuiltIn
+          if (from < 8) {
+            await m.addColumn(decks, decks.isBuiltIn);
           }
         },
       );
@@ -315,4 +320,3 @@ LazyDatabase _openConnection() {
     return NativeDatabase(file);
   });
 }
-

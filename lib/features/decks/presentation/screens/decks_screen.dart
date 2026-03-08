@@ -1235,7 +1235,6 @@ class _DecksScreenState extends State<DecksScreen>
           ),
         ),
         actions: [
-          // ✅ ИСПРАВЛЕНО: tooltip локализован через ARB
           IconButton(
               icon: const Icon(Icons.school, color: Colors.blue),
               onPressed: () => Navigator.push(
@@ -1323,12 +1322,43 @@ class _DecksScreenState extends State<DecksScreen>
                     Expanded(
                         child: _decks.isEmpty
                             ? _buildEmptyState(l)
-                            : ListView.builder(
+                            : ListView(
                                 padding:
                                     const EdgeInsets.fromLTRB(16, 8, 16, 100),
-                                itemCount: _decks.length,
-                                itemBuilder: (context, index) =>
-                                    _buildDeckCard(_decks[index], l))),
+                                children: [
+                                  if (_decks.any((d) => d.isBuiltIn)) ...[
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 8, horizontal: 4),
+                                      child: Text(l.librarySection,
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .titleMedium
+                                              ?.copyWith(
+                                                  fontWeight: FontWeight.bold)),
+                                    ),
+                                    ..._decks
+                                        .where((d) => d.isBuiltIn)
+                                        .map((d) => _buildLibraryCard(d, l)),
+                                    const SizedBox(height: 16),
+                                  ],
+                                  if (_decks.any((d) => !d.isBuiltIn)) ...[
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 8, horizontal: 4),
+                                      child: Text(l.myDecks,
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .titleMedium
+                                              ?.copyWith(
+                                                  fontWeight: FontWeight.bold)),
+                                    ),
+                                    ..._decks
+                                        .where((d) => !d.isBuiltIn)
+                                        .map((d) => _buildDeckCard(d, l)),
+                                  ]
+                                ],
+                              )),
                   ],
                 ),
         ),
@@ -1450,6 +1480,79 @@ class _DecksScreenState extends State<DecksScreen>
                         ])),
                   ],
                 ),
+              ]),
+              const SizedBox(height: 12),
+              Row(children: [
+                _buildLangChip(deck.sourceLanguage),
+                const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 4),
+                    child: Icon(Icons.arrow_forward, size: 16)),
+                _buildLangChip(deck.targetLanguage),
+                const Spacer(),
+                Text('${deck.totalCards} ${l.cards}',
+                    style: const TextStyle(fontSize: 13)),
+              ]),
+              const SizedBox(height: 12),
+              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(l.progress, style: const TextStyle(fontSize: 12)),
+                      Text(
+                          '${deck.masteredCards}/${deck.totalCards} (${(progress * 100).toStringAsFixed(0)}%)',
+                          style: const TextStyle(
+                              fontSize: 12, fontWeight: FontWeight.bold))
+                    ]),
+                const SizedBox(height: 4),
+                LinearProgressIndicator(
+                    value: progress,
+                    backgroundColor: Colors.grey[200],
+                    color: Theme.of(context).colorScheme.primary,
+                    borderRadius: BorderRadius.circular(4)),
+              ]),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLibraryCard(Deck deck, AppLocalizations l) {
+    final progress =
+        deck.totalCards > 0 ? deck.masteredCards / deck.totalCards : 0.0;
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: InkWell(
+        onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) => CardsListScreen(
+                    db: widget.db,
+                    deckId: deck.id,
+                    deckName: deck.name))).then((_) => _loadDecksAndStats()),
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(children: [
+                Expanded(
+                    child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                      Text(deck.name,
+                          style: Theme.of(context).textTheme.titleLarge),
+                      if (deck.description != null &&
+                          deck.description!.isNotEmpty)
+                        Text(deck.description!,
+                            style: TextStyle(
+                                color: Colors.grey[600], fontSize: 13))
+                    ])),
+                IconButton(
+                    icon: const Icon(Icons.share, color: Colors.blue),
+                    onPressed: () => _exportDeck(deck),
+                    tooltip: l.exportShare),
               ]),
               const SizedBox(height: 12),
               Row(children: [

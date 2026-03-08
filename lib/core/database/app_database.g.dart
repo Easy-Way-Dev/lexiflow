@@ -79,6 +79,16 @@ class $DecksTable extends Decks with TableInfo<$DecksTable, Deck> {
   late final GeneratedColumn<DateTime> lastStudiedAt =
       GeneratedColumn<DateTime>('last_studied_at', aliasedName, true,
           type: DriftSqlType.dateTime, requiredDuringInsert: false);
+  static const VerificationMeta _isBuiltInMeta =
+      const VerificationMeta('isBuiltIn');
+  @override
+  late final GeneratedColumn<bool> isBuiltIn = GeneratedColumn<bool>(
+      'is_built_in', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("is_built_in" IN (0, 1))'),
+      defaultValue: const Constant(false));
   @override
   List<GeneratedColumn> get $columns => [
         id,
@@ -89,7 +99,8 @@ class $DecksTable extends Decks with TableInfo<$DecksTable, Deck> {
         totalCards,
         masteredCards,
         createdAt,
-        lastStudiedAt
+        lastStudiedAt,
+        isBuiltIn
       ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -154,6 +165,12 @@ class $DecksTable extends Decks with TableInfo<$DecksTable, Deck> {
           lastStudiedAt.isAcceptableOrUnknown(
               data['last_studied_at']!, _lastStudiedAtMeta));
     }
+    if (data.containsKey('is_built_in')) {
+      context.handle(
+          _isBuiltInMeta,
+          isBuiltIn.isAcceptableOrUnknown(
+              data['is_built_in']!, _isBuiltInMeta));
+    }
     return context;
   }
 
@@ -181,6 +198,8 @@ class $DecksTable extends Decks with TableInfo<$DecksTable, Deck> {
           .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
       lastStudiedAt: attachedDatabase.typeMapping.read(
           DriftSqlType.dateTime, data['${effectivePrefix}last_studied_at']),
+      isBuiltIn: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_built_in'])!,
     );
   }
 
@@ -200,6 +219,7 @@ class Deck extends DataClass implements Insertable<Deck> {
   final int masteredCards;
   final DateTime createdAt;
   final DateTime? lastStudiedAt;
+  final bool isBuiltIn;
   const Deck(
       {required this.id,
       required this.name,
@@ -209,7 +229,8 @@ class Deck extends DataClass implements Insertable<Deck> {
       required this.totalCards,
       required this.masteredCards,
       required this.createdAt,
-      this.lastStudiedAt});
+      this.lastStudiedAt,
+      required this.isBuiltIn});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -226,6 +247,7 @@ class Deck extends DataClass implements Insertable<Deck> {
     if (!nullToAbsent || lastStudiedAt != null) {
       map['last_studied_at'] = Variable<DateTime>(lastStudiedAt);
     }
+    map['is_built_in'] = Variable<bool>(isBuiltIn);
     return map;
   }
 
@@ -244,6 +266,7 @@ class Deck extends DataClass implements Insertable<Deck> {
       lastStudiedAt: lastStudiedAt == null && nullToAbsent
           ? const Value.absent()
           : Value(lastStudiedAt),
+      isBuiltIn: Value(isBuiltIn),
     );
   }
 
@@ -260,6 +283,7 @@ class Deck extends DataClass implements Insertable<Deck> {
       masteredCards: serializer.fromJson<int>(json['masteredCards']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       lastStudiedAt: serializer.fromJson<DateTime?>(json['lastStudiedAt']),
+      isBuiltIn: serializer.fromJson<bool>(json['isBuiltIn']),
     );
   }
   @override
@@ -275,6 +299,7 @@ class Deck extends DataClass implements Insertable<Deck> {
       'masteredCards': serializer.toJson<int>(masteredCards),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'lastStudiedAt': serializer.toJson<DateTime?>(lastStudiedAt),
+      'isBuiltIn': serializer.toJson<bool>(isBuiltIn),
     };
   }
 
@@ -287,7 +312,8 @@ class Deck extends DataClass implements Insertable<Deck> {
           int? totalCards,
           int? masteredCards,
           DateTime? createdAt,
-          Value<DateTime?> lastStudiedAt = const Value.absent()}) =>
+          Value<DateTime?> lastStudiedAt = const Value.absent(),
+          bool? isBuiltIn}) =>
       Deck(
         id: id ?? this.id,
         name: name ?? this.name,
@@ -299,6 +325,7 @@ class Deck extends DataClass implements Insertable<Deck> {
         createdAt: createdAt ?? this.createdAt,
         lastStudiedAt:
             lastStudiedAt.present ? lastStudiedAt.value : this.lastStudiedAt,
+        isBuiltIn: isBuiltIn ?? this.isBuiltIn,
       );
   Deck copyWithCompanion(DecksCompanion data) {
     return Deck(
@@ -321,6 +348,7 @@ class Deck extends DataClass implements Insertable<Deck> {
       lastStudiedAt: data.lastStudiedAt.present
           ? data.lastStudiedAt.value
           : this.lastStudiedAt,
+      isBuiltIn: data.isBuiltIn.present ? data.isBuiltIn.value : this.isBuiltIn,
     );
   }
 
@@ -335,14 +363,24 @@ class Deck extends DataClass implements Insertable<Deck> {
           ..write('totalCards: $totalCards, ')
           ..write('masteredCards: $masteredCards, ')
           ..write('createdAt: $createdAt, ')
-          ..write('lastStudiedAt: $lastStudiedAt')
+          ..write('lastStudiedAt: $lastStudiedAt, ')
+          ..write('isBuiltIn: $isBuiltIn')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, name, description, sourceLanguage,
-      targetLanguage, totalCards, masteredCards, createdAt, lastStudiedAt);
+  int get hashCode => Object.hash(
+      id,
+      name,
+      description,
+      sourceLanguage,
+      targetLanguage,
+      totalCards,
+      masteredCards,
+      createdAt,
+      lastStudiedAt,
+      isBuiltIn);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -355,7 +393,8 @@ class Deck extends DataClass implements Insertable<Deck> {
           other.totalCards == this.totalCards &&
           other.masteredCards == this.masteredCards &&
           other.createdAt == this.createdAt &&
-          other.lastStudiedAt == this.lastStudiedAt);
+          other.lastStudiedAt == this.lastStudiedAt &&
+          other.isBuiltIn == this.isBuiltIn);
 }
 
 class DecksCompanion extends UpdateCompanion<Deck> {
@@ -368,6 +407,7 @@ class DecksCompanion extends UpdateCompanion<Deck> {
   final Value<int> masteredCards;
   final Value<DateTime> createdAt;
   final Value<DateTime?> lastStudiedAt;
+  final Value<bool> isBuiltIn;
   const DecksCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
@@ -378,6 +418,7 @@ class DecksCompanion extends UpdateCompanion<Deck> {
     this.masteredCards = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.lastStudiedAt = const Value.absent(),
+    this.isBuiltIn = const Value.absent(),
   });
   DecksCompanion.insert({
     this.id = const Value.absent(),
@@ -389,6 +430,7 @@ class DecksCompanion extends UpdateCompanion<Deck> {
     this.masteredCards = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.lastStudiedAt = const Value.absent(),
+    this.isBuiltIn = const Value.absent(),
   })  : name = Value(name),
         sourceLanguage = Value(sourceLanguage),
         targetLanguage = Value(targetLanguage);
@@ -402,6 +444,7 @@ class DecksCompanion extends UpdateCompanion<Deck> {
     Expression<int>? masteredCards,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? lastStudiedAt,
+    Expression<bool>? isBuiltIn,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -413,6 +456,7 @@ class DecksCompanion extends UpdateCompanion<Deck> {
       if (masteredCards != null) 'mastered_cards': masteredCards,
       if (createdAt != null) 'created_at': createdAt,
       if (lastStudiedAt != null) 'last_studied_at': lastStudiedAt,
+      if (isBuiltIn != null) 'is_built_in': isBuiltIn,
     });
   }
 
@@ -425,7 +469,8 @@ class DecksCompanion extends UpdateCompanion<Deck> {
       Value<int>? totalCards,
       Value<int>? masteredCards,
       Value<DateTime>? createdAt,
-      Value<DateTime?>? lastStudiedAt}) {
+      Value<DateTime?>? lastStudiedAt,
+      Value<bool>? isBuiltIn}) {
     return DecksCompanion(
       id: id ?? this.id,
       name: name ?? this.name,
@@ -436,6 +481,7 @@ class DecksCompanion extends UpdateCompanion<Deck> {
       masteredCards: masteredCards ?? this.masteredCards,
       createdAt: createdAt ?? this.createdAt,
       lastStudiedAt: lastStudiedAt ?? this.lastStudiedAt,
+      isBuiltIn: isBuiltIn ?? this.isBuiltIn,
     );
   }
 
@@ -469,6 +515,9 @@ class DecksCompanion extends UpdateCompanion<Deck> {
     if (lastStudiedAt.present) {
       map['last_studied_at'] = Variable<DateTime>(lastStudiedAt.value);
     }
+    if (isBuiltIn.present) {
+      map['is_built_in'] = Variable<bool>(isBuiltIn.value);
+    }
     return map;
   }
 
@@ -483,7 +532,8 @@ class DecksCompanion extends UpdateCompanion<Deck> {
           ..write('totalCards: $totalCards, ')
           ..write('masteredCards: $masteredCards, ')
           ..write('createdAt: $createdAt, ')
-          ..write('lastStudiedAt: $lastStudiedAt')
+          ..write('lastStudiedAt: $lastStudiedAt, ')
+          ..write('isBuiltIn: $isBuiltIn')
           ..write(')'))
         .toString();
   }
@@ -2618,6 +2668,7 @@ typedef $$DecksTableCreateCompanionBuilder = DecksCompanion Function({
   Value<int> masteredCards,
   Value<DateTime> createdAt,
   Value<DateTime?> lastStudiedAt,
+  Value<bool> isBuiltIn,
 });
 typedef $$DecksTableUpdateCompanionBuilder = DecksCompanion Function({
   Value<int> id,
@@ -2629,6 +2680,7 @@ typedef $$DecksTableUpdateCompanionBuilder = DecksCompanion Function({
   Value<int> masteredCards,
   Value<DateTime> createdAt,
   Value<DateTime?> lastStudiedAt,
+  Value<bool> isBuiltIn,
 });
 
 final class $$DecksTableReferences
@@ -2686,6 +2738,9 @@ class $$DecksTableFilterComposer extends Composer<_$AppDatabase, $DecksTable> {
 
   ColumnFilters<DateTime> get lastStudiedAt => $composableBuilder(
       column: $table.lastStudiedAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isBuiltIn => $composableBuilder(
+      column: $table.isBuiltIn, builder: (column) => ColumnFilters(column));
 
   Expression<bool> cardsRefs(
       Expression<bool> Function($$CardsTableFilterComposer f) f) {
@@ -2748,6 +2803,9 @@ class $$DecksTableOrderingComposer
   ColumnOrderings<DateTime> get lastStudiedAt => $composableBuilder(
       column: $table.lastStudiedAt,
       builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isBuiltIn => $composableBuilder(
+      column: $table.isBuiltIn, builder: (column) => ColumnOrderings(column));
 }
 
 class $$DecksTableAnnotationComposer
@@ -2785,6 +2843,9 @@ class $$DecksTableAnnotationComposer
 
   GeneratedColumn<DateTime> get lastStudiedAt => $composableBuilder(
       column: $table.lastStudiedAt, builder: (column) => column);
+
+  GeneratedColumn<bool> get isBuiltIn =>
+      $composableBuilder(column: $table.isBuiltIn, builder: (column) => column);
 
   Expression<T> cardsRefs<T extends Object>(
       Expression<T> Function($$CardsTableAnnotationComposer a) f) {
@@ -2840,6 +2901,7 @@ class $$DecksTableTableManager extends RootTableManager<
             Value<int> masteredCards = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<DateTime?> lastStudiedAt = const Value.absent(),
+            Value<bool> isBuiltIn = const Value.absent(),
           }) =>
               DecksCompanion(
             id: id,
@@ -2851,6 +2913,7 @@ class $$DecksTableTableManager extends RootTableManager<
             masteredCards: masteredCards,
             createdAt: createdAt,
             lastStudiedAt: lastStudiedAt,
+            isBuiltIn: isBuiltIn,
           ),
           createCompanionCallback: ({
             Value<int> id = const Value.absent(),
@@ -2862,6 +2925,7 @@ class $$DecksTableTableManager extends RootTableManager<
             Value<int> masteredCards = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<DateTime?> lastStudiedAt = const Value.absent(),
+            Value<bool> isBuiltIn = const Value.absent(),
           }) =>
               DecksCompanion.insert(
             id: id,
@@ -2873,6 +2937,7 @@ class $$DecksTableTableManager extends RootTableManager<
             masteredCards: masteredCards,
             createdAt: createdAt,
             lastStudiedAt: lastStudiedAt,
+            isBuiltIn: isBuiltIn,
           ),
           withReferenceMapper: (p0) => p0
               .map((e) =>
