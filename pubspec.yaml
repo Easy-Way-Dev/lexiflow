@@ -30,7 +30,7 @@ dependencies:
 
   # Audio
   audioplayers: ^6.0.0
-  record: ^5.1.2
+  record: ^6.0.0
 
   # HTTP & API
   http: ^1.1.2

@@ -10,7 +10,7 @@ class AudioHelper {
   static final AudioRecorder _recorder = AudioRecorder();
   static bool _isRecording = false;
 
-  // ========== ЗАПИСЬ ==========
+  // ========== RECORDING ==========
 
   static Future<bool> startRecording() async {
     try {
@@ -62,11 +62,11 @@ class AudioHelper {
         _isRecording = false;
       }
     } catch (e) {
-      debugPrint('Error canceling: $e');
+      debugPrint('Error canceling recording: $e');
     }
   }
 
-  // ========== ВОСПРОИЗВЕДЕНИЕ ==========
+  // ========== PLAYBACK ==========
 
   static Future<void> playAudio(String audioPath) async {
     try {
@@ -85,14 +85,14 @@ class AudioHelper {
     }
   }
 
-  // ========== СОСТОЯНИЕ ==========
+  // ========== STATE ==========
 
   static bool get isRecording => _isRecording;
 
   static Stream<PlayerState> get playerStateStream =>
       _player.onPlayerStateChanged;
 
-  // ========== УТИЛИТЫ ==========
+  // ========== UTILITIES ==========
 
   static Future<void> deleteAudio(String? audioPath) async {
     if (audioPath == null || audioPath.isEmpty) return;
@@ -100,7 +100,7 @@ class AudioHelper {
       final file = File(audioPath);
       if (await file.exists()) await file.delete();
     } catch (e) {
-      debugPrint('Error deleting audio: $e');
+      debugPrint('Error deleting audio file: $e');
     }
   }
 
