@@ -15,6 +15,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:lexiflow/app/onboarding_screen.dart';
 import 'package:lexiflow/app/paywall_screen.dart';
+import 'package:lexiflow/core/services/built_in_sets_service.dart';
 
 String _transliterate(String text) {
   const map = {
@@ -115,6 +116,8 @@ class _DecksScreenState extends State<DecksScreen>
   bool _isLoading = true;
   int _currentStreak = 0;
 
+  late TabController _tabController;
+
   late AnimationController _pulseController;
   late AnimationController _gradientController;
   late Animation<double> _pulseAnimation;
@@ -126,6 +129,9 @@ class _DecksScreenState extends State<DecksScreen>
     super.initState();
     _loadDecksAndStats();
     _fixLegacyLanguageCodes();
+    LexiFlowApp.localeNotifier.addListener(_onLocaleChanged);
+
+    _tabController = TabController(length: 2, vsync: this);
 
     _pulseController = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 1500))
@@ -146,9 +152,15 @@ class _DecksScreenState extends State<DecksScreen>
 
   @override
   void dispose() {
+    _tabController.dispose();
+    LexiFlowApp.localeNotifier.removeListener(_onLocaleChanged);
     _pulseController.dispose();
     _gradientController.dispose();
     super.dispose();
+  }
+
+  void _onLocaleChanged() {
+    _loadDecksAndStats();
   }
 
   Future<void> _loadDecksAndStats() async {
@@ -1207,7 +1219,8 @@ class _DecksScreenState extends State<DecksScreen>
       selected: isSelected,
       onTap: () async {
         await widget.db.setSetting('app_locale', code);
-        LexiFlowApp.setLocale(Locale(code));
+        await BuiltInSetsService.seedForLanguage(code, widget.db);
+        LexiFlowApp.setLocale(Locale(code)); // ← теперь ПОСЛЕ seed
         if (mounted) Navigator.pop(context);
       },
     );
@@ -1267,6 +1280,7 @@ class _DecksScreenState extends State<DecksScreen>
               ? const Center(child: CircularProgressIndicator())
               : Column(
                   children: [
+                    // Кнопка быстрого тренирования
                     Padding(
                       padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
                       child: AnimatedBuilder(
@@ -1283,82 +1297,70 @@ class _DecksScreenState extends State<DecksScreen>
                                 padding: const EdgeInsets.symmetric(
                                     vertical: 20, horizontal: 16),
                                 decoration: BoxDecoration(
-                                    gradient: LinearGradient(
-                                        colors: const [
-                                          Color(0xFF6366F1),
-                                          Color(0xFFEC4899),
-                                          Color(0xFF6366F1)
-                                        ],
-                                        begin: _gradientBegin.value,
-                                        end: _gradientEnd.value),
-                                    borderRadius: BorderRadius.circular(16),
-                                    boxShadow: [
-                                      BoxShadow(
-                                          color: const Color(0xFFEC4899)
-                                              .withValues(alpha: 0.3),
-                                          blurRadius: 15,
-                                          spreadRadius: 2,
-                                          offset: const Offset(0, 5))
-                                    ]),
+                                  gradient: LinearGradient(
+                                    colors: const [
+                                      Color(0xFF6366F1),
+                                      Color(0xFFEC4899),
+                                      Color(0xFF6366F1)
+                                    ],
+                                    begin: _gradientBegin.value,
+                                    end: _gradientEnd.value,
+                                  ),
+                                  borderRadius: BorderRadius.circular(16),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: const Color(0xFFEC4899)
+                                          .withValues(alpha: 0.3),
+                                      blurRadius: 15,
+                                      spreadRadius: 2,
+                                      offset: const Offset(0, 5),
+                                    )
+                                  ],
+                                ),
                                 child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      const Icon(Icons.bolt,
-                                          color: Colors.white, size: 28),
-                                      const SizedBox(width: 8),
-                                      Text(l.microSessionTitle,
-                                          style: const TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 20,
-                                              fontWeight: FontWeight.bold,
-                                              letterSpacing: 0.5))
-                                    ]),
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    const Icon(Icons.bolt,
+                                        color: Colors.white, size: 28),
+                                    const SizedBox(width: 8),
+                                    Text(l.microSessionTitle,
+                                        style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 20,
+                                            fontWeight: FontWeight.bold,
+                                            letterSpacing: 0.5))
+                                  ],
+                                ),
                               ),
                             ),
                           );
                         },
                       ),
                     ),
+                    TabBar(
+                      controller: _tabController,
+                      labelStyle: const TextStyle(
+                          fontSize: 16, fontWeight: FontWeight.bold),
+                      unselectedLabelStyle: const TextStyle(fontSize: 15),
+                      indicatorWeight: 3,
+                      tabs: [
+                        Tab(text: l.librarySection),
+                        Tab(text: l.myDecks),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    // Табы
                     Expanded(
-                        child: _decks.isEmpty
-                            ? _buildEmptyState(l)
-                            : ListView(
-                                padding:
-                                    const EdgeInsets.fromLTRB(16, 8, 16, 100),
-                                children: [
-                                  if (_decks.any((d) => d.isBuiltIn)) ...[
-                                    Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                          vertical: 8, horizontal: 4),
-                                      child: Text(l.librarySection,
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .titleMedium
-                                              ?.copyWith(
-                                                  fontWeight: FontWeight.bold)),
-                                    ),
-                                    ..._decks
-                                        .where((d) => d.isBuiltIn)
-                                        .map((d) => _buildLibraryCard(d, l)),
-                                    const SizedBox(height: 16),
-                                  ],
-                                  if (_decks.any((d) => !d.isBuiltIn)) ...[
-                                    Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                          vertical: 8, horizontal: 4),
-                                      child: Text(l.myDecks,
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .titleMedium
-                                              ?.copyWith(
-                                                  fontWeight: FontWeight.bold)),
-                                    ),
-                                    ..._decks
-                                        .where((d) => !d.isBuiltIn)
-                                        .map((d) => _buildDeckCard(d, l)),
-                                  ]
-                                ],
-                              )),
+                      child: TabBarView(
+                        controller: _tabController,
+                        children: [
+                          // ── Вкладка: Библиотека ──
+                          _buildLibraryTab(l),
+                          // ── Вкладка: Мои сеты ──
+                          _buildMyDecksTab(l),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
         ),
@@ -1367,6 +1369,48 @@ class _DecksScreenState extends State<DecksScreen>
           onPressed: () => _showDeckDialog(),
           icon: const Icon(Icons.add),
           label: Text(l.newSet)),
+    );
+  }
+
+  Widget _buildLibraryTab(AppLocalizations l) {
+    final langCode = LexiFlowApp.localeNotifier.value.languageCode;
+    // Если язык не ru/uk — показываем ru сеты как fallback
+    final targetLang = ['ru', 'uk'].contains(langCode) ? langCode : 'ru';
+    final libraryDecks = _decks
+        .where((d) => d.isBuiltIn && d.targetLanguage == targetLang)
+        .toList();
+    if (libraryDecks.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.library_books, size: 80, color: Colors.grey[400]),
+            const SizedBox(height: 16),
+            Text(l.noSets,
+                style: Theme.of(context)
+                    .textTheme
+                    .headlineSmall
+                    ?.copyWith(color: Colors.grey[600])),
+          ],
+        ),
+      );
+    }
+    return ListView.builder(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
+      itemCount: libraryDecks.length,
+      itemBuilder: (context, i) => _buildLibraryCard(libraryDecks[i], l),
+    );
+  }
+
+  Widget _buildMyDecksTab(AppLocalizations l) {
+    final myDecks = _decks.where((d) => !d.isBuiltIn).toList();
+    if (myDecks.isEmpty) {
+      return _buildEmptyState(l);
+    }
+    return ListView.builder(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
+      itemCount: myDecks.length,
+      itemBuilder: (context, i) => _buildDeckCard(myDecks[i], l),
     );
   }
 
